@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { nextStartTime } from './player'
+import { chunkDuration, nextStartTime } from './player'
 
 describe('nextStartTime', () => {
   it('lần đầu (cursor sau lưng) thì phát ngay', () => {
@@ -22,5 +22,17 @@ describe('nextStartTime', () => {
     for (const [now, cur] of [[0, 0], [100, 1], [3.3, 3.29], [1e6, 0]]) {
       expect(nextStartTime(now, cur)).toBeGreaterThanOrEqual(now)
     }
+  })
+})
+
+describe('chunkDuration', () => {
+  it('dùng rate THẬT của decoder (48k), không phải rate cấu hình (24k)', () => {
+    // 2880 frame/packet 60ms @48k -- con số đo thật từ Chromium 149
+    expect(chunkDuration(2880, 48000)).toBeCloseTo(0.06)
+  })
+
+  it('tin nhầm 24000 thì ra gấp đôi thời lượng -- chính là lỗi phát chậm nửa tốc', () => {
+    expect(chunkDuration(2880, 24000)).toBeCloseTo(0.12)
+    expect(chunkDuration(2880, 24000)).not.toBeCloseTo(chunkDuration(2880, 48000))
   })
 })
