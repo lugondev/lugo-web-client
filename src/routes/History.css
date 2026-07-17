@@ -1,0 +1,135 @@
+.his {
+  min-height: 100dvh;
+  padding: 20px 20px 88px;
+  max-width: 34rem;
+  margin: 0 auto;
+}
+
+.his__h {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 8px 0 4px;
+}
+
+.his__sub {
+  margin: 0 0 24px;
+  opacity: 0.6;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+}
+
+.his__list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.his__row {
+  width: 100%;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  border: 1px solid var(--lugo-cream-deep);
+  border-radius: 12px;
+  padding: 14px 16px;
+  background: none;
+  cursor: pointer;
+  display: grid;
+  gap: 4px;
+}
+.his__row:hover { border-color: color-mix(in srgb, currentColor 30%, transparent); }
+.his__row:focus-visible {
+  outline: 2px solid var(--lugo-accent-warm);
+  outline-offset: 2px;
+}
+
+.his__preview {
+  font-weight: 500;
+  margin: 0;
+  /* Cắt ở một dòng: đây là danh sách để quét mắt, không phải để đọc. */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.his__meta {
+  font-size: 0.8125rem;
+  opacity: 0.55;
+  margin: 0;
+}
+
+.his__empty {
+  border: 1px dashed var(--lugo-cream-deep);
+  border-radius: 12px;
+  padding: 24px 20px;
+  text-align: center;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  opacity: 0.7;
+}
+
+.his__err {
+  color: var(--lugo-danger);
+  font-size: 0.9375rem;
+}
+
+/* --- chi tiết --- */
+
+.his__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.his__btn {
+  font: inherit;
+  font-size: 0.875rem;
+  padding: 8px 14px;
+  min-height: 40px;
+  border-radius: 999px;
+  border: 1px solid currentColor;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+  opacity: 0.7;
+}
+.his__btn:hover { opacity: 1; }
+.his__btn:focus-visible {
+  outline: 2px solid var(--lugo-accent-warm);
+  outline-offset: 3px;
+}
+
+.his__btn--danger {
+  border-color: var(--lugo-danger);
+  color: var(--lugo-danger);
+}
+
+.his__turns {
+  display: grid;
+  gap: 18px;
+  margin: 0;
+}
+
+.his__turn { margin: 0; }
+
+/* Nhãn ai nói. Không dùng bong bóng chat -- đây là bản ghi để đọc lại,
+   không phải một cuộc chat đang diễn ra. */
+.his__who {
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.45;
+  margin: 0 0 4px;
+}
+
+.his__said {
+  margin: 0;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.his__turn--user .his__said { opacity: 0.65; }
