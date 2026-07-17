@@ -4,12 +4,22 @@
   right: 0;
   bottom: 0;
   display: flex;
-  justify-content: center;
+  align-items: center;
   gap: 4px;
   padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
   background: color-mix(in srgb, var(--lugo-bg) 92%, transparent);
   backdrop-filter: blur(8px);
   border-top: 1px solid color-mix(in srgb, currentColor 12%, transparent);
+}
+
+/* Nói + Thiết bị: chiếm phần còn lại sau khi trừ chỗ cho Đăng xuất, và canh
+   giữa trong phần đó -- nên vẫn trông cân đối, không bị dạt hẳn sang trái. */
+.nav__tabs {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  justify-content: center;
+  gap: 4px;
 }
 
 .nav__btn {
@@ -39,4 +49,34 @@
   outline-offset: 2px;
 }
 
-.nav__spacer { flex: 1; max-width: 24px; }
+/* Vạch chia -- tách Đăng xuất ra thành một LOẠI điều khiển khác, không phải
+   thêm một điểm đến trong hàng tab. */
+.nav__divider {
+  align-self: stretch;
+  width: 1px;
+  margin: 4px 2px;
+  background: color-mix(in srgb, currentColor 14%, transparent);
+}
+
+/* Đăng xuất: chữ nhỏ hơn, mờ hơn nav__btn, không nền pill, không hover kiểu
+   tab -- để KHÔNG đọc như một mục thứ ba ngang hàng Nói/Thiết bị. Vẫn giữ
+   tối thiểu ~40px chiều cao chạm và outline focus-visible rõ ràng. */
+.nav__logout {
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 400;
+  padding: 10px 12px;
+  min-height: 40px;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: inherit;
+  opacity: 0.4;
+  cursor: pointer;
+}
+.nav__logout:hover { opacity: 0.65; text-decoration: underline; }
+
+.nav__logout:focus-visible {
+  outline: 2px solid var(--lugo-accent-warm);
+  outline-offset: 2px;
+}

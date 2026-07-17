@@ -27,6 +27,23 @@ async function errorFrom(resp: Response): Promise<Error> {
   return new Error(`Máy chủ trả về lỗi ${resp.status}`)
 }
 
+/** Dịch lỗi của server sang tiếng Việt hành động được.
+ *
+ * Giữ SỰ PHÂN BIỆT của server (mã sai vs phần cứng đã ghép) vì hai tình huống
+ * cần hai hành động khác nhau -- nhưng không giữ tiếng Anh: người dùng cuối
+ * không phải lập trình viên. Lỗi lạ thì trả nguyên văn, thà khó hiểu còn hơn
+ * mất thông tin.
+ */
+export function friendlyDeviceError(raw: string): string {
+  if (/invalid or expired/i.test(raw)) {
+    return 'Mã không đúng hoặc đã hết hạn. Mã chỉ dùng được trong 10 phút — bật lại thiết bị để lấy mã mới.'
+  }
+  if (/already paired/i.test(raw)) {
+    return 'Thiết bị này đã ghép với một tài khoản rồi. Gỡ nó ở danh sách phía trên trước khi ghép lại.'
+  }
+  return raw
+}
+
 export async function listDevices(): Promise<Device[]> {
   // /v1/devices/mine, KHÔNG phải /v1/devices -- cái sau là endpoint admin và
   // bearer sẽ nhận 403, đúng như thiết kế.

@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { claimDevice, listDevices, revokeDevice } from './devices'
+import { claimDevice, friendlyDeviceError, listDevices, revokeDevice } from './devices'
 import { saveTokens } from './tokens'
 
 function jsonResponse(body: unknown, status = 200): Response {
@@ -72,5 +72,24 @@ describe('devices api', () => {
   it('revokeDevice ném lỗi khi server từ chối', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse({ detail: 'not found' }, 404)))
     await expect(revokeDevice('nope')).rejects.toThrow()
+  })
+})
+
+describe('friendlyDeviceError', () => {
+  it('dịch "invalid or expired" sang tiếng Việt hành động được', () => {
+    const msg = friendlyDeviceError('pairing code is invalid or expired')
+    expect(msg).not.toMatch(/invalid|expired/i)
+    expect(msg).toContain('Mã không đúng hoặc đã hết hạn')
+  })
+
+  it('dịch "already paired" sang tiếng Việt hành động được', () => {
+    const msg = friendlyDeviceError('device already paired to another account')
+    expect(msg).not.toMatch(/already paired/i)
+    expect(msg).toContain('đã ghép với một tài khoản rồi')
+  })
+
+  it('lỗi lạ thì trả nguyên văn -- không được nuốt mất thông tin', () => {
+    const raw = 'internal server error: db timeout'
+    expect(friendlyDeviceError(raw)).toBe(raw)
   })
 })

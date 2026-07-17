@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { claimDevice, listDevices, revokeDevice, type Device } from '../api/devices'
+import { claimDevice, friendlyDeviceError, listDevices, revokeDevice, type Device } from '../api/devices'
 import { isRecentlyActive, relativeTime } from '../lib/time'
 import './Devices.css'
 
@@ -33,9 +33,13 @@ export function Devices() {
       setName('')
       await refresh()
     } catch (err) {
-      // Giữ nguyên chữ của server: nó phân biệt "mã sai" với "phần cứng đã
-      // ghép rồi", và hai lỗi đó cần hai hành động khác nhau.
-      setError(err instanceof Error ? err.message : 'Ghép không thành công')
+      // Server phân biệt "mã sai" với "phần cứng đã ghép rồi" -- hai lỗi đó
+      // cần hai hành động khác nhau, nên GIỮ sự phân biệt. Nhưng người dùng
+      // cuối không đọc tiếng Anh: dịch sang tiếng Việt hành động được, lỗi lạ
+      // thì rơi về nguyên văn server thay vì mất thông tin.
+      setError(
+        err instanceof Error ? friendlyDeviceError(err.message) : 'Ghép không thành công',
+      )
     } finally {
       setBusy(false)
     }

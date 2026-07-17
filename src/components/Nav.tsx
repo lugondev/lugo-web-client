@@ -20,18 +20,25 @@ export function Nav({
 }) {
   return (
     <nav className="nav" aria-label="Điều hướng chính">
-      {ITEMS.map((it) => (
-        <button
-          key={it.id}
-          className="nav__btn"
-          aria-current={current === it.id ? 'page' : undefined}
-          onClick={() => onGo(it.id)}
-        >
-          {it.label}
-        </button>
-      ))}
-      <span className="nav__spacer" />
-      <button className="nav__btn" onClick={onLogout}>
+      {/* Nói và Thiết bị là hai màn thật, ngang hàng nhau -- nhóm riêng và
+          canh giữa trong phần còn lại sau khi trừ chỗ cho Đăng xuất. */}
+      <div className="nav__tabs">
+        {ITEMS.map((it) => (
+          <button
+            key={it.id}
+            className="nav__btn"
+            aria-current={current === it.id ? 'page' : undefined}
+            onClick={() => onGo(it.id)}
+          >
+            {it.label}
+          </button>
+        ))}
+      </div>
+      <span className="nav__divider" aria-hidden="true" />
+      {/* Đăng xuất là HÀNH ĐỘNG, không phải một màn -- cố tình KHÔNG dùng
+          nav__btn (không aria-current, không dáng pill/tab) để không đọc
+          nhầm thành mục thứ ba ngang hàng với Nói/Thiết bị. */}
+      <button className="nav__logout" onClick={onLogout}>
         Đăng xuất
       </button>
     </nav>
