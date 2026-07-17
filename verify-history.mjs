@@ -1,0 +1,30 @@
+import { chromium } from 'playwright'
+const b = await chromium.launch()
+const p = await b.newPage({ viewport: { width: 420, height: 860 }, deviceScaleFactor: 2 })
+const errors = []
+p.on('pageerror', e => errors.push(String(e)))
+p.on('console', m => { if (m.type()==='error') errors.push('console: '+m.text().slice(0,110)) })
+await p.goto('http://localhost:5173/')
+await p.fill('input[aria-label="Tên đăng nhập"]', 'e2e-user')
+await p.fill('input[aria-label="Mật khẩu"]', 'pw12345678')
+await p.click('button[type="submit"]')
+await p.waitForTimeout(1500)
+await p.click('text=Lịch sử')
+await p.waitForTimeout(1400)
+console.log('so phien hien ra:', await p.locator('.his__row').count())
+await p.screenshot({ path: 'shots/his-list.png' })
+if (await p.locator('.his__row').count() > 0) {
+  await p.locator('.his__row').first().click()
+  await p.waitForTimeout(1400)
+  console.log('so luot transcript:', await p.locator('.his__turn').count())
+  const audioEls = await p.locator('audio').count()
+  const hasPlayWord = (await p.content()).includes('Phát lại')
+  console.log('nut phat audio (phai 0):', audioEls, '| co chu "Phat lai"?', hasPlayWord)
+  const orange = await p.evaluate(() => [...document.querySelectorAll('.his *')].filter(e => {
+    const c = getComputedStyle(e); return /255,\s*138,\s*0/.test(c.color + c.backgroundColor + c.borderColor + c.backgroundImage)
+  }).length)
+  console.log('phan tu mau CAM (phai 0):', orange)
+  await p.screenshot({ path: 'shots/his-detail.png' })
+}
+console.log('loi trang:', errors.length ? errors : 'khong co')
+await b.close()
