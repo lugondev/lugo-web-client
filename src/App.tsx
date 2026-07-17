@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type ComponentType } from 'react'
 import './theme.css'
 import { isAuthed, logout } from './api/auth'
 import { onAuthLost } from './api/client'
@@ -7,6 +7,15 @@ import { Devices } from './routes/Devices'
 import { History } from './routes/History'
 import { Login } from './routes/Login'
 import { Talk } from './routes/Talk'
+import { Tools } from './routes/Tools'
+
+// 4 màn -- ternary lồng nhau bắt đầu khó đọc. Bản đồ Screen -> component.
+const SCREENS: Record<Screen, ComponentType> = {
+  talk: Talk,
+  history: History,
+  devices: Devices,
+  tools: Tools,
+}
 
 export default function App() {
   const [authed, setAuthed] = useState(isAuthed())
@@ -26,9 +35,11 @@ export default function App() {
     setScreen('talk')
   }
 
+  const Active = SCREENS[screen]
+
   return (
     <>
-      {screen === 'talk' ? <Talk /> : screen === 'history' ? <History /> : <Devices />}
+      <Active />
       <Nav current={screen} onGo={setScreen} onLogout={signOut} />
     </>
   )
