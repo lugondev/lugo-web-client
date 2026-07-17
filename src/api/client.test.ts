@@ -113,4 +113,38 @@ describe('apiFetch', () => {
     expect(refreshCalls).toBe(1)
     expect(results.every((r) => r.status === 200)).toBe(true)
   })
+
+  it('nhiều request cùng mất auth chỉ báo onAuthLost MỘT lần', async () => {
+    saveTokens('expired', 'bad-ref')
+    const fetchMock = vi.fn(async (url: string) => {
+      if (String(url).includes('/api/auth/refresh')) return jsonResponse({ success: false }, 401)
+      return jsonResponse({}, 401)
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    const lost = vi.fn()
+    onAuthLost(lost)
+
+    await Promise.all([apiFetch('/v1/a'), apiFetch('/v1/b'), apiFetch('/v1/c')])
+
+    expect(lost).toHaveBeenCalledOnce()
+  })
+
+  it('refresh gặp 5xx thì KHÔNG đăng xuất người dùng', async () => {
+    saveTokens('expired', 'ref-1')
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(jsonResponse({ success: false }, 401))
+      .mockResolvedValueOnce(jsonResponse({ error: 'boom' }, 500))
+    vi.stubGlobal('fetch', fetchMock)
+
+    const lost = vi.fn()
+    onAuthLost(lost)
+
+    await apiFetch('/v1/sessions')
+
+    // API chớp nháy không phải là mất quyền -- token phải còn nguyên
+    expect(getAccessToken()).toBe('expired')
+    expect(lost).not.toHaveBeenCalled()
+  })
 })
