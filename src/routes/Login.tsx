@@ -40,7 +40,7 @@ export function Login({ onDone }: { onDone: () => void }) {
           placeholder="Mật khẩu"
           autoComplete="current-password"
         />
-        {error && <p role="alert" style={{ color: 'var(--lugo-accent)', margin: 0 }}>{error}</p>}
+        {error && <p role="alert" style={{ color: 'var(--lugo-danger)', margin: 0 }}>{error}</p>}
         <button type="submit" disabled={busy} style={{ background: 'var(--lugo-accent-gradient)', border: 0, padding: 12, borderRadius: 8, color: '#111', fontWeight: 600 }}>
           {busy ? 'Đang vào...' : 'Vào'}
         </button>

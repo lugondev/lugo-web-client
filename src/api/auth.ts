@@ -13,7 +13,14 @@ export async function login(username: string, password: string): Promise<void> {
     throw new Error('Sai tên đăng nhập hoặc mật khẩu')
   }
   const body = await resp.json()
-  const { access_token, refresh_token } = body.data
+  const { access_token, refresh_token } = body.data ?? {}
+  // 200 không đồng nghĩa dữ liệu hợp lệ: nếu thiếu token, destructure ra
+  // undefined, và localStorage.setItem ép undefined thành chuỗi "undefined"
+  // -- getAccessToken() sẽ khác null, isAuthed() thành true với token rác.
+  // Đây không phải sai mật khẩu (không được nói vậy), mà là máy chủ hỏng.
+  if (typeof access_token !== 'string' || access_token === '' || typeof refresh_token !== 'string' || refresh_token === '') {
+    throw new Error('Máy chủ trả về dữ liệu không hợp lệ')
+  }
   saveTokens(access_token, refresh_token)
 }
 

@@ -9,6 +9,11 @@
   --lugo-accent-warm: #ffc857;
   --lugo-accent-gradient: linear-gradient(135deg, #ff8a00, #ffc857);
 
+  /* Bảng màu Lugo không có màu lỗi. Cam thì đã dành cho trạng thái hoạt động
+     và hành động chính -- dùng lại cam cho lỗi khiến một màu vừa nghĩa "đi"
+     vừa nghĩa "hỏng". */
+  --lugo-danger: #c9372c;
+
   --lugo-bg: var(--lugo-cream);
   --lugo-fg: var(--lugo-ink);
 }
@@ -18,6 +23,7 @@
 [data-surface='talk'] {
   --lugo-bg: var(--lugo-ink);
   --lugo-fg: var(--lugo-cream);
+  --lugo-danger: #ff8a80;
 }
 
 body {

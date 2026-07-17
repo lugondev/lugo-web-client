@@ -55,6 +55,22 @@ describe('auth', () => {
     expect(getAccessToken()).toBeNull()
   })
 
+  it('200 nhưng thiếu token thì KHÔNG lưu gì và báo lỗi', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse({ success: true, data: {} })))
+
+    await expect(login('toan', 'pw12345678')).rejects.toThrow()
+    // localStorage ép undefined thành chuỗi "undefined" -- phải chặn từ đầu
+    expect(getAccessToken()).toBeNull()
+    expect(isAuthed()).toBe(false)
+  })
+
+  it('200 nhưng thiếu hẳn data thì báo lỗi tử tế, không ném TypeError thô', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse({ success: true })))
+
+    await expect(login('toan', 'pw12345678')).rejects.toThrow(/không hợp lệ/)
+    expect(isAuthed()).toBe(false)
+  })
+
   it('logout xoá token', async () => {
     vi.stubGlobal(
       'fetch',
