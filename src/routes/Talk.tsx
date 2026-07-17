@@ -13,7 +13,7 @@ const STATE_LABEL: Record<TalkState, string> = {
   error: 'Có lỗi',
 }
 
-export function Talk({ onLogout }: { onLogout: () => void }) {
+export function Talk() {
   const [state, setState] = useState<TalkState>('idle')
   const [reply, setReply] = useState('')
   const [you, setYou] = useState('')
@@ -74,9 +74,6 @@ export function Talk({ onLogout }: { onLogout: () => void }) {
     <main className="talk" data-surface="talk">
       <div className="talk__bar">
         <span className="talk__wordmark">LUGO</span>
-        <button className="talk__btn talk__btn--ghost" onClick={onLogout}>
-          Đăng xuất
-        </button>
       </div>
 
       <div className="talk__stage">
