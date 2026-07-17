@@ -1,0 +1,28 @@
+/* Bộ nhận diện Lugo. Cam CHỈ dùng cho trạng thái hoạt động và hành động
+   chính -- cam dùng cho mọi thứ thì không còn báo hiệu gì. */
+:root {
+  --lugo-ink: #111111;
+  --lugo-ink-soft: #2a2a2a;
+  --lugo-cream: #f7f4ee;
+  --lugo-cream-deep: #e8e1d6;
+  --lugo-accent: #ff8a00;
+  --lugo-accent-warm: #ffc857;
+  --lugo-accent-gradient: linear-gradient(135deg, #ff8a00, #ffc857);
+
+  --lugo-bg: var(--lugo-cream);
+  --lugo-fg: var(--lugo-ink);
+}
+
+/* Talk là màn dùng lâu, thường buổi tối, và logo trắng trên nền tối là bản
+   mạnh nhất của bộ nhận diện -> nền tối là mặc định ở đó. */
+[data-surface='talk'] {
+  --lugo-bg: var(--lugo-ink);
+  --lugo-fg: var(--lugo-cream);
+}
+
+body {
+  margin: 0;
+  background: var(--lugo-bg);
+  color: var(--lugo-fg);
+  font-family: system-ui, -apple-system, sans-serif;
+}
