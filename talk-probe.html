@@ -1,0 +1,33 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Lugo talk probe</title>
+<button id="go">Nối &amp; nói</button>
+<button id="say">Gửi text</button>
+<button id="stop">Dừng</button>
+<pre id="log"></pre>
+<script type="module">
+import { Conversation } from '/src/audio/conversation.ts'
+import { login } from '/src/api/auth.ts'
+
+const log = (m) => (document.getElementById('log').textContent += m + '\n')
+window.__state = []
+const conv = new Conversation({
+  onState: (s) => { window.__state.push(s); log('state: ' + s) },
+  onUserText: (t) => log('ban: ' + t),
+  onReplyText: (t) => log('lugo: ' + t),
+  onError: (e) => log('LOI: ' + e),
+})
+window.__conv = conv
+document.getElementById('go').onclick = async () => {
+  try {
+    await login('e2e-user', 'pw12345678')
+    log('login ok')
+    await conv.connect()
+  } catch (e) { log('LOI login: ' + e) }
+}
+document.getElementById('stop').onclick = () => conv.disconnect()
+document.getElementById('say').onclick = () => {
+  log('gui text...')
+  conv.sendText('Xin chao, ban khoe khong?')
+}
+</script>
