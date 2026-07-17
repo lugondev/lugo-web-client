@@ -4,6 +4,7 @@ import { isAuthed, logout } from './api/auth'
 import { onAuthLost } from './api/client'
 import { Nav, type Screen } from './components/Nav'
 import { Devices } from './routes/Devices'
+import { History } from './routes/History'
 import { Login } from './routes/Login'
 import { Talk } from './routes/Talk'
 
@@ -27,7 +28,7 @@ export default function App() {
 
   return (
     <>
-      {screen === 'talk' ? <Talk /> : <Devices />}
+      {screen === 'talk' ? <Talk /> : screen === 'history' ? <History /> : <Devices />}
       <Nav current={screen} onGo={setScreen} onLogout={signOut} />
     </>
   )
