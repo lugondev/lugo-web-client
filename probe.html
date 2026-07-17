@@ -1,0 +1,20 @@
+<!doctype html>
+<meta charset="utf-8">
+<pre id="out">đang kiểm tra...</pre>
+<script type="module">
+const out = document.getElementById('out')
+const lines = []
+lines.push('AudioDecoder: ' + (typeof AudioDecoder !== 'undefined'))
+lines.push('AudioContext: ' + (typeof AudioContext !== 'undefined'))
+lines.push('getUserMedia: ' + !!navigator.mediaDevices?.getUserMedia)
+if (typeof AudioDecoder !== 'undefined') {
+  try {
+    const cfg = { codec: 'opus', sampleRate: 24000, numberOfChannels: 1 }
+    const sup = await AudioDecoder.isConfigSupported(cfg)
+    lines.push('opus 24k mono decode: ' + sup.supported)
+  } catch (e) {
+    lines.push('opus check ném lỗi: ' + e)
+  }
+}
+out.textContent = lines.join('\n')
+</script>
