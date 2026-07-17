@@ -74,7 +74,7 @@ export function Talk({ onLogout }: { onLogout: () => void }) {
     <main className="talk" data-surface="talk">
       <div className="talk__bar">
         <span className="talk__wordmark">LUGO</span>
-        <button className="talk__btn" onClick={onLogout}>
+        <button className="talk__btn talk__btn--ghost" onClick={onLogout}>
           Đăng xuất
         </button>
       </div>

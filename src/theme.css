@@ -26,9 +26,18 @@
   --lugo-danger: #ff8a80;
 }
 
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
 body {
   margin: 0;
   background: var(--lugo-bg);
   color: var(--lugo-fg);
   font-family: 'Be Vietnam Pro', system-ui, sans-serif;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
 }

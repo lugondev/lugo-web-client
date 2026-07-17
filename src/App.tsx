@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react'
-import './theme.css'
 import { isAuthed, logout } from './api/auth'
 import { onAuthLost } from './api/client'
 import { Login } from './routes/Login'

@@ -84,6 +84,25 @@
 }
 .talk__btn:hover { opacity: 1; }
 
+/* Đăng xuất -- việc ít quan trọng nhất trên màn này. Vẫn là nút thật, chạm
+   được thoải mái (>=40px), chỉ là không được to tiếng như nút chính. */
+.talk__btn--ghost {
+  font-size: 0.8125rem;
+  padding: 8px 14px;
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  border-color: transparent;
+  opacity: 0.5;
+}
+.talk__btn--ghost:hover {
+  opacity: 0.85;
+  border-color: currentColor;
+}
+.talk__btn--ghost:focus-visible {
+  opacity: 1;
+}
+
 /* Hành động chính -- một trong hai chỗ duy nhất được dùng cam. */
 .talk__btn--primary {
   background: var(--lugo-accent-gradient);
