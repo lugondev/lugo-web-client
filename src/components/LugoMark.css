@@ -1,0 +1,77 @@
+.mark {
+  width: clamp(160px, 42vw, 240px);
+  height: clamp(160px, 42vw, 240px);
+  display: block;
+}
+
+.mark__ring {
+  stroke: var(--lugo-cream);
+  opacity: 0.35;
+  transition: opacity 400ms ease, stroke 400ms ease;
+  /* view-box chứ KHÔNG phải fill-box: transform-origin ở đây tính bằng toạ độ
+     viewBox (50px 50px). fill-box sẽ lấy gốc theo hộp bao của chính hình, làm
+     tâm xoay lệch đi. */
+  transform-box: view-box;
+}
+
+.mark__dot {
+  fill: var(--lugo-cream);
+  opacity: 0.35;
+  transition: opacity 400ms ease, fill 400ms ease;
+  /* view-box chứ KHÔNG phải fill-box: transform-origin ở đây tính bằng toạ độ
+     viewBox (50px 50px). fill-box sẽ lấy gốc theo hộp bao của chính hình, làm
+     tâm xoay lệch đi. */
+  transform-box: view-box;
+}
+
+/* listening: chấm (bạn) sống dậy. Vòng sáng vừa -- Lugo đang chú ý, chưa nói. */
+.mark[data-state='listening'] .mark__ring { opacity: 0.5; }
+.mark[data-state='listening'] .mark__dot {
+  fill: var(--lugo-accent);
+  opacity: 1;
+}
+
+/* thinking: vòng (Lugo) xoay. Chấm lặng -- lượt nói đã xong. */
+.mark[data-state='thinking'] .mark__ring {
+  opacity: 0.9;
+  transform-origin: 50px 50px;
+  animation: mark-spin 1.6s linear infinite;
+}
+
+/* speaking: vòng cam, thở theo âm lượng (scale do JS đặt theo level). */
+.mark[data-state='speaking'] .mark__ring {
+  stroke: var(--lugo-accent);
+  opacity: 1;
+}
+
+/* connecting: thở chậm, chưa cam -- chưa có gì hoạt động thật. */
+.mark[data-state='connecting'] .mark__ring {
+  animation: mark-breathe 1.8s ease-in-out infinite;
+}
+
+.mark[data-state='error'] .mark__ring,
+.mark[data-state='error'] .mark__dot {
+  stroke: var(--lugo-danger);
+  fill: var(--lugo-danger);
+  opacity: 0.9;
+}
+.mark[data-state='error'] .mark__ring { fill: none; }
+
+@keyframes mark-spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes mark-breathe {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.7; }
+}
+
+/* Chuyển động phải phục vụ, không được ép. Bỏ xoay/thở; trạng thái vẫn đọc
+   được qua màu và độ đậm. */
+@media (prefers-reduced-motion: reduce) {
+  .mark__ring,
+  .mark__dot {
+    animation: none !important;
+    transition: opacity 200ms ease, stroke 200ms ease, fill 200ms ease;
+  }
+}
