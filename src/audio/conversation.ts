@@ -36,6 +36,12 @@ export class Conversation {
     this.cb = cb
   }
 
+  /** Mức để vẽ vòng tròn: khi Lugo nói thì lấy theo tiếng nó, còn lại lấy theo
+   * giọng bạn. Đúng quy tắc "ai hoạt động thì phần đó động". */
+  get level(): number {
+    return this.state === 'speaking' ? this.player.level : this.mic.level
+  }
+
   private setState(s: TalkState): void {
     if (this.state === s) return
     this.state = s

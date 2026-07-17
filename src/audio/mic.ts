@@ -1,3 +1,4 @@
+import { readLevel, smoothLevel } from './level'
 import { PCM_WORKLET_SRC } from './pcm-worklet'
 
 const SAMPLE_RATE = 16000
@@ -16,6 +17,9 @@ export function floatToPcm16(input: Float32Array): ArrayBuffer {
 export class Mic {
   private ctx: AudioContext | null = null
   private stream: MediaStream | null = null
+  private analyser: AnalyserNode | null = null
+  private buf = new Float32Array(1024)
+  private _level = 0
 
   async start(onFrame: (pcm: ArrayBuffer) => void): Promise<void> {
     // Xin AudioContext đúng 16kHz để trình duyệt tự resample -- rẻ hơn và
@@ -43,6 +47,18 @@ export class Mic {
     mute.gain.value = 0
     node.connect(mute)
     mute.connect(this.ctx.destination)
+
+    // Analyser song song với worklet (KHÔNG nối tiếp) -- worklet vẫn phải
+    // nhận nguyên tín hiệu để STT không bị suy giảm.
+    this.analyser = this.ctx.createAnalyser()
+    this.analyser.fftSize = 2048
+    source.connect(this.analyser)
+  }
+
+  /** Mức giọng NÓI CỦA BẠN, 0..1. Chấm trong logo là "bạn" -- nó nở theo cái này. */
+  get level(): number {
+    this._level = smoothLevel(this._level, readLevel(this.analyser, this.buf), 0.5, 0.12)
+    return this._level
   }
 
   stop(): void {
@@ -50,5 +66,7 @@ export class Mic {
     this.stream = null
     void this.ctx?.close()
     this.ctx = null
+    this.analyser = null
+    this._level = 0
   }
 }

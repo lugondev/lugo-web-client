@@ -1,3 +1,5 @@
+import { readLevel, smoothLevel } from './level'
+
 const OUTPUT_SAMPLE_RATE = 24000
 
 /** Thời điểm phát chunk kế tiếp trên đồng hồ AudioContext.
@@ -27,10 +29,16 @@ export class Player {
   private cursor = 0
   private sources: AudioBufferSourceNode[] = []
   private timestamp = 0
+  private analyser: AnalyserNode | null = null
+  private buf = new Float32Array(1024)
+  private _level = 0
 
   private ensure(): void {
     if (this.ctx) return
     this.ctx = new AudioContext()
+    this.analyser = this.ctx.createAnalyser()
+    this.analyser.fftSize = 2048
+    this.analyser.connect(this.ctx.destination)
     this.decoder = new AudioDecoder({
       output: (data: AudioData) => this.schedule(data),
       error: (e: Error) => console.error('opus decode', e),
@@ -63,7 +71,7 @@ export class Player {
     buf.copyToChannel(pcm, 0)
     const src = ctx.createBufferSource()
     src.buffer = buf
-    src.connect(ctx.destination)
+    src.connect(this.analyser ?? ctx.destination)
 
     const at = nextStartTime(ctx.currentTime, this.cursor)
     src.start(at)
@@ -90,6 +98,12 @@ export class Player {
     return this.sources.length > 0
   }
 
+  /** Mức tiếng LUGO ĐANG NÓI, 0..1. Vòng tròn thở theo cái này. */
+  get level(): number {
+    this._level = smoothLevel(this._level, readLevel(this.analyser, this.buf), 0.4, 0.1)
+    return this._level
+  }
+
   /** Barge-in: im NGAY. Người dùng đã nói đè lên -- nghe tiếp là sai. */
   stop(): void {
     this.sources.forEach((s) => {
@@ -110,5 +124,7 @@ export class Player {
     this.decoder = null
     void this.ctx?.close()
     this.ctx = null
+    this.analyser = null
+    this._level = 0
   }
 }
