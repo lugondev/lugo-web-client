@@ -1,0 +1,108 @@
+.tool {
+  min-height: 100dvh;
+  padding: 20px 20px 88px;
+  max-width: 34rem;
+  margin: 0 auto;
+}
+
+.tool__h {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 8px 0 4px;
+}
+
+.tool__sub {
+  margin: 0 0 28px;
+  opacity: 0.6;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+}
+
+.tool__card {
+  border: 1px solid var(--lugo-cream-deep);
+  border-radius: 12px;
+  padding: 18px 16px;
+  margin-bottom: 16px;
+  display: grid;
+  gap: 12px;
+}
+
+.tool__card-h {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.tool__hint {
+  font-size: 0.8125rem;
+  opacity: 0.55;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.tool__file {
+  font: inherit;
+  font-size: 0.875rem;
+}
+.tool__file:focus-visible {
+  outline: 2px solid var(--lugo-accent-warm);
+  outline-offset: 2px;
+}
+
+.tool__area {
+  font: inherit;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--lugo-cream-deep);
+  background: transparent;
+  color: inherit;
+  resize: vertical;
+  min-height: 96px;
+}
+.tool__area:focus-visible {
+  outline: 2px solid var(--lugo-accent-warm);
+  outline-offset: 2px;
+  border-color: transparent;
+}
+
+.tool__btn {
+  font: inherit;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  padding: 12px 20px;
+  min-height: 44px;
+  border-radius: 999px;
+  border: 0;
+  cursor: pointer;
+  /* Mỗi công cụ có một hành động chính -- đây là hai chỗ duy nhất dùng cam. */
+  background: var(--lugo-accent-gradient);
+  color: #111;
+}
+.tool__btn:disabled {
+  background: none;
+  border: 1px solid currentColor;
+  color: inherit;
+  opacity: 0.4;
+  cursor: default;
+}
+.tool__btn:focus-visible {
+  outline: 2px solid var(--lugo-accent-warm);
+  outline-offset: 3px;
+}
+
+.tool__out {
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: color-mix(in srgb, currentColor 5%, transparent);
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.tool__err {
+  color: var(--lugo-danger);
+  font-size: 0.9375rem;
+  margin: 0;
+}
+
+.tool__audio { width: 100%; }
