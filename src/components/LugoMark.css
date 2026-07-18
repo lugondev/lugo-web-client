@@ -2,76 +2,116 @@
   width: clamp(160px, 42vw, 240px);
   height: clamp(160px, 42vw, 240px);
   display: block;
+  overflow: visible;
 }
 
-.mark__ring {
-  stroke: var(--lugo-cream);
-  opacity: 0.35;
-  transition: opacity 400ms ease, stroke 400ms ease;
-  /* view-box chứ KHÔNG phải fill-box: transform-origin ở đây tính bằng toạ độ
-     viewBox (50px 50px). fill-box sẽ lấy gốc theo hộp bao của chính hình, làm
-     tâm xoay lệch đi. */
+.mark__ringwrap {
+  transform-origin: 50px 50px;
   transform-box: view-box;
+}
+
+/* KHÔNG đặt transform/transform-origin lên chính .mark__ring: nó đã có thuộc tính
+   transform="rotate(...)". Trên Chrome (SVG2) thuộc tính transform được coi như CSS
+   transform, nên thêm transform-origin ở đây sẽ đổi tâm xoay và làm vòng LỆCH khỏi
+   chấm. Xoay tĩnh để nguyên ở thuộc tính; scale/spin đặt lên .mark__ringwrap (<g>). */
+/* Vòng theo màu chữ (--lugo-fg qua currentColor): đậm trên nền sáng, kem trên nền
+   tối. Nhấn trạng thái bằng màu (cam) hoặc chuyển động, không hạ opacity thành xám. */
+.mark__ring {
+  stroke: currentColor;
+  opacity: 1;
+  transition: opacity 400ms ease, stroke 400ms ease;
 }
 
 .mark__dot {
-  fill: var(--lugo-cream);
-  opacity: 0.35;
-  transition: opacity 400ms ease, fill 400ms ease;
-  /* view-box chứ KHÔNG phải fill-box: transform-origin ở đây tính bằng toạ độ
-     viewBox (50px 50px). fill-box sẽ lấy gốc theo hộp bao của chính hình, làm
-     tâm xoay lệch đi. */
-  transform-box: view-box;
-}
-
-/* listening: chấm (bạn) sống dậy. Vòng sáng vừa -- Lugo đang chú ý, chưa nói. */
-.mark[data-state='listening'] .mark__ring { opacity: 0.5; }
-.mark[data-state='listening'] .mark__dot {
   fill: var(--lugo-accent);
-  opacity: 1;
-}
-
-/* thinking: vòng (Lugo) xoay. Chấm lặng -- lượt nói đã xong. */
-.mark[data-state='thinking'] .mark__ring {
   opacity: 0.9;
-  transform-origin: 50px 50px;
-  animation: mark-spin 1.6s linear infinite;
+  transform-box: view-box;
+  transition: opacity 400ms ease, fill 400ms ease;
 }
 
-/* speaking: vòng cam, thở theo âm lượng (scale do JS đặt theo level). */
+/* Đường vẽ thinking: ẩn mặc định, chỉ bật ở thinking. KHÔNG đặt transform CSS ở
+   đây — đã có rotate ở thuộc tính; chỉ animate stroke-dasharray. */
+.mark__runner {
+  opacity: 0;
+  transition: opacity 300ms ease;
+}
+
+/* idle: nhịp thở chậm — sống, nhưng chưa làm gì. Thở cả DẤU (vòng + chấm) để chấm
+   luôn nằm đúng khe. */
+.mark[data-state='idle'] { animation: mark-breathe 5.5s ease-in-out infinite; transform-origin: center; }
+.mark[data-state='idle'] .mark__ring { opacity: 1; }
+.mark[data-state='idle'] .mark__dot { opacity: 0.9; }
+
+/* connecting: thở nhanh hơn idle, chấm mờ — chưa có gì hoạt động thật. */
+.mark[data-state='connecting'] { animation: mark-breathe 1.8s ease-in-out infinite; transform-origin: center; }
+.mark[data-state='connecting'] .mark__dot { opacity: 0.5; }
+
+/* listening: BẠN đang nói. Chấm cam nở theo giọng thật (scale do JS đặt theo level).
+   Vòng lùi nhẹ để chấm là tâm điểm. */
+.mark[data-state='listening'] .mark__ring { opacity: 0.6; }
+.mark[data-state='listening'] .mark__dot { opacity: 1; }
+
+/* thinking: đường cam→trắng (màu branding) tự vẽ quanh vòng. ẨN hẳn vòng nền (không
+   để lại vệt xám); chấm "bạn" đứng yên cam nằm TRÊN. */
+.mark[data-state='thinking'] .mark__ring { opacity: 0; }
+.mark[data-state='thinking'] .mark__dot { opacity: 1; }
+.mark[data-state='thinking'] .mark__runner {
+  opacity: 1;
+  animation: mark-draw 2.8s ease-in-out infinite;
+}
+
+/* speaking: vòng cam, KHOẢNG HỞ khép–mở như đang mở miệng nói (dash bằng CSS); kèm
+   thở nhẹ theo âm lượng (scale do JS đặt trên .mark__ringwrap). */
 .mark[data-state='speaking'] .mark__ring {
   stroke: var(--lugo-accent);
   opacity: 1;
+  animation: mark-mouth 1.9s ease-in-out infinite;
 }
+.mark[data-state='speaking'] .mark__dot { opacity: 0.35; }
 
-/* connecting: thở chậm, chưa cam -- chưa có gì hoạt động thật. */
-.mark[data-state='connecting'] .mark__ring {
-  animation: mark-breathe 1.8s ease-in-out infinite;
-}
-
-.mark[data-state='error'] .mark__ring,
-.mark[data-state='error'] .mark__dot {
+/* error: vòng + chấm chuyển đỏ danger. */
+.mark[data-state='error'] .mark__ring {
   stroke: var(--lugo-danger);
+  opacity: 0.9;
+}
+.mark[data-state='error'] .mark__dot {
   fill: var(--lugo-danger);
   opacity: 0.9;
 }
-.mark[data-state='error'] .mark__ring { fill: none; }
-
-@keyframes mark-spin {
-  to { transform: rotate(360deg); }
-}
 
 @keyframes mark-breathe {
-  0%, 100% { opacity: 0.3; }
-  50% { opacity: 0.7; }
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.04); }
 }
 
-/* Chuyển động phải phục vụ, không được ép. Bỏ xoay/thở; trạng thái vẫn đọc
-   được qua màu và độ đậm. */
+/* Loading 2 chiều BẬT NGƯỢC (thinking): cung sloshing qua lại giữa A và B, liền mạch
+   ở cả hai đầu (không cú nhảy reset); luôn chừa khoảng hở 34 ở chấm. */
+@keyframes mark-draw {
+  0%   { stroke-dasharray: 0.01 238.75; stroke-dashoffset: 0; }
+  25%  { stroke-dasharray: 204.76 34;   stroke-dashoffset: 0; }
+  50%  { stroke-dasharray: 0.01 238.75; stroke-dashoffset: -204.75; }
+  75%  { stroke-dasharray: 204.76 34;   stroke-dashoffset: 0; }
+  100% { stroke-dasharray: 0.01 238.75; stroke-dashoffset: 0; }
+}
+
+/* Miệng nói (speaking): từng đầu mở ra–thu vào luân phiên như đang mấp máy. Chấm
+   luôn ở giữa khe. */
+@keyframes mark-mouth {
+  0%   { stroke-dasharray: 204.76 34;  stroke-dashoffset: 0; }
+  25%  { stroke-dasharray: 180 58.76;  stroke-dashoffset: 0; }
+  50%  { stroke-dasharray: 204.76 34;  stroke-dashoffset: 0; }
+  75%  { stroke-dasharray: 180 58.76;  stroke-dashoffset: -24.76; }
+  100% { stroke-dasharray: 204.76 34;  stroke-dashoffset: 0; }
+}
+
+/* Chuyển động phải phục vụ, không được ép. Bỏ thở/vẽ; trạng thái vẫn đọc được qua
+   màu và độ đậm. */
 @media (prefers-reduced-motion: reduce) {
+  .mark,
+  .mark__ringwrap,
   .mark__ring,
+  .mark__runner,
   .mark__dot {
     animation: none !important;
-    transition: opacity 200ms ease, stroke 200ms ease, fill 200ms ease;
   }
 }
