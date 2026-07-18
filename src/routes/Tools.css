@@ -18,10 +18,8 @@
   line-height: 1.5;
 }
 
-.tool__card {
-  border: 1px solid var(--lugo-cream-deep);
-  border-radius: 12px;
-  padding: 18px 16px;
+/* Card lo border/padding; ở đây chỉ còn khoảng cách riêng của màn hình này. */
+.tool__section {
   margin-bottom: 16px;
   display: grid;
   gap: 12px;
@@ -47,47 +45,6 @@
 .tool__file:focus-visible {
   outline: 2px solid var(--lugo-accent-warm);
   outline-offset: 2px;
-}
-
-.tool__area {
-  font: inherit;
-  padding: 12px 14px;
-  border-radius: 10px;
-  border: 1px solid var(--lugo-cream-deep);
-  background: transparent;
-  color: inherit;
-  resize: vertical;
-  min-height: 96px;
-}
-.tool__area:focus-visible {
-  outline: 2px solid var(--lugo-accent-warm);
-  outline-offset: 2px;
-  border-color: transparent;
-}
-
-.tool__btn {
-  font: inherit;
-  font-size: 0.9375rem;
-  font-weight: 500;
-  padding: 12px 20px;
-  min-height: 44px;
-  border-radius: 999px;
-  border: 0;
-  cursor: pointer;
-  /* Mỗi công cụ có một hành động chính -- đây là hai chỗ duy nhất dùng cam. */
-  background: var(--lugo-accent-gradient);
-  color: #111;
-}
-.tool__btn:disabled {
-  background: none;
-  border: 1px solid currentColor;
-  color: inherit;
-  opacity: 0.4;
-  cursor: default;
-}
-.tool__btn:focus-visible {
-  outline: 2px solid var(--lugo-accent-warm);
-  outline-offset: 3px;
 }
 
 .tool__out {

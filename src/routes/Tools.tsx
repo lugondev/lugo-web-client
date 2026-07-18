@@ -1,5 +1,8 @@
 import { useState } from 'react'
 import { synthesize, transcribeFile } from '../api/tools'
+import { Button } from '../ui/Button'
+import { Card } from '../ui/Card'
+import { TextArea } from '../ui/TextArea'
 import './Tools.css'
 
 function ToText() {
@@ -15,23 +18,23 @@ function ToText() {
     setText('')
     try {
       const t = await transcribeFile(file)
-      setText(t || '(không nghe ra chữ nào)')
+      setText(t || '(nothing heard)')
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Không nhận dạng được')
+      setError(e instanceof Error ? e.message : 'Could not transcribe')
     } finally {
       setBusy(false)
     }
   }
 
   return (
-    <section className="tool__card">
-      <h2 className="tool__card-h">Ghi âm thành chữ</h2>
-      <p className="tool__hint">Chọn một file wav hoặc mp3. Lugo sẽ nghe và gõ lại.</p>
+    <Card className="tool__section">
+      <h2 className="tool__card-h">Recording to text</h2>
+      <p className="tool__hint">Pick a wav or mp3 file. Lugo will listen and type it out.</p>
       <input
         className="tool__file"
         type="file"
         accept="audio/*"
-        aria-label="Chọn file ghi âm"
+        aria-label="Choose a recording"
         onChange={(e) => {
           setFile(e.target.files?.[0] ?? null)
           setText('')
@@ -44,10 +47,10 @@ function ToText() {
         </p>
       )}
       {text && <p className="tool__out">{text}</p>}
-      <button className="tool__btn" onClick={run} disabled={!file || busy}>
-        {busy ? 'Đang nghe...' : 'Chuyển thành chữ'}
-      </button>
-    </section>
+      <Button variant="primary" onClick={run} disabled={!file || busy}>
+        {busy ? 'Listening…' : 'To text'}
+      </Button>
+    </Card>
   )
 }
 
@@ -65,41 +68,45 @@ function ToVoice() {
       const r = await synthesize(input.trim())
       setUrl(r.audioUrl)
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Không đọc được')
+      setError(e instanceof Error ? e.message : 'Could not read this out')
     } finally {
       setBusy(false)
     }
   }
 
   return (
-    <section className="tool__card">
-      <h2 className="tool__card-h">Chữ thành tiếng</h2>
-      <p className="tool__hint">Gõ gì đó, Lugo sẽ đọc lên.</p>
-      <textarea
-        className="tool__area"
-        aria-label="Đoạn chữ cần đọc"
+    <Card className="tool__section">
+      <h2 className="tool__card-h">Text to speech</h2>
+      <p className="tool__hint">Type something and Lugo will read it aloud.</p>
+      <TextArea
+        id="tool-tts-text"
+        label="Text to read"
         value={input}
         onChange={(e) => setInput(e.target.value)}
-        placeholder="Hôm nay trời đẹp quá..."
+        placeholder="Lovely day today…"
       />
       {error && (
         <p className="tool__err" role="alert">
           {error}
         </p>
       )}
-      {url && <audio className="tool__audio" controls src={url} autoPlay />}
-      <button className="tool__btn" onClick={run} disabled={!input.trim() || busy}>
-        {busy ? 'Đang đọc...' : 'Đọc lên'}
-      </button>
-    </section>
+      {url && (
+        // URL tuyệt đối do synthesize() trả về (API khác domain với client) --
+        // KHÔNG đổi thành đường dẫn tương đối, sẽ trỏ nhầm vào domain client.
+        <audio className="tool__audio" controls src={url} autoPlay />
+      )}
+      <Button variant="primary" onClick={run} disabled={!input.trim() || busy}>
+        {busy ? 'Reading…' : 'Read aloud'}
+      </Button>
+    </Card>
   )
 }
 
 export function Tools() {
   return (
     <main className="tool">
-      <h1 className="tool__h">Công cụ</h1>
-      <p className="tool__sub">Hai việc lặt vặt, không cần mở cuộc trò chuyện.</p>
+      <h1 className="tool__h">Tools</h1>
+      <p className="tool__sub">Two quick jobs, no need to open a conversation.</p>
       <ToText />
       <ToVoice />
     </main>
