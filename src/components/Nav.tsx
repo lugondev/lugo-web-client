@@ -1,13 +1,15 @@
 import './Nav.css'
 
-export type Screen = 'talk' | 'history' | 'devices' | 'tools'
+export type Screen = 'talk' | 'history' | 'devices' | 'tools' | 'profiles'
 
 // Chỉ liệt kê màn CÓ THẬT. Nav trỏ tới màn không có là nói dối người dùng.
 // Thứ tự thưa dần theo tần suất dùng: Nói là việc chính, Lịch sử là thứ bạn
-// xem sau khi nói, Thiết bị là cấu hình, Công cụ là việc lặt vặt thỉnh thoảng.
+// xem sau khi nói, Hồ sơ là cấu hình assistant, Thiết bị là cấu hình thiết
+// bị, Công cụ là việc lặt vặt thỉnh thoảng.
 const ITEMS: { id: Screen; label: string }[] = [
   { id: 'talk', label: 'Talk' },
   { id: 'history', label: 'History' },
+  { id: 'profiles', label: 'Profiles' },
   { id: 'devices', label: 'Devices' },
   { id: 'tools', label: 'Tools' },
 ]

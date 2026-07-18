@@ -6,13 +6,15 @@ import { Nav, type Screen } from './components/Nav'
 import { Devices } from './screens/Devices'
 import { History } from './screens/History'
 import { Login } from './screens/Login'
+import { Profiles } from './screens/Profiles'
 import { Talk } from './screens/Talk'
 import { Tools } from './screens/Tools'
 
-// 4 màn -- ternary lồng nhau bắt đầu khó đọc. Bản đồ Screen -> component.
+// 5 màn -- ternary lồng nhau bắt đầu khó đọc. Bản đồ Screen -> component.
 const SCREENS: Record<Screen, ComponentType> = {
   talk: Talk,
   history: History,
+  profiles: Profiles,
   devices: Devices,
   tools: Tools,
 }
