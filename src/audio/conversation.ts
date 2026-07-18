@@ -83,6 +83,11 @@ export class Conversation {
     }
     this.ws.onopen = async () => {
       await this.mic.start((pcm) => {
+        // Half-duplex: đừng gửi mic khi trợ lý đang nói. Loa phát tiếng trợ lý,
+        // mic thu lại (echo) -> endpointer ở server tưởng người dùng chen ngang
+        // -> abort giữa chừng, tiếng bị ngắt sau một đoạn ngắn. Chặn tại nguồn.
+        // Đánh đổi: không ngắt lời bằng giọng khi trợ lý đang nói (chờ nói xong).
+        if (this.state === 'speaking' || this.player.playing) return
         if (this.ws?.readyState === WebSocket.OPEN) this.ws.send(pcm)
       })
       this.setState('listening')
