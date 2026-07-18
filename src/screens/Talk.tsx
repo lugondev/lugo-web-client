@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
+import { listProfiles, type Profile } from '../api/profiles'
 import { checkAudioSupport } from '../audio/capability'
 import { Conversation, type TalkState } from '../audio/conversation'
 import { LugoMark } from '../components/LugoMark'
 import { Button } from '../ui/Button'
+import { PROFILE_KEY, resolveInitialProfile } from './talkProfile'
 import './Talk.css'
 
 const STATE_LABEL: Record<TalkState, string> = {
@@ -20,6 +22,8 @@ export function Talk() {
   const [you, setYou] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [level, setLevel] = useState(0)
+  const [profiles, setProfiles] = useState<Profile[]>([])
+  const [profile, setProfile] = useState<string>('')
   const convRef = useRef<Conversation | null>(null)
 
   // Đọc level ~mỗi khung hình. Không đưa vào state của Conversation vì đây
@@ -36,6 +40,23 @@ export function Talk() {
   }, [])
 
   useEffect(() => () => convRef.current?.disconnect(), [])
+
+  useEffect(() => {
+    let alive = true
+    listProfiles()
+      .then((list) => {
+        if (!alive) return
+        setProfiles(list)
+        setProfile(resolveInitialProfile(localStorage.getItem(PROFILE_KEY), list.map((p) => p.name)))
+      })
+      .catch(() => { /* danh sách hỏng thì cứ để trống -> Start chạy bằng default server */ })
+    return () => { alive = false }
+  }, [])
+
+  function chooseProfile(name: string): void {
+    setProfile(name)
+    localStorage.setItem(PROFILE_KEY, name)
+  }
 
   async function start() {
     const support = checkAudioSupport()
@@ -58,7 +79,7 @@ export function Talk() {
       onUserText: setYou,
       onReplyText: (t) => setReply((prev) => (prev ? `${prev} ${t}` : t)),
       onError: (m) => setError(m),
-    })
+    }, profile || undefined)
     convRef.current = conv
     await conv.connect()
   }
@@ -75,6 +96,21 @@ export function Talk() {
     <main className="talk" data-surface="talk">
       <div className="talk__bar">
         <span className="talk__wordmark">LUGO</span>
+        {profiles.length > 0 && (
+          <label className="talk__profile">
+            <span className="sr-only">Assistant</span>
+            <select
+              aria-label="Assistant"
+              value={profile}
+              disabled={live}
+              onChange={(e) => chooseProfile(e.target.value)}
+            >
+              {profiles.map((p) => (
+                <option key={p.name} value={p.name}>{p.nickname || p.name}</option>
+              ))}
+            </select>
+          </label>
+        )}
       </div>
 
       <div className="talk__stage">
