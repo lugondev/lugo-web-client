@@ -86,4 +86,12 @@ describe('profiles api', () => {
       jsonResponse({ detail: "'mine' already exists" }, 409)))
     await expect(createProfile({ name: 'mine' } as never)).rejects.toThrow(/already exists|taken/i)
   })
+
+  it('surfaces FastAPI 422 validation errors (detail is an array of {loc,msg,type})', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(
+      jsonResponse({
+        detail: [{ loc: ['body', 'llm', 'base_url'], msg: 'field required', type: 'value_error' }],
+      }, 422)))
+    await expect(createProfile({ name: 'mine' } as never)).rejects.toThrow(/field required/)
+  })
 })

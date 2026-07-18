@@ -33,6 +33,9 @@ async function errorFrom(resp: Response): Promise<Error> {
     const body = await resp.json()
     const raw = body?.error ?? body?.detail
     if (typeof raw === 'string') msg = raw
+    else if (Array.isArray(raw)) {
+      msg = raw.map((e: { msg?: string }) => e?.msg).filter(Boolean).join('; ')
+    }
   } catch {
     // body không phải JSON -- rơi xuống thông báo mặc định
   }

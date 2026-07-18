@@ -21,6 +21,7 @@ export function Profiles() {
   const [cloneName, setCloneName] = useState('')
 
   function refresh(): void {
+    setError(null)
     listProfiles().then(setProfiles).catch((e) => setError((e as Error).message))
   }
   useEffect(refresh, [])
