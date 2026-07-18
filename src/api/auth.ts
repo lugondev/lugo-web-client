@@ -10,7 +10,7 @@ export async function login(username: string, password: string): Promise<void> {
     body: JSON.stringify({ username, password }),
   })
   if (!resp.ok) {
-    throw new Error('Sai tên đăng nhập hoặc mật khẩu')
+    throw new Error('Wrong username or password')
   }
   const body = await resp.json()
   const { access_token, refresh_token } = body.data ?? {}
@@ -19,7 +19,7 @@ export async function login(username: string, password: string): Promise<void> {
   // -- getAccessToken() sẽ khác null, isAuthed() thành true với token rác.
   // Đây không phải sai mật khẩu (không được nói vậy), mà là máy chủ hỏng.
   if (typeof access_token !== 'string' || access_token === '' || typeof refresh_token !== 'string' || refresh_token === '') {
-    throw new Error('Máy chủ trả về dữ liệu không hợp lệ')
+    throw new Error('The server returned invalid data')
   }
   saveTokens(access_token, refresh_token)
 }

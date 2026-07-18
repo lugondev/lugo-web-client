@@ -53,11 +53,11 @@ describe('history api', () => {
     expect(d.messages[0].role).toBe('user')
   })
 
-  it('getSession 404 ném lỗi TIẾNG VIỆT, không phải chuỗi của server', async () => {
-    // Người dùng cuối là người Việt. Một vòng trước ta đã lỡ hiện
+  it('getSession 404 ném lỗi TIẾNG ANH thân thiện, không phải chuỗi của server', async () => {
+    // Người dùng cuối không đọc lỗi kỹ thuật thô. Một vòng trước ta đã lỡ hiện
     // "pairing code is invalid or expired" thẳng vào mặt họ.
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse({ detail: "Session 's1' not found" }, 404)))
-    await expect(getSession('s1')).rejects.toThrow(/không tìm thấy|không còn/i)
+    await expect(getSession('s1')).rejects.toThrow(/could not be found|deleted/i)
   })
 
   it('deleteSession gọi đúng method DELETE', async () => {

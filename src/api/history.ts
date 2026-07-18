@@ -23,12 +23,12 @@ export type SessionDetail = SessionRow & { messages: Message[] }
  */
 async function errorFrom(resp: Response): Promise<Error> {
   if (resp.status === 404) {
-    return new Error('Không tìm thấy cuộc trò chuyện này. Có thể nó đã bị xoá.')
+    return new Error('This conversation could not be found. It may have been deleted.')
   }
   if (resp.status === 401 || resp.status === 403) {
-    return new Error('Phiên đăng nhập đã hết hạn. Hãy đăng nhập lại.')
+    return new Error('Your session has expired. Please sign in again.')
   }
-  return new Error(`Máy chủ trả về lỗi ${resp.status}`)
+  return new Error(`Server returned error ${resp.status}`)
 }
 
 export async function listSessions(limit = 20, offset = 0): Promise<SessionRow[]> {

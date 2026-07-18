@@ -67,7 +67,7 @@ describe('auth', () => {
   it('200 nhưng thiếu hẳn data thì báo lỗi tử tế, không ném TypeError thô', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse({ success: true })))
 
-    await expect(login('toan', 'pw12345678')).rejects.toThrow(/không hợp lệ/)
+    await expect(login('toan', 'pw12345678')).rejects.toThrow(/invalid data/i)
     expect(isAuthed()).toBe(false)
   })
 

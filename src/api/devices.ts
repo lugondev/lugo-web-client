@@ -24,7 +24,7 @@ async function errorFrom(resp: Response): Promise<Error> {
   } catch {
     // body không phải JSON -- rơi xuống thông báo mặc định
   }
-  return new Error(`Máy chủ trả về lỗi ${resp.status}`)
+  return new Error(`Server returned error ${resp.status}`)
 }
 
 /** Dịch lỗi của server sang tiếng Việt hành động được.
@@ -36,10 +36,10 @@ async function errorFrom(resp: Response): Promise<Error> {
  */
 export function friendlyDeviceError(raw: string): string {
   if (/invalid or expired/i.test(raw)) {
-    return 'Mã không đúng hoặc đã hết hạn. Mã chỉ dùng được trong 10 phút — bật lại thiết bị để lấy mã mới.'
+    return 'That code is wrong or expired. Codes last 10 minutes — restart the device to get a new one.'
   }
   if (/already paired/i.test(raw)) {
-    return 'Thiết bị này đã ghép với một tài khoản rồi. Gỡ nó ở danh sách phía trên trước khi ghép lại.'
+    return 'This device is already paired to an account. Remove it from the list above before pairing again.'
   }
   return raw
 }

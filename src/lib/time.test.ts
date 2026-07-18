@@ -6,33 +6,33 @@ const ago = (sec: number) => new Date(NOW - sec * 1000).toISOString()
 
 describe('relativeTime', () => {
   it('null thì nói thẳng là chưa từng thấy', () => {
-    expect(relativeTime(null, NOW)).toBe('chưa kết nối lần nào')
+    expect(relativeTime(null, NOW)).toBe('never connected')
   })
 
   it('vài giây trước', () => {
-    expect(relativeTime(ago(5), NOW)).toBe('vừa xong')
+    expect(relativeTime(ago(5), NOW)).toBe('just now')
   })
 
   it('phút', () => {
-    expect(relativeTime(ago(120), NOW)).toBe('2 phút trước')
+    expect(relativeTime(ago(120), NOW)).toBe('2 min ago')
   })
 
   it('giờ', () => {
-    expect(relativeTime(ago(3 * 3600), NOW)).toBe('3 giờ trước')
+    expect(relativeTime(ago(3 * 3600), NOW)).toBe('3 h ago')
   })
 
   it('ngày', () => {
-    expect(relativeTime(ago(2 * 86400), NOW)).toBe('2 ngày trước')
+    expect(relativeTime(ago(2 * 86400), NOW)).toBe('2 d ago')
   })
 
   it('thời gian trong tương lai không ra số âm', () => {
     // Lệch đồng hồ giữa máy chủ và trình duyệt là chuyện thường.
     // "-3 phút trước" làm người dùng nghĩ app hỏng.
-    expect(relativeTime(new Date(NOW + 60000).toISOString(), NOW)).toBe('vừa xong')
+    expect(relativeTime(new Date(NOW + 60000).toISOString(), NOW)).toBe('just now')
   })
 
   it('chuỗi rác không làm sập, trả về thông báo trung thực', () => {
-    expect(relativeTime('không-phải-ngày', NOW)).toBe('chưa kết nối lần nào')
+    expect(relativeTime('không-phải-ngày', NOW)).toBe('never connected')
   })
 })
 

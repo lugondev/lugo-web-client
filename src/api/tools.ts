@@ -2,7 +2,7 @@ import { ApiUrl, apiFetch } from './client'
 
 async function viError(resp: Response, fallback: string): Promise<Error> {
   if (resp.status === 401 || resp.status === 403) {
-    return new Error('Phiên đăng nhập đã hết hạn. Hãy đăng nhập lại.')
+    return new Error('Your session has expired. Please sign in again.')
   }
   return new Error(fallback)
 }
@@ -16,7 +16,7 @@ export async function transcribeFile(file: File): Promise<string> {
   // KHÔNG đặt Content-Type: trình duyệt phải tự sinh boundary cho multipart.
   const resp = await apiFetch('/v1/stt/transcribe', { method: 'POST', body })
   if (!resp.ok) {
-    throw await viError(resp, 'Không nhận dạng được file này. Thử file wav hoặc mp3 khác xem sao.')
+    throw await viError(resp, 'Could not transcribe this file. Try a different wav or mp3.')
   }
   const json = await resp.json()
   return (json.data?.text ?? '') as string
@@ -32,11 +32,11 @@ export async function synthesize(text: string): Promise<{
     body: JSON.stringify({ text }),
   })
   if (!resp.ok) {
-    throw await viError(resp, 'Không đọc được đoạn này. Thử lại sau ít phút.')
+    throw await viError(resp, 'Could not read this out. Try again in a moment.')
   }
   const json = await resp.json()
   const url = json.data?.audio_url as string | undefined
-  if (!url) throw new Error('Máy chủ không trả về audio.')
+  if (!url) throw new Error('The server returned no audio.')
   return {
     // audio_url là đường dẫn tương đối của API. Client chạy domain KHÁC, nên
     // phải ghép base URL vào, không thì thẻ <audio> trỏ vào domain client -> 404.

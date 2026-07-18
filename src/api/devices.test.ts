@@ -76,16 +76,14 @@ describe('devices api', () => {
 })
 
 describe('friendlyDeviceError', () => {
-  it('dịch "invalid or expired" sang tiếng Việt hành động được', () => {
+  it('dịch "invalid or expired" sang tiếng Anh hành động được', () => {
     const msg = friendlyDeviceError('pairing code is invalid or expired')
-    expect(msg).not.toMatch(/invalid|expired/i)
-    expect(msg).toContain('Mã không đúng hoặc đã hết hạn')
+    expect(msg).toContain('wrong or expired')
   })
 
-  it('dịch "already paired" sang tiếng Việt hành động được', () => {
+  it('dịch "already paired" sang tiếng Anh hành động được', () => {
     const msg = friendlyDeviceError('device already paired to another account')
-    expect(msg).not.toMatch(/already paired/i)
-    expect(msg).toContain('đã ghép với một tài khoản rồi')
+    expect(msg).toContain('already paired to an account')
   })
 
   it('lỗi lạ thì trả nguyên văn -- không được nuốt mất thông tin', () => {

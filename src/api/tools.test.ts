@@ -50,9 +50,9 @@ describe('tools api', () => {
     expect(new Headers(f.mock.calls[0][1].headers).get('Authorization')).toBe('Bearer acc')
   })
 
-  it('transcribeFile lỗi thì ném tiếng Việt', async () => {
+  it('transcribeFile lỗi thì ném tiếng Anh thân thiện', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse({ detail: 'STT failed (vosk): boom' }, 500)))
-    await expect(transcribeFile(new File(['x'], 'a.wav'))).rejects.toThrow(/không|thất bại/i)
+    await expect(transcribeFile(new File(['x'], 'a.wav'))).rejects.toThrow(/could not|try/i)
   })
 
   it('synthesize gửi CHỈ text', async () => {
@@ -80,8 +80,8 @@ describe('tools api', () => {
     expect(r.audioUrl.startsWith('http')).toBe(true)
   })
 
-  it('synthesize lỗi thì ném tiếng Việt', async () => {
+  it('synthesize lỗi thì ném tiếng Anh thân thiện', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse({ success: false, error: 'engine not found' }, 400)))
-    await expect(synthesize('x')).rejects.toThrow(/không|thất bại/i)
+    await expect(synthesize('x')).rejects.toThrow(/could not|try/i)
   })
 })
