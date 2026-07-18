@@ -8,7 +8,14 @@
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "preview": "vite preview",
-    "test": "vitest run"
+    "test": "vitest run",
+    "e2e": "node scripts/e2e/ui.mjs",
+    "e2e:audio": "node scripts/e2e/audio.mjs",
+    "e2e:devices": "node scripts/e2e/devices.mjs",
+    "e2e:history": "node scripts/e2e/history.mjs",
+    "e2e:states": "node scripts/e2e/states.mjs",
+    "e2e:talk": "node scripts/e2e/talk.mjs",
+    "e2e:tools": "node scripts/e2e/tools.mjs"
   },
   "dependencies": {
     "@fontsource/be-vietnam-pro": "^5.2.8",
