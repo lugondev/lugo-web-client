@@ -64,3 +64,39 @@
   border-radius: 12px;
   padding: 16px;
 }
+
+.modal__backdrop {
+  position: fixed;
+  inset: 0;
+  background: color-mix(in srgb, var(--lugo-ink) 55%, transparent);
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  z-index: 50;
+}
+
+.modal {
+  /* Modal luôn dùng bề mặt kem, kể cả khi mở từ màn Talk nền tối -- nó là một
+     lớp nổi riêng, không thuộc nền phía sau. */
+  background: var(--lugo-cream);
+  color: var(--lugo-ink);
+  --lugo-danger: #c9372c;
+  border-radius: 16px;
+  padding: 22px;
+  width: min(380px, 100%);
+  display: grid;
+  gap: 14px;
+  box-shadow: 0 20px 60px -20px rgba(0, 0, 0, 0.5);
+}
+
+.modal__title { font-size: 1.125rem; font-weight: 600; margin: 0; }
+.modal__body { margin: 0; line-height: 1.55; opacity: 0.8; }
+.modal__actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 4px; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .modal { animation: modal-in 160ms ease; }
+  @keyframes modal-in {
+    from { transform: translateY(8px); opacity: 0; }
+    to { transform: none; opacity: 1; }
+  }
+}
