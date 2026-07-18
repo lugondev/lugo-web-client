@@ -1,6 +1,10 @@
 import { useEffect, useState } from 'react'
 import { claimDevice, friendlyDeviceError, listDevices, revokeDevice, type Device } from '../api/devices'
 import { isRecentlyActive, relativeTime } from '../lib/time'
+import { Button } from '../ui/Button'
+import { Card } from '../ui/Card'
+import { ConfirmModal } from '../ui/ConfirmModal'
+import { TextInput } from '../ui/TextInput'
 import './Devices.css'
 
 export function Devices() {
@@ -10,12 +14,13 @@ export function Devices() {
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const [confirming, setConfirming] = useState<string | null>(null)
+  const [removing, setRemoving] = useState(false)
 
   async function refresh() {
     try {
       setItems(await listDevices())
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Không tải được danh sách thiết bị')
+      setError(e instanceof Error ? e.message : 'Could not load devices')
     }
   }
 
@@ -34,11 +39,9 @@ export function Devices() {
       await refresh()
     } catch (err) {
       // Server phân biệt "mã sai" với "phần cứng đã ghép rồi" -- hai lỗi đó
-      // cần hai hành động khác nhau, nên GIỮ sự phân biệt. Nhưng người dùng
-      // cuối không đọc tiếng Anh: dịch sang tiếng Việt hành động được, lỗi lạ
-      // thì rơi về nguyên văn server thay vì mất thông tin.
+      // cần hai hành động khác nhau, nên GIỮ sự phân biệt.
       setError(
-        err instanceof Error ? friendlyDeviceError(err.message) : 'Ghép không thành công',
+        err instanceof Error ? friendlyDeviceError(err.message) : 'Pairing failed',
       )
     } finally {
       setBusy(false)
@@ -47,89 +50,92 @@ export function Devices() {
 
   async function remove(id: string) {
     setError(null)
+    setRemoving(true)
     try {
       await revokeDevice(id)
       setConfirming(null)
       await refresh()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Gỡ không thành công')
+      setError(err instanceof Error ? err.message : 'Removal failed')
+    } finally {
+      setRemoving(false)
     }
   }
 
   const active = items.filter((d) => !d.revoked)
+  const confirmingDevice = active.find((d) => d.id === confirming) ?? null
 
   return (
     <main className="dev">
-      <h1 className="dev__h">Thiết bị</h1>
-      <p className="dev__sub">Thiết bị đã ghép sẽ nói chuyện với Lugo bằng tài khoản của bạn.</p>
+      <h1 className="dev__h">Devices</h1>
+      <p className="dev__sub">Paired devices talk to Lugo using your account.</p>
 
       {active.length === 0 ? (
         <p className="dev__empty">
-          Chưa có thiết bị nào. Bật thiết bị Lugo lên — nó sẽ hiện một mã gồm 6 chữ số. Nhập mã đó
-          xuống dưới.
+          No devices yet. Turn on your Lugo device — it&apos;ll show a 6-digit code. Enter it
+          below.
         </p>
       ) : (
         <ul className="dev__list">
           {active.map((d) => (
-            <li className="dev__item" key={d.id}>
-              <div>
-                <p className="dev__name">{d.name}</p>
-                <p className="dev__meta">
-                  {isRecentlyActive(d.last_seen_at)
-                    ? 'Đang hoạt động'
-                    : `Lần cuối thấy: ${relativeTime(d.last_seen_at)}`}
-                </p>
-                <p className="dev__serial">{d.serial}</p>
-              </div>
-              {confirming === d.id ? (
-                <div style={{ display: 'flex', gap: 6 }}>
-                  <button className="dev__btn dev__btn--danger" onClick={() => remove(d.id)}>
-                    Gỡ thật
-                  </button>
-                  <button className="dev__btn" onClick={() => setConfirming(null)}>
-                    Thôi
-                  </button>
+            <li key={d.id}>
+              <Card className="dev__item">
+                <div>
+                  <p className="dev__name">{d.name}</p>
+                  <p className="dev__meta">
+                    {isRecentlyActive(d.last_seen_at)
+                      ? 'Active'
+                      : `Last seen: ${relativeTime(d.last_seen_at)}`}
+                  </p>
+                  <p className="dev__serial">{d.serial}</p>
                 </div>
-              ) : (
-                <button className="dev__btn dev__btn--danger" onClick={() => setConfirming(d.id)}>
-                  Gỡ
-                </button>
-              )}
+                <Button variant="danger" size="sm" onClick={() => setConfirming(d.id)}>
+                  Remove
+                </Button>
+              </Card>
             </li>
           ))}
         </ul>
       )}
 
       <form className="dev__form" onSubmit={pair}>
-        <input
-          className="dev__input dev__code"
-          aria-label="Mã 6 chữ số"
+        <TextInput
+          id="dev-code"
+          label="6-digit code"
+          className="dev__code"
           value={code}
           onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
           placeholder="000000"
           inputMode="numeric"
           autoComplete="one-time-code"
         />
-        <input
-          className="dev__input"
-          aria-label="Tên thiết bị"
+        <TextInput
+          id="dev-name"
+          label="Device name"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="Đặt tên, ví dụ: Loa bếp"
+          placeholder="Name it, e.g. Kitchen speaker"
         />
         {error && (
           <p className="dev__err" role="alert">
             {error}
           </p>
         )}
-        <button
-          className="dev__btn dev__btn--primary"
-          type="submit"
-          disabled={busy || code.length !== 6 || !name.trim()}
-        >
-          {busy ? 'Đang ghép...' : 'Ghép thiết bị'}
-        </button>
+        <Button variant="primary" type="submit" disabled={busy || code.length !== 6 || !name.trim()}>
+          {busy ? 'Pairing…' : 'Pair device'}
+        </Button>
       </form>
+
+      <ConfirmModal
+        open={confirming !== null}
+        title="Remove device?"
+        message={`${confirmingDevice?.name ?? 'This device'} will lose access and have to be paired again.`}
+        confirmLabel="Remove"
+        destructive
+        busy={removing}
+        onConfirm={() => confirming && remove(confirming)}
+        onCancel={() => setConfirming(null)}
+      />
     </main>
   )
 }

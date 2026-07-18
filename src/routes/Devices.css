@@ -27,9 +27,6 @@
 }
 
 .dev__item {
-  border: 1px solid var(--lugo-cream-deep);
-  border-radius: 12px;
-  padding: 14px 16px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -75,54 +72,6 @@
   letter-spacing: 0.3em;
   text-align: center;
   font-variant-numeric: tabular-nums;
-}
-
-.dev__input {
-  font: inherit;
-  padding: 12px 14px;
-  border-radius: 10px;
-  border: 1px solid var(--lugo-cream-deep);
-  background: transparent;
-  color: inherit;
-}
-
-.dev__input:focus-visible {
-  outline: 2px solid var(--lugo-accent-warm);
-  outline-offset: 2px;
-  border-color: transparent;
-}
-
-.dev__btn {
-  font: inherit;
-  font-size: 0.9375rem;
-  font-weight: 500;
-  padding: 12px 20px;
-  border-radius: 999px;
-  border: 1px solid currentColor;
-  background: none;
-  color: inherit;
-  cursor: pointer;
-  opacity: 0.75;
-}
-.dev__btn:hover { opacity: 1; }
-.dev__btn:focus-visible {
-  outline: 2px solid var(--lugo-accent-warm);
-  outline-offset: 3px;
-}
-
-/* Hành động chính của màn này -- chỗ duy nhất được dùng cam ở đây. */
-.dev__btn--primary {
-  background: var(--lugo-accent-gradient);
-  color: #111;
-  border-color: transparent;
-  opacity: 1;
-}
-
-.dev__btn--danger {
-  border-color: var(--lugo-danger);
-  color: var(--lugo-danger);
-  font-size: 0.8125rem;
-  padding: 8px 14px;
 }
 
 .dev__err {

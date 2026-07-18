@@ -1,52 +1,47 @@
 import { useEffect, useState } from 'react'
 import { deleteSession, getSession, listSessions, type SessionDetail, type SessionRow } from '../api/history'
 import { relativeTime } from '../lib/time'
+import { Button } from '../ui/Button'
+import { ConfirmModal } from '../ui/ConfirmModal'
 import './History.css'
 
 function Detail({ id, onBack, onDeleted }: { id: string; onBack: () => void; onDeleted: () => void }) {
   const [data, setData] = useState<SessionDetail | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [confirming, setConfirming] = useState(false)
+  const [removing, setRemoving] = useState(false)
 
   useEffect(() => {
     let alive = true
     getSession(id)
       .then((d) => alive && setData(d))
-      .catch((e) => alive && setError(e instanceof Error ? e.message : 'Không tải được'))
+      .catch((e) => alive && setError(e instanceof Error ? e.message : 'Could not load'))
     return () => {
       alive = false
     }
   }, [id])
 
   async function remove() {
+    setRemoving(true)
     try {
       await deleteSession(id)
       onDeleted()
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Xoá không thành công')
+      setError(e instanceof Error ? e.message : 'Delete failed')
+    } finally {
+      setRemoving(false)
     }
   }
 
   return (
     <main className="his">
       <div className="his__bar">
-        <button className="his__btn" onClick={onBack}>
-          Quay lại
-        </button>
-        {confirming ? (
-          <span style={{ display: 'flex', gap: 6 }}>
-            <button className="his__btn his__btn--danger" onClick={remove}>
-              Xoá thật
-            </button>
-            <button className="his__btn" onClick={() => setConfirming(false)}>
-              Thôi
-            </button>
-          </span>
-        ) : (
-          <button className="his__btn his__btn--danger" onClick={() => setConfirming(true)}>
-            Xoá
-          </button>
-        )}
+        <Button variant="secondary" size="sm" onClick={onBack}>
+          Back
+        </Button>
+        <Button variant="danger" size="sm" onClick={() => setConfirming(true)}>
+          Delete
+        </Button>
       </div>
 
       {error && (
@@ -56,19 +51,30 @@ function Detail({ id, onBack, onDeleted }: { id: string; onBack: () => void; onD
       )}
 
       {data && data.messages.length === 0 && (
-        <p className="his__empty">Cuộc trò chuyện này không có nội dung nào.</p>
+        <p className="his__empty">This conversation has no content.</p>
       )}
 
       {data && data.messages.length > 0 && (
         <div className="his__turns">
           {data.messages.map((m, i) => (
             <div className={`his__turn his__turn--${m.role}`} key={`${m.turn}-${i}`}>
-              <p className="his__who">{m.role === 'user' ? 'Bạn' : 'Lugo'}</p>
+              <p className="his__who">{m.role === 'user' ? 'YOU' : 'LUGO'}</p>
               <p className="his__said">{m.content}</p>
             </div>
           ))}
         </div>
       )}
+
+      <ConfirmModal
+        open={confirming}
+        title="Delete conversation?"
+        message="This can't be undone."
+        confirmLabel="Delete"
+        destructive
+        busy={removing}
+        onConfirm={remove}
+        onCancel={() => setConfirming(false)}
+      />
     </main>
   )
 }
@@ -84,7 +90,7 @@ export function History() {
       setRows(await listSessions(50))
       setError(null)
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Không tải được lịch sử')
+      setError(e instanceof Error ? e.message : 'Could not load history')
     }
   }
 
@@ -107,8 +113,8 @@ export function History() {
 
   return (
     <main className="his">
-      <h1 className="his__h">Lịch sử</h1>
-      <p className="his__sub">Những gì bạn và Lugo đã nói với nhau.</p>
+      <h1 className="his__h">History</h1>
+      <p className="his__sub">Everything you and Lugo have said.</p>
 
       {error && (
         <p className="his__err" role="alert">
@@ -117,15 +123,15 @@ export function History() {
       )}
 
       {!error && rows.length === 0 ? (
-        <p className="his__empty">Chưa có cuộc trò chuyện nào. Sang mục Nói để bắt đầu.</p>
+        <p className="his__empty">No conversations yet. Head to Talk to start.</p>
       ) : (
         <ul className="his__list">
           {rows.map((r) => (
             <li key={r.id}>
               <button className="his__row" onClick={() => setOpen(r.id)}>
-                <p className="his__preview">{r.preview || 'Không có nội dung'}</p>
+                <p className="his__preview">{r.preview || 'No content'}</p>
                 <p className="his__meta">
-                  {relativeTime(r.created_at)} · {r.message_count} tin nhắn
+                  {relativeTime(r.created_at)} · {r.message_count} messages
                 </p>
               </button>
             </li>
