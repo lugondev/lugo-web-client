@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { wsUrl } from './conversation'
+import { buildParams, wsUrl } from './conversation'
 
 describe('wsUrl', () => {
   it('http thành ws', () => {
@@ -16,5 +16,21 @@ describe('wsUrl', () => {
 
   it('không đụng tới phần còn lại của URL', () => {
     expect(wsUrl('https://api.example.com:8443/base', '/x')).toBe('wss://api.example.com:8443/base/x')
+  })
+})
+
+describe('buildParams', () => {
+  it('keeps the base audio params', () => {
+    const p = buildParams()
+    expect(p.get('audio_out')).toBe('opus')
+    expect(p.get('output')).toBe('audio,text')
+    expect(p.get('sample_rate')).toBe('16000')
+    expect(p.get('output_sample_rate')).toBe('24000')
+  })
+
+  it('adds profile only when given', () => {
+    expect(buildParams('esp32').get('profile')).toBe('esp32')
+    expect(buildParams().has('profile')).toBe(false)
+    expect(buildParams('').has('profile')).toBe(false) // empty string = no profile
   })
 })

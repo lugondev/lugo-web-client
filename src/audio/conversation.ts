@@ -9,14 +9,18 @@ export function wsUrl(base: string, path: string): string {
   return `${base.replace(/^http/, 'ws')}${path}`
 }
 
-const PARAMS = new URLSearchParams({
-  // Opus qua chính socket đã xác thực: audio_out=url sẽ trỏ vào /artifacts,
-  // vốn KHÔNG có auth -- ai có URL cũng nghe được hội thoại.
-  audio_out: 'opus',
-  output: 'audio,text',
-  sample_rate: '16000',
-  output_sample_rate: '24000',
-})
+export function buildParams(profile?: string): URLSearchParams {
+  const p = new URLSearchParams({
+    // Opus qua chính socket đã xác thực: audio_out=url sẽ trỏ vào /artifacts,
+    // vốn KHÔNG có auth -- ai có URL cũng nghe được hội thoại.
+    audio_out: 'opus',
+    output: 'audio,text',
+    sample_rate: '16000',
+    output_sample_rate: '24000',
+  })
+  if (profile) p.set('profile', profile)
+  return p
+}
 
 export interface ConversationCallbacks {
   onState?: (s: TalkState) => void
@@ -31,9 +35,11 @@ export class Conversation {
   private player = new Player()
   private state: TalkState = 'idle'
   private cb: ConversationCallbacks
+  private profile?: string
 
-  constructor(cb: ConversationCallbacks = {}) {
+  constructor(cb: ConversationCallbacks = {}, profile?: string) {
     this.cb = cb
+    this.profile = profile
   }
 
   /** Mức để vẽ vòng tròn: khi Lugo nói thì lấy theo tiếng nó, còn lại lấy theo
@@ -59,7 +65,7 @@ export class Conversation {
 
     // Token đi qua subprotocol, KHÔNG qua query string: query string bị ghi vào
     // access log và lịch sử proxy.
-    this.ws = new WebSocket(wsUrl(ApiUrl(''), `/v1/conversation/stream?${PARAMS}`), [
+    this.ws = new WebSocket(wsUrl(ApiUrl(''), `/v1/conversation/stream?${buildParams(this.profile)}`), [
       'bearer',
       token,
     ])
