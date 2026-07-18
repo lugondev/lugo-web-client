@@ -69,53 +69,6 @@
   align-items: center;
 }
 
-.talk__btn {
-  font: inherit;
-  font-size: 0.9375rem;
-  font-weight: 500;
-  padding: 13px 28px;
-  border-radius: 999px;
-  cursor: pointer;
-  border: 1px solid currentColor;
-  background: none;
-  color: var(--lugo-fg);
-  opacity: 0.75;
-  transition: opacity 160ms ease;
-}
-.talk__btn:hover { opacity: 1; }
-
-/* Đăng xuất -- việc ít quan trọng nhất trên màn này. Vẫn là nút thật, chạm
-   được thoải mái (>=40px), chỉ là không được to tiếng như nút chính. */
-.talk__btn--ghost {
-  font-size: 0.8125rem;
-  padding: 8px 14px;
-  min-height: 40px;
-  display: inline-flex;
-  align-items: center;
-  border-color: transparent;
-  opacity: 0.5;
-}
-.talk__btn--ghost:hover {
-  opacity: 0.85;
-  border-color: currentColor;
-}
-.talk__btn--ghost:focus-visible {
-  opacity: 1;
-}
-
-/* Hành động chính -- một trong hai chỗ duy nhất được dùng cam. */
-.talk__btn--primary {
-  background: var(--lugo-accent-gradient);
-  color: #111;
-  border-color: transparent;
-  opacity: 1;
-}
-
-.talk__btn:focus-visible {
-  outline: 2px solid var(--lugo-accent-warm);
-  outline-offset: 3px;
-}
-
 .sr-only {
   position: absolute;
   width: 1px; height: 1px;

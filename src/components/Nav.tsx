@@ -6,10 +6,10 @@ export type Screen = 'talk' | 'history' | 'devices' | 'tools'
 // Thứ tự thưa dần theo tần suất dùng: Nói là việc chính, Lịch sử là thứ bạn
 // xem sau khi nói, Thiết bị là cấu hình, Công cụ là việc lặt vặt thỉnh thoảng.
 const ITEMS: { id: Screen; label: string }[] = [
-  { id: 'talk', label: 'Nói' },
-  { id: 'history', label: 'Lịch sử' },
-  { id: 'devices', label: 'Thiết bị' },
-  { id: 'tools', label: 'Công cụ' },
+  { id: 'talk', label: 'Talk' },
+  { id: 'history', label: 'History' },
+  { id: 'devices', label: 'Devices' },
+  { id: 'tools', label: 'Tools' },
 ]
 
 export function Nav({
@@ -22,7 +22,7 @@ export function Nav({
   onLogout: () => void
 }) {
   return (
-    <nav className="nav" aria-label="Điều hướng chính">
+    <nav className="nav" aria-label="Main navigation">
       {/* Bốn màn thật, ngang hàng nhau -- nhóm riêng và canh giữa trong phần
           còn lại sau khi trừ chỗ cho Đăng xuất. */}
       <div className="nav__tabs">
@@ -42,7 +42,7 @@ export function Nav({
           nav__btn (không aria-current, không dáng pill/tab) để không đọc
           nhầm thành một mục ngang hàng với Nói/Lịch sử/Thiết bị/Công cụ. */}
       <button className="nav__logout" onClick={onLogout}>
-        Đăng xuất
+        Sign out
       </button>
     </nav>
   )

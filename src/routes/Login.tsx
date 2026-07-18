@@ -1,5 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { login } from '../api/auth'
+import { Button } from '../ui/Button'
+import { TextInput } from '../ui/TextInput'
 
 export function Login({ onDone }: { onDone: () => void }) {
   const [username, setUsername] = useState('')
@@ -25,25 +27,27 @@ export function Login({ onDone }: { onDone: () => void }) {
     <main style={{ display: 'grid', placeItems: 'center', minHeight: '100vh', padding: 24 }}>
       <form onSubmit={submit} style={{ display: 'grid', gap: 12, width: 'min(320px, 100%)' }}>
         <h1 style={{ margin: 0, fontSize: 28, letterSpacing: '0.2em' }}>LUGO</h1>
-        <input
-          aria-label="Tên đăng nhập"
+        <TextInput
+          id="login-username"
+          label="Username"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
-          placeholder="Tên đăng nhập"
+          placeholder="Username"
           autoComplete="username"
         />
-        <input
-          aria-label="Mật khẩu"
+        <TextInput
+          id="login-password"
+          label="Password"
           type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          placeholder="Mật khẩu"
+          placeholder="Password"
           autoComplete="current-password"
         />
         {error && <p role="alert" style={{ color: 'var(--lugo-danger)', margin: 0 }}>{error}</p>}
-        <button type="submit" disabled={busy} style={{ background: 'var(--lugo-accent-gradient)', border: 0, padding: 12, borderRadius: 8, color: '#111', fontWeight: 600 }}>
-          {busy ? 'Đang vào...' : 'Vào'}
-        </button>
+        <Button variant="primary" type="submit" fullWidth disabled={busy}>
+          {busy ? 'Signing in…' : 'Sign in'}
+        </Button>
       </form>
     </main>
   )

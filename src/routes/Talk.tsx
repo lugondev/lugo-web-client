@@ -2,15 +2,16 @@ import { useEffect, useRef, useState } from 'react'
 import { checkAudioSupport } from '../audio/capability'
 import { Conversation, type TalkState } from '../audio/conversation'
 import { LugoMark } from '../components/LugoMark'
+import { Button } from '../ui/Button'
 import './Talk.css'
 
 const STATE_LABEL: Record<TalkState, string> = {
-  idle: 'Chưa kết nối',
-  connecting: 'Đang kết nối',
-  listening: 'Đang nghe',
-  thinking: 'Đang nghĩ',
-  speaking: 'Đang trả lời',
-  error: 'Có lỗi',
+  idle: 'Idle',
+  connecting: 'Connecting',
+  listening: 'Listening',
+  thinking: 'Thinking',
+  speaking: 'Speaking',
+  error: 'Error',
 }
 
 export function Talk() {
@@ -40,7 +41,7 @@ export function Talk() {
     const support = checkAudioSupport()
     if (!support.ok) {
       // Nói thật thiếu gì, và nói cách sửa. Không "trình duyệt không hỗ trợ".
-      setError(`Trình duyệt này thiếu ${support.missing.join(', ')}. Hãy mở bằng Chrome hoặc Edge bản mới, qua HTTPS.`)
+      setError(`This browser is missing ${support.missing.join(', ')}. Open it in a recent Chrome or Edge, over HTTPS.`)
       setState('error')
       return
     }
@@ -90,9 +91,9 @@ export function Talk() {
         ) : reply ? (
           <p className="talk__reply">{reply}</p>
         ) : live ? (
-          <p className="talk__hint">Cứ nói tự nhiên. Muốn ngắt lời thì cứ nói chen vào.</p>
+          <p className="talk__hint">Just talk. Cut in any time to interrupt.</p>
         ) : (
-          <p className="talk__hint">Nhấn để bắt đầu. Cứ nói như nói với một người bạn.</p>
+          <p className="talk__hint">Tap to start. Talk like you would with a friend.</p>
         )}
 
         {you && !error && <p className="talk__you">{you}</p>}
@@ -100,13 +101,13 @@ export function Talk() {
 
       <div className="talk__controls">
         {live ? (
-          <button className="talk__btn" onClick={stop}>
-            Dừng
-          </button>
+          <Button variant="secondary" onClick={stop}>
+            Stop
+          </Button>
         ) : (
-          <button className="talk__btn talk__btn--primary" onClick={start}>
-            Bắt đầu nói
-          </button>
+          <Button variant="primary" onClick={start}>
+            Start talking
+          </Button>
         )}
       </div>
     </main>
