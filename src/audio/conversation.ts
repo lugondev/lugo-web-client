@@ -9,7 +9,7 @@ export function wsUrl(base: string, path: string): string {
   return `${base.replace(/^http/, 'ws')}${path}`
 }
 
-export function buildParams(profile?: string): URLSearchParams {
+export function buildParams(profile?: string, sessionId?: string): URLSearchParams {
   const p = new URLSearchParams({
     // Opus qua chính socket đã xác thực: audio_out=url sẽ trỏ vào /artifacts,
     // vốn KHÔNG có auth -- ai có URL cũng nghe được hội thoại.
@@ -19,6 +19,7 @@ export function buildParams(profile?: string): URLSearchParams {
     output_sample_rate: '24000',
   })
   if (profile) p.set('profile', profile)
+  if (sessionId) p.set('session_id', sessionId)
   return p
 }
 
@@ -36,10 +37,12 @@ export class Conversation {
   private state: TalkState = 'idle'
   private cb: ConversationCallbacks
   private profile?: string
+  private sessionId?: string
 
-  constructor(cb: ConversationCallbacks = {}, profile?: string) {
+  constructor(cb: ConversationCallbacks = {}, profile?: string, sessionId?: string) {
     this.cb = cb
     this.profile = profile
+    this.sessionId = sessionId
   }
 
   /** Mức để vẽ vòng tròn: khi Lugo nói thì lấy theo tiếng nó, còn lại lấy theo
@@ -65,7 +68,7 @@ export class Conversation {
 
     // Token đi qua subprotocol, KHÔNG qua query string: query string bị ghi vào
     // access log và lịch sử proxy.
-    this.ws = new WebSocket(wsUrl(ApiUrl(''), `/v1/conversation/stream?${buildParams(this.profile)}`), [
+    this.ws = new WebSocket(wsUrl(ApiUrl(''), `/v1/conversation/stream?${buildParams(this.profile, this.sessionId)}`), [
       'bearer',
       token,
     ])

@@ -33,4 +33,10 @@ describe('buildParams', () => {
     expect(buildParams().has('profile')).toBe(false)
     expect(buildParams('').has('profile')).toBe(false) // empty string = no profile
   })
+
+  it('adds session_id only when given', () => {
+    expect(buildParams(undefined, 's1').get('session_id')).toBe('s1')
+    expect(buildParams().has('session_id')).toBe(false)
+    expect(buildParams('esp32', 's1').get('session_id')).toBe('s1')
+  })
 })
