@@ -14,8 +14,11 @@ vi.mock('./ProfileEditor', () => ({ ProfileEditor: () => <div>editor</div> }))
 import { listProfiles, deleteProfile } from '../api/profiles'
 import { Profiles } from './Profiles'
 
-const SHARED = { name: 'esp32', owner_id: null, nickname: 'ESP32', mcp_servers: [] }
-const MINE = { name: 'mine', owner_id: 'u1', nickname: 'Mine', mcp_servers: [] }
+const LLM = { base_url: '', api_key: '', model: 'gpt-4o-mini', engine: 'openai' }
+const STT = { profile: '', engine: 'whisper', language: '', model: '' }
+const TTS = { profile_name: '' }
+const SHARED = { name: 'esp32', owner_id: null, nickname: 'ESP32', mcp_servers: [], llm: LLM, stt: STT, tts: TTS }
+const MINE = { name: 'mine', owner_id: 'u1', nickname: 'Mine', mcp_servers: [], llm: LLM, stt: STT, tts: TTS }
 
 beforeEach(() => {
   vi.clearAllMocks()

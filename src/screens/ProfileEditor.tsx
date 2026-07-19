@@ -65,16 +65,20 @@ export function ProfileEditor({
 
   return (
     <div className="pe">
+      <div className="pe__bar">
+        <Button variant="secondary" size="sm" onClick={onCancel}>Back</Button>
+      </div>
+
       {error && <p className="pe__error" role="alert">{error}</p>}
 
       <fieldset className="pe__group">
         <legend>Basic</legend>
         <label className="pe__field">Name
-          <input aria-label="Name" value={form.name} readOnly={mode === 'edit'}
+          <input className="input" aria-label="Name" value={form.name} readOnly={mode === 'edit'}
             onChange={(e) => patch({ name: e.target.value })} />
         </label>
         <label className="pe__field">Nickname
-          <input aria-label="Nickname" value={form.nickname}
+          <input className="input" aria-label="Nickname" value={form.nickname}
             onChange={(e) => patch({ nickname: e.target.value })} />
         </label>
         <label className="pe__check">
@@ -87,11 +91,11 @@ export function ProfileEditor({
       <fieldset className="pe__group">
         <legend>LLM</legend>
         <label className="pe__field">Engine
-          <input aria-label="LLM engine" list="llm-engines" value={form.llm.engine}
+          <input className="input" aria-label="LLM engine" list="llm-engines" value={form.llm.engine}
             onChange={(e) => patch({ llm: { ...form.llm, engine: e.target.value } })} />
         </label>
         <label className="pe__field">Model
-          <input aria-label="LLM model" list="llm-models" value={form.llm.model}
+          <input className="input" aria-label="LLM model" list="llm-models" value={form.llm.model}
             onChange={(e) => patch({ llm: { ...form.llm, model: e.target.value } })} />
         </label>
         <datalist id="llm-engines">
@@ -101,11 +105,11 @@ export function ProfileEditor({
           {llmOptions.map((o) => <option key={o.id} value={o.model_id}>{o.label}</option>)}
         </datalist>
         <label className="pe__field">Base URL
-          <input aria-label="LLM base_url" value={form.llm.base_url}
+          <input className="input" aria-label="LLM base_url" value={form.llm.base_url}
             onChange={(e) => patch({ llm: { ...form.llm, base_url: e.target.value } })} />
         </label>
         <label className="pe__field">API key
-          <input aria-label="API key" type="password" placeholder="leave blank to keep existing"
+          <input className="input" aria-label="API key" type="password" placeholder="leave blank to keep existing"
             value={form.llm.api_key}
             onChange={(e) => patch({ llm: { ...form.llm, api_key: e.target.value } })} />
         </label>
@@ -113,28 +117,28 @@ export function ProfileEditor({
 
       <fieldset className="pe__group">
         <legend>System prompt</legend>
-        <textarea aria-label="System prompt" rows={4} value={form.system_prompt}
+        <textarea className="textarea" aria-label="System prompt" rows={4} value={form.system_prompt}
           onChange={(e) => patch({ system_prompt: e.target.value })} />
       </fieldset>
 
       <fieldset className="pe__group">
         <legend>STT</legend>
         <label className="pe__field">Preset
-          <select aria-label="STT preset" value={form.stt.profile}
+          <select className="input" aria-label="STT preset" value={form.stt.profile}
             onChange={(e) => patch({ stt: { ...form.stt, profile: e.target.value } })}>
             {STT_PRESETS.map((p) => <option key={p} value={p}>{p || '(server default)'}</option>)}
           </select>
         </label>
         <label className="pe__field">Engine
-          <input aria-label="STT engine" value={form.stt.engine}
+          <input className="input" aria-label="STT engine" value={form.stt.engine}
             onChange={(e) => patch({ stt: { ...form.stt, engine: e.target.value } })} />
         </label>
         <label className="pe__field">Language
-          <input aria-label="STT language" value={form.stt.language}
+          <input className="input" aria-label="STT language" value={form.stt.language}
             onChange={(e) => patch({ stt: { ...form.stt, language: e.target.value } })} />
         </label>
         <label className="pe__field">Model
-          <input aria-label="STT model" value={form.stt.model}
+          <input className="input" aria-label="STT model" value={form.stt.model}
             onChange={(e) => patch({ stt: { ...form.stt, model: e.target.value } })} />
         </label>
       </fieldset>
@@ -142,7 +146,7 @@ export function ProfileEditor({
       <fieldset className="pe__group">
         <legend>TTS</legend>
         <label className="pe__field">Voice profile
-          <select aria-label="TTS profile" value={form.tts.profile_name}
+          <select className="input" aria-label="TTS profile" value={form.tts.profile_name}
             onChange={(e) => patch({ tts: { profile_name: e.target.value } })}>
             <option value="">(server default)</option>
             {ttsProfiles.map((t) => <option key={t.name} value={t.name}>{t.nickname || t.name}</option>)}
@@ -155,11 +159,11 @@ export function ProfileEditor({
         {mcp.map((row, i) => (
           <div className="pe__mcp" key={i}>
             <label className="pe__field">Name
-              <input aria-label={`MCP server ${i + 1} name`} value={row.name}
+              <input className="input" aria-label={`MCP server ${i + 1} name`} value={row.name}
                 onChange={(e) => setMcp((m) => m.map((r, j) => j === i ? { ...r, name: e.target.value } : r))} />
             </label>
             <label className="pe__field">URL
-              <input aria-label={`MCP server ${i + 1} url`} value={row.url}
+              <input className="input" aria-label={`MCP server ${i + 1} url`} value={row.url}
                 onChange={(e) => setMcp((m) => m.map((r, j) => j === i ? { ...r, url: e.target.value } : r))} />
             </label>
             <label className="pe__check">
@@ -168,15 +172,15 @@ export function ProfileEditor({
               Enabled
             </label>
             <label className="pe__field">Headers (JSON)
-              <textarea aria-label={`MCP server ${i + 1} headers (JSON)`} rows={2} value={row.headersText}
+              <textarea className="textarea" aria-label={`MCP server ${i + 1} headers (JSON)`} rows={2} value={row.headersText}
                 onChange={(e) => setMcp((m) => m.map((r, j) => j === i ? { ...r, headersText: e.target.value } : r))} />
             </label>
-            <Button variant="secondary" onClick={() => setMcp((m) => m.filter((_, j) => j !== i))}>
+            <Button variant="secondary" size="sm" onClick={() => setMcp((m) => m.filter((_, j) => j !== i))}>
               {`Remove MCP server ${i + 1}`}
             </Button>
           </div>
         ))}
-        <Button variant="secondary"
+        <Button variant="secondary" size="sm"
           onClick={() => setMcp((m) => [...m, { name: '', url: '', enabled: true, headersText: '{}' }])}>
           Add MCP server
         </Button>
@@ -190,34 +194,34 @@ export function ProfileEditor({
           Enabled
         </label>
         <label className="pe__field">Mode
-          <select aria-label="Memory mode" value={form.memory.mode}
+          <select className="input" aria-label="Memory mode" value={form.memory.mode}
             onChange={(e) => patch({ memory: { ...form.memory, mode: e.target.value } })}>
             <option value="all">all</option>
             <option value="semantic">semantic</option>
           </select>
         </label>
         <label className="pe__field">Top K
-          <input aria-label="Memory top_k" type="number" value={form.memory.top_k}
+          <input className="input" aria-label="Memory top_k" type="number" value={form.memory.top_k}
             onChange={(e) => patch({ memory: { ...form.memory, top_k: Number(e.target.value) } })} />
         </label>
         <label className="pe__field">Extractor model
-          <input aria-label="Memory extractor_model" value={form.memory.extractor_model}
+          <input className="input" aria-label="Memory extractor_model" value={form.memory.extractor_model}
             onChange={(e) => patch({ memory: { ...form.memory, extractor_model: e.target.value } })} />
         </label>
         <label className="pe__field">Embed model
-          <input aria-label="Memory embed_model" value={form.memory.embed_model}
+          <input className="input" aria-label="Memory embed_model" value={form.memory.embed_model}
             onChange={(e) => patch({ memory: { ...form.memory, embed_model: e.target.value } })} />
         </label>
         <label className="pe__field">Compaction threshold
-          <input aria-label="Memory compaction_threshold" type="number" value={form.memory.compaction_threshold}
+          <input className="input" aria-label="Memory compaction_threshold" type="number" value={form.memory.compaction_threshold}
             onChange={(e) => patch({ memory: { ...form.memory, compaction_threshold: Number(e.target.value) } })} />
         </label>
         <label className="pe__field">Max facts
-          <input aria-label="Memory max_facts" type="number" value={form.memory.max_facts}
+          <input className="input" aria-label="Memory max_facts" type="number" value={form.memory.max_facts}
             onChange={(e) => patch({ memory: { ...form.memory, max_facts: Number(e.target.value) } })} />
         </label>
         <label className="pe__field">Dedup threshold
-          <input aria-label="Memory dedup_threshold" type="number" step="0.01" value={form.memory.dedup_threshold}
+          <input className="input" aria-label="Memory dedup_threshold" type="number" step="0.01" value={form.memory.dedup_threshold}
             onChange={(e) => patch({ memory: { ...form.memory, dedup_threshold: Number(e.target.value) } })} />
         </label>
       </fieldset>
@@ -225,7 +229,7 @@ export function ProfileEditor({
       <fieldset className="pe__group">
         <legend>Session</legend>
         <label className="pe__field">Idle timeout (s)
-          <input aria-label="Session idle_timeout_s" type="number" value={form.session.idle_timeout_s}
+          <input className="input" aria-label="Session idle_timeout_s" type="number" value={form.session.idle_timeout_s}
             onChange={(e) => patch({ session: { idle_timeout_s: Number(e.target.value) } })} />
         </label>
       </fieldset>

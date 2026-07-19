@@ -6,11 +6,23 @@ import {
 import { emptyProfileInput, toEditableInput } from './profileForm'
 import { ProfileEditor } from './ProfileEditor'
 import { Button } from '../ui/Button'
+import { Card } from '../ui/Card'
 import { ConfirmModal } from '../ui/ConfirmModal'
 import { Modal } from '../ui/Modal'
 import './Profiles.css'
 
 type Editing = { mode: 'create' | 'edit'; initial: ProfileInput } | null
+
+function ProfileMeta({ p }: { p: Profile }) {
+  return (
+    <p className="profiles__meta">
+      <span>LLM {p.llm.engine || '—'} · {p.llm.model || '—'}</span>
+      <span>STT {p.stt.engine || p.stt.profile || '—'}</span>
+      <span>TTS {p.tts.profile_name || '—'}</span>
+      {p.llm.api_key && <span className="profiles__apikey">API key set</span>}
+    </p>
+  )
+}
 
 export function Profiles() {
   const [profiles, setProfiles] = useState<Profile[]>([])
@@ -56,40 +68,60 @@ export function Profiles() {
 
   return (
     <main className="profiles">
-      {error && <p role="alert" className="pe__error">{error}</p>}
-      <div className="profiles__row">
-        <h2>Profiles</h2>
-        <Button variant="primary"
+      <div className="profiles__head">
+        <h1 className="profiles__h">Profiles</h1>
+        <Button variant="primary" size="sm"
           onClick={() => setEditing({ mode: 'create', initial: emptyProfileInput() })}>New</Button>
       </div>
+      <p className="profiles__sub">Assistant configurations you can switch between.</p>
 
-      <section>
+      {error && <p role="alert" className="pe__error">{error}</p>}
+
+      <section className="profiles__section">
         {/* "My profiles", not "Mine" -- a profile's nickname can legitimately
             be "Mine" (see Profiles.test.tsx fixture), which would collide
             with getByText queries against a bare "Mine" heading. */}
-        <h3>My profiles</h3>
-        {mine.map((p) => (
-          <div className="profiles__row" key={p.name}>
-            <span>{p.nickname || p.name}</span>
-            <span>
-              <button data-act="edit" className="btn btn--secondary" onClick={() => openEdit(p.name)}>Edit</button>
-              <button data-act="clone" className="btn btn--secondary"
-                onClick={() => { setCloneOf(p.name); setCloneName(`${p.name}-copy`) }}>Clone</button>
-              <button data-act="delete" className="btn btn--danger" onClick={() => setToDelete(p.name)}>Delete</button>
-            </span>
+        <h2 className="profiles__section-h">My profiles</h2>
+        {mine.length === 0 ? (
+          <p className="profiles__empty">No profiles yet. Tap New to create one.</p>
+        ) : (
+          <div className="profiles__list">
+            {mine.map((p) => (
+              <Card className="profiles__row" key={p.name}>
+                <div className="profiles__rowtop">
+                  <span className="profiles__name">{p.nickname || p.name}</span>
+                  <span className="profiles__actions">
+                    <Button data-act="edit" variant="secondary" size="sm" onClick={() => openEdit(p.name)}>Edit</Button>
+                    <Button data-act="clone" variant="secondary" size="sm"
+                      onClick={() => { setCloneOf(p.name); setCloneName(`${p.name}-copy`) }}>Clone</Button>
+                    <Button data-act="delete" variant="danger" size="sm" onClick={() => setToDelete(p.name)}>Delete</Button>
+                  </span>
+                </div>
+                <ProfileMeta p={p} />
+              </Card>
+            ))}
           </div>
-        ))}
+        )}
       </section>
 
-      <section>
-        <h3>Shared templates</h3>
-        {shared.map((p) => (
-          <div className="profiles__row" key={p.name}>
-            <span>{p.nickname || p.name} <span className="profiles__badge">shared</span></span>
-            <button data-act="clone" className="btn btn--secondary"
-              onClick={() => { setCloneOf(p.name); setCloneName(`${p.name}-copy`) }}>Clone</button>
+      <section className="profiles__section">
+        <h2 className="profiles__section-h">Shared templates</h2>
+        {shared.length === 0 ? (
+          <p className="profiles__empty">No shared templates.</p>
+        ) : (
+          <div className="profiles__list">
+            {shared.map((p) => (
+              <Card className="profiles__row" key={p.name}>
+                <div className="profiles__rowtop">
+                  <span className="profiles__name">{p.nickname || p.name} <span className="profiles__badge">shared</span></span>
+                  <Button data-act="clone" variant="secondary" size="sm"
+                    onClick={() => { setCloneOf(p.name); setCloneName(`${p.name}-copy`) }}>Clone</Button>
+                </div>
+                <ProfileMeta p={p} />
+              </Card>
+            ))}
           </div>
-        ))}
+        )}
       </section>
 
       <ConfirmModal
@@ -104,7 +136,7 @@ export function Profiles() {
 
       <Modal open={cloneOf !== null} title={`Clone "${cloneOf ?? ''}"`} onClose={() => setCloneOf(null)}>
         <label className="pe__field">New name
-          <input aria-label="Clone new name" value={cloneName}
+          <input className="input" aria-label="Clone new name" value={cloneName}
             onChange={(e) => setCloneName(e.target.value)} />
         </label>
         <div className="pe__actions">
