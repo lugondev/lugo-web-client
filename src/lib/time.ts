@@ -6,17 +6,17 @@ function parse(iso: string | null): number | null {
   return Number.isNaN(t) ? null : t
 }
 
-/** "lần cuối thấy" dạng người đọc được.
+/** Human-readable "last seen".
  *
- * Cố ý KHÔNG nói "online": last_seen_at chỉ được cập nhật khi thiết bị mở WS,
- * nên nó là dấu vết quá khứ, không phải hiện diện thật.
+ * Deliberately does NOT say "online": last_seen_at is only updated when the device opens
+ * a WS, so it's a trace of the past, not real presence.
  */
 export function relativeTime(iso: string | null, now: number = Date.now()): string {
   const t = parse(iso)
   if (t === null) return 'never connected'
 
-  // Kẹp về 0: lệch đồng hồ server/trình duyệt là chuyện thường, và
-  // "-3 phút trước" khiến người dùng tưởng app hỏng.
+  // Clamp to 0: clock skew between server and browser is common, and
+  // "-3 min ago" makes users think the app is broken.
   const sec = Math.max(0, Math.floor((now - t) / 1000))
   if (sec < 60) return 'just now'
   if (sec < 3600) return `${Math.floor(sec / 60)} min ago`

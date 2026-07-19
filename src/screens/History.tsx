@@ -5,7 +5,12 @@ import { Button } from '../ui/Button'
 import { ConfirmModal } from '../ui/ConfirmModal'
 import './History.css'
 
-function Detail({ id, onBack, onDeleted }: { id: string; onBack: () => void; onDeleted: () => void }) {
+function Detail({
+  id,
+  onBack,
+  onDeleted,
+  onContinue,
+}: { id: string; onBack: () => void; onDeleted: () => void; onContinue: (id: string) => void }) {
   const [data, setData] = useState<SessionDetail | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [confirming, setConfirming] = useState(false)
@@ -39,9 +44,14 @@ function Detail({ id, onBack, onDeleted }: { id: string; onBack: () => void; onD
         <Button variant="secondary" size="sm" onClick={onBack}>
           Back
         </Button>
-        <Button variant="danger" size="sm" onClick={() => setConfirming(true)}>
-          Delete
-        </Button>
+        <div className="his__bar-right">
+          <Button variant="primary" size="sm" onClick={() => onContinue(id)}>
+            Continue
+          </Button>
+          <Button variant="danger" size="sm" onClick={() => setConfirming(true)}>
+            Delete
+          </Button>
+        </div>
       </div>
 
       {error && (
@@ -79,14 +89,14 @@ function Detail({ id, onBack, onDeleted }: { id: string; onBack: () => void; onD
   )
 }
 
-export function History() {
+export function History({ onContinue }: { onContinue: (id: string) => void }) {
   const [rows, setRows] = useState<SessionRow[]>([])
   const [open, setOpen] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   async function refresh() {
     try {
-      // Server đã sắp theo created_at DESC -- không sắp lại ở client.
+      // The server already orders by created_at DESC -- don't re-sort on the client.
       setRows(await listSessions(50))
       setError(null)
     } catch (e) {
@@ -107,6 +117,7 @@ export function History() {
           setOpen(null)
           void refresh()
         }}
+        onContinue={onContinue}
       />
     )
   }
@@ -127,13 +138,16 @@ export function History() {
       ) : (
         <ul className="his__list">
           {rows.map((r) => (
-            <li key={r.id}>
+            <li key={r.id} className="his__item">
               <button className="his__row" onClick={() => setOpen(r.id)}>
                 <p className="his__preview">{r.preview || 'No content'}</p>
                 <p className="his__meta">
                   {relativeTime(r.created_at)} · {r.message_count} messages
                 </p>
               </button>
+              <Button variant="secondary" size="sm" className="his__continue" onClick={() => onContinue(r.id)}>
+                Continue
+              </Button>
             </li>
           ))}
         </ul>

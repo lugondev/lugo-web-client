@@ -10,12 +10,13 @@
   transform-box: view-box;
 }
 
-/* KHÔNG đặt transform/transform-origin lên chính .mark__ring: nó đã có thuộc tính
-   transform="rotate(...)". Trên Chrome (SVG2) thuộc tính transform được coi như CSS
-   transform, nên thêm transform-origin ở đây sẽ đổi tâm xoay và làm vòng LỆCH khỏi
-   chấm. Xoay tĩnh để nguyên ở thuộc tính; scale/spin đặt lên .mark__ringwrap (<g>). */
-/* Vòng theo màu chữ (--lugo-fg qua currentColor): đậm trên nền sáng, kem trên nền
-   tối. Nhấn trạng thái bằng màu (cam) hoặc chuyển động, không hạ opacity thành xám. */
+/* DON'T put transform/transform-origin on .mark__ring itself: it already has a
+   transform="rotate(...)" attribute. On Chrome (SVG2) the transform attribute is treated
+   as a CSS transform, so adding transform-origin here would shift the rotation center and
+   knock the ring OFF the dot. Keep the static rotation on the attribute; put scale/spin on
+   .mark__ringwrap (<g>). */
+/* Ring follows the text color (--lugo-fg via currentColor): dark on light backgrounds,
+   cream on dark. Emphasize state with color (orange) or motion, don't drop opacity to gray. */
 .mark__ring {
   stroke: currentColor;
   opacity: 1;
@@ -29,30 +30,30 @@
   transition: opacity 400ms ease, fill 400ms ease;
 }
 
-/* Đường vẽ thinking: ẩn mặc định, chỉ bật ở thinking. KHÔNG đặt transform CSS ở
-   đây — đã có rotate ở thuộc tính; chỉ animate stroke-dasharray. */
+/* Thinking stroke: hidden by default, only on in thinking. DON'T put a CSS transform here
+   — the rotate is already on the attribute; only animate stroke-dasharray. */
 .mark__runner {
   opacity: 0;
   transition: opacity 300ms ease;
 }
 
-/* idle: nhịp thở chậm — sống, nhưng chưa làm gì. Thở cả DẤU (vòng + chấm) để chấm
-   luôn nằm đúng khe. */
+/* idle: slow breathing — alive, but not doing anything yet. Breathe the whole MARK (ring +
+   dot) so the dot stays right in the gap. */
 .mark[data-state='idle'] { animation: mark-breathe 5.5s ease-in-out infinite; transform-origin: center; }
 .mark[data-state='idle'] .mark__ring { opacity: 1; }
 .mark[data-state='idle'] .mark__dot { opacity: 0.9; }
 
-/* connecting: thở nhanh hơn idle, chấm mờ — chưa có gì hoạt động thật. */
+/* connecting: breathes faster than idle, dot dimmed — nothing really active yet. */
 .mark[data-state='connecting'] { animation: mark-breathe 1.8s ease-in-out infinite; transform-origin: center; }
 .mark[data-state='connecting'] .mark__dot { opacity: 0.5; }
 
-/* listening: BẠN đang nói. Chấm cam nở theo giọng thật (scale do JS đặt theo level).
-   Vòng lùi nhẹ để chấm là tâm điểm. */
+/* listening: YOU are speaking. Orange dot swells with your real voice (scale set by JS from
+   level). Ring recedes slightly so the dot is the focal point. */
 .mark[data-state='listening'] .mark__ring { opacity: 0.6; }
 .mark[data-state='listening'] .mark__dot { opacity: 1; }
 
-/* thinking: đường cam→trắng (màu branding) tự vẽ quanh vòng. ẨN hẳn vòng nền (không
-   để lại vệt xám); chấm "bạn" đứng yên cam nằm TRÊN. */
+/* thinking: orange→white stroke (branding colors) draws itself around the ring. HIDE the
+   base ring entirely (no gray trail left behind); "your" dot stays still and orange ON TOP. */
 .mark[data-state='thinking'] .mark__ring { opacity: 0; }
 .mark[data-state='thinking'] .mark__dot { opacity: 1; }
 .mark[data-state='thinking'] .mark__runner {
@@ -60,8 +61,8 @@
   animation: mark-draw 2.8s ease-in-out infinite;
 }
 
-/* speaking: vòng cam, KHOẢNG HỞ khép–mở như đang mở miệng nói (dash bằng CSS); kèm
-   thở nhẹ theo âm lượng (scale do JS đặt trên .mark__ringwrap). */
+/* speaking: orange ring, the GAP closes and opens like a mouth talking (dash via CSS); plus
+   gentle breathing with volume (scale set by JS on .mark__ringwrap). */
 .mark[data-state='speaking'] .mark__ring {
   stroke: var(--lugo-accent);
   opacity: 1;
@@ -69,7 +70,7 @@
 }
 .mark[data-state='speaking'] .mark__dot { opacity: 0.35; }
 
-/* error: vòng + chấm chuyển đỏ danger. */
+/* error: ring + dot turn danger red. */
 .mark[data-state='error'] .mark__ring {
   stroke: var(--lugo-danger);
   opacity: 0.9;
@@ -84,8 +85,8 @@
   50% { transform: scale(1.04); }
 }
 
-/* Loading 2 chiều BẬT NGƯỢC (thinking): cung sloshing qua lại giữa A và B, liền mạch
-   ở cả hai đầu (không cú nhảy reset); luôn chừa khoảng hở 34 ở chấm. */
+/* Bidirectional loading that REVERSES (thinking): the arc sloshes back and forth between A
+   and B, seamless at both ends (no reset jump); always leaves the 34 gap at the dot. */
 @keyframes mark-draw {
   0%   { stroke-dasharray: 0.01 238.75; stroke-dashoffset: 0; }
   25%  { stroke-dasharray: 204.76 34;   stroke-dashoffset: 0; }
@@ -94,8 +95,8 @@
   100% { stroke-dasharray: 0.01 238.75; stroke-dashoffset: 0; }
 }
 
-/* Miệng nói (speaking): từng đầu mở ra–thu vào luân phiên như đang mấp máy. Chấm
-   luôn ở giữa khe. */
+/* Mouth talking (speaking): each end opens and closes in turn, like lips moving. The dot
+   always stays in the middle of the gap. */
 @keyframes mark-mouth {
   0%   { stroke-dasharray: 204.76 34;  stroke-dashoffset: 0; }
   25%  { stroke-dasharray: 180 58.76;  stroke-dashoffset: 0; }
@@ -104,8 +105,8 @@
   100% { stroke-dasharray: 204.76 34;  stroke-dashoffset: 0; }
 }
 
-/* Chuyển động phải phục vụ, không được ép. Bỏ thở/vẽ; trạng thái vẫn đọc được qua
-   màu và độ đậm. */
+/* Motion must serve, never force itself. Drop the breathing/drawing; state is still readable
+   through color and weight. */
 @media (prefers-reduced-motion: reduce) {
   .mark,
   .mark__ringwrap,

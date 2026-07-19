@@ -1,7 +1,7 @@
-// Nơi DUY NHẤT chạm vào storage của token. Mọi thứ khác đi qua client.ts.
+// The ONLY place that touches token storage. Everything else goes through client.ts.
 //
-// Token nằm trong localStorage nên XSS đọc được -- đây là cái giá đã chấp nhận
-// khi chọn bearer thay vì BFF (xem spec). Access token TTL 1h giới hạn thiệt hại.
+// Tokens live in localStorage so XSS can read them -- the accepted cost of
+// choosing bearer over a BFF (see spec). A 1h access token TTL limits the damage.
 const ACCESS_KEY = 'lugo.access_token'
 const REFRESH_KEY = 'lugo.refresh_token'
 

@@ -1,10 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
+import { listSessions } from '../api/history'
 import { listProfiles, type Profile } from '../api/profiles'
 import { checkAudioSupport } from '../audio/capability'
 import { Conversation, type TalkState } from '../audio/conversation'
 import { LugoMark } from '../components/LugoMark'
 import { Button } from '../ui/Button'
 import { PROFILE_KEY, resolveInitialProfile } from './talkProfile'
+import { controlFor } from './talkControl'
+import { latestSessionId } from './talkSession'
 import './Talk.css'
 
 const STATE_LABEL: Record<TalkState, string> = {
@@ -16,7 +19,10 @@ const STATE_LABEL: Record<TalkState, string> = {
   error: 'Error',
 }
 
-export function Talk() {
+export function Talk({
+  resumeSessionId = null,
+  onResumed,
+}: { resumeSessionId?: string | null; onResumed?: () => void } = {}) {
   const [state, setState] = useState<TalkState>('idle')
   const [reply, setReply] = useState('')
   const [you, setYou] = useState('')
@@ -26,8 +32,8 @@ export function Talk() {
   const [profile, setProfile] = useState<string>('')
   const convRef = useRef<Conversation | null>(null)
 
-  // Đọc level ~mỗi khung hình. Không đưa vào state của Conversation vì đây
-  // thuần túy là chuyện vẽ -- lớp audio không cần biết có ai đang vẽ.
+  // Read the level ~every frame. Kept out of Conversation's state because
+  // this is purely a drawing concern -- the audio layer needn't know anyone's drawing.
   useEffect(() => {
     let raf = 0
     const tick = () => {
@@ -49,19 +55,27 @@ export function Talk() {
         setProfiles(list)
         setProfile(resolveInitialProfile(localStorage.getItem(PROFILE_KEY), list.map((p) => p.name)))
       })
-      .catch(() => { /* danh sách hỏng thì cứ để trống -> Start chạy bằng default server */ })
+      .catch(() => { /* broken list -> just leave it empty; Start runs with the server default */ })
     return () => { alive = false }
   }, [])
+
+  // Coming from History (Continue) -> connect right away, don't wait for
+  // another Start talking tap. resumeSessionId is consumed once: onResumed()
+  // tells App to clear it, so returning to Talk later won't re-resume the old session.
+  useEffect(() => {
+    if (!resumeSessionId) return
+    void start(resumeSessionId).then(() => onResumed?.())
+  }, [resumeSessionId])
 
   function chooseProfile(name: string): void {
     setProfile(name)
     localStorage.setItem(PROFILE_KEY, name)
   }
 
-  async function start() {
+  async function start(explicitSessionId?: string) {
     const support = checkAudioSupport()
     if (!support.ok) {
-      // Nói thật thiếu gì, và nói cách sửa. Không "trình duyệt không hỗ trợ".
+      // Say honestly what's missing, and how to fix it. Not "browser not supported".
       setError(`This browser is missing ${support.missing.join(', ')}. Open it in a recent Chrome or Edge, over HTTPS.`)
       setState('error')
       return
@@ -69,17 +83,27 @@ export function Talk() {
     setError(null)
     setReply('')
     setYou('')
+    // An explicit id (from History/Continue) -> use it directly, no lookup.
+    // Otherwise take the most recent session; a lookup failure must not block Start talking.
+    let sessionId = explicitSessionId
+    if (!sessionId) {
+      try {
+        sessionId = latestSessionId(await listSessions(1))
+      } catch {
+        // ignore -- just start a new session like before this feature existed
+      }
+    }
     const conv = new Conversation({
       onState: (s) => {
         setState(s)
-        // Lượt mới bắt đầu -> xoá lượt cũ. Không làm thế thì các lượt dính
-        // vào nhau thành một khối chữ dài vô tận.
+        // A new turn begins -> clear the old one. Without this, turns run
+        // together into one endless block of text.
         if (s === 'thinking') setReply('')
       },
       onUserText: setYou,
       onReplyText: (t) => setReply((prev) => (prev ? `${prev} ${t}` : t)),
       onError: (m) => setError(m),
-    }, profile || undefined)
+    }, profile || undefined, sessionId)
     convRef.current = conv
     await conv.connect()
   }
@@ -90,7 +114,12 @@ export function Talk() {
     setState('idle')
   }
 
+  function skip() {
+    convRef.current?.abort()
+  }
+
   const live = state !== 'idle' && state !== 'error'
+  const control = controlFor(state)
 
   return (
     <main className="talk" data-surface="talk">
@@ -116,8 +145,8 @@ export function Talk() {
       <div className="talk__stage">
         <LugoMark state={state} level={level} />
 
-        {/* Vòng tròn đã nói trạng thái cho người nhìn thấy nó. Dòng này dành
-            cho người dùng trình đọc màn hình -- khác đối tượng, không trùng việc. */}
+        {/* The circle already conveys state to anyone who can see it. This line
+            is for screen-reader users -- a different audience, not a duplicate. */}
         <p className="sr-only" aria-live="polite">
           {STATE_LABEL[state]}
         </p>
@@ -136,13 +165,13 @@ export function Talk() {
       </div>
 
       <div className="talk__controls">
-        {live ? (
-          <Button variant="secondary" onClick={stop}>
-            Stop
+        {control.kind === 'start' ? (
+          <Button variant="primary" onClick={() => void start()}>
+            {control.label}
           </Button>
         ) : (
-          <Button variant="primary" onClick={start}>
-            Start talking
+          <Button variant="secondary" onClick={control.kind === 'skip' ? skip : stop}>
+            {control.label}
           </Button>
         )}
       </div>

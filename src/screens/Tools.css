@@ -18,7 +18,7 @@
   line-height: 1.5;
 }
 
-/* Card lo border/padding; ở đây chỉ còn khoảng cách riêng của màn hình này. */
+/* Card handles the border/padding; here it's only this screen's own spacing. */
 .tool__section {
   margin-bottom: 16px;
   display: grid;

@@ -15,7 +15,7 @@ describe('apiFetch', () => {
     vi.restoreAllMocks()
   })
 
-  it('gắn Authorization: Bearer từ token đã lưu', async () => {
+  it('attaches Authorization: Bearer from the saved token', async () => {
     saveTokens('acc-1', 'ref-1')
     const fetchMock = vi.fn().mockResolvedValue(jsonResponse({ ok: true }))
     vi.stubGlobal('fetch', fetchMock)
@@ -26,18 +26,18 @@ describe('apiFetch', () => {
     expect(headers.get('Authorization')).toBe('Bearer acc-1')
   })
 
-  it('KHÔNG bao giờ gửi cookie', async () => {
+  it('NEVER sends cookies', async () => {
     saveTokens('acc-1', 'ref-1')
     const fetchMock = vi.fn().mockResolvedValue(jsonResponse({ ok: true }))
     vi.stubGlobal('fetch', fetchMock)
 
     await apiFetch('/v1/sessions')
 
-    // backend tắt allow_credentials; gửi cookie chỉ khiến browser chặn response
+    // backend disables allow_credentials; sending cookies only makes the browser block the response
     expect(fetchMock.mock.calls[0][1].credentials).not.toBe('include')
   })
 
-  it('gặp 401 thì refresh rồi gọi lại request', async () => {
+  it('on 401, refreshes then retries the request', async () => {
     saveTokens('expired', 'ref-1')
     const fetchMock = vi
       .fn()
@@ -53,13 +53,13 @@ describe('apiFetch', () => {
     expect(resp.status).toBe(200)
     expect(fetchMock).toHaveBeenCalledTimes(3)
     expect(fetchMock.mock.calls[1][0]).toContain('/api/auth/refresh')
-    // request gọi lại phải mang token MỚI, không phải token cũ
+    // the retried request must carry the NEW token, not the old one
     const retryHeaders = new Headers(fetchMock.mock.calls[2][1].headers)
     expect(retryHeaders.get('Authorization')).toBe('Bearer acc-2')
     expect(getAccessToken()).toBe('acc-2')
   })
 
-  it('refresh thất bại thì xoá token và báo auth lost', async () => {
+  it('when refresh fails, clears tokens and reports auth lost', async () => {
     saveTokens('expired', 'bad-ref')
     const fetchMock = vi
       .fn()
@@ -77,7 +77,7 @@ describe('apiFetch', () => {
     expect(lost).toHaveBeenCalledOnce()
   })
 
-  it('không refresh vòng lặp: 401 sau khi đã refresh thì bỏ cuộc', async () => {
+  it('no refresh loop: gives up on a 401 after already refreshing', async () => {
     saveTokens('expired', 'ref-1')
     const fetchMock = vi
       .fn()
@@ -91,11 +91,11 @@ describe('apiFetch', () => {
     const resp = await apiFetch('/v1/sessions')
 
     expect(resp.status).toBe(401)
-    // 3 lần: request gốc, refresh, retry. KHÔNG được refresh lần nữa.
+    // 3 calls: original request, refresh, retry. Must NOT refresh again.
     expect(fetchMock).toHaveBeenCalledTimes(3)
   })
 
-  it('nhiều request cùng gặp 401 chỉ refresh MỘT lần', async () => {
+  it('multiple requests hitting 401 refresh only ONCE', async () => {
     saveTokens('expired', 'ref-1')
     let refreshCalls = 0
     const fetchMock = vi.fn(async (url: string, init?: RequestInit) => {
@@ -114,7 +114,7 @@ describe('apiFetch', () => {
     expect(results.every((r) => r.status === 200)).toBe(true)
   })
 
-  it('nhiều request cùng mất auth chỉ báo onAuthLost MỘT lần', async () => {
+  it('multiple requests losing auth report onAuthLost only ONCE', async () => {
     saveTokens('expired', 'bad-ref')
     const fetchMock = vi.fn(async (url: string) => {
       if (String(url).includes('/api/auth/refresh')) return jsonResponse({ success: false }, 401)
@@ -130,7 +130,7 @@ describe('apiFetch', () => {
     expect(lost).toHaveBeenCalledOnce()
   })
 
-  it('refresh gặp 5xx thì KHÔNG đăng xuất người dùng', async () => {
+  it('a 5xx on refresh does NOT log the user out', async () => {
     saveTokens('expired', 'ref-1')
     const fetchMock = vi
       .fn()
@@ -143,7 +143,7 @@ describe('apiFetch', () => {
 
     await apiFetch('/v1/sessions')
 
-    // API chớp nháy không phải là mất quyền -- token phải còn nguyên
+    // the API flickering is not a loss of access -- the token must stay intact
     expect(getAccessToken()).toBe('expired')
     expect(lost).not.toHaveBeenCalled()
   })

@@ -5,49 +5,49 @@ const NOW = Date.parse('2026-07-17T12:00:00Z')
 const ago = (sec: number) => new Date(NOW - sec * 1000).toISOString()
 
 describe('relativeTime', () => {
-  it('null thì nói thẳng là chưa từng thấy', () => {
+  it('null says plainly it was never seen', () => {
     expect(relativeTime(null, NOW)).toBe('never connected')
   })
 
-  it('vài giây trước', () => {
+  it('a few seconds ago', () => {
     expect(relativeTime(ago(5), NOW)).toBe('just now')
   })
 
-  it('phút', () => {
+  it('minutes', () => {
     expect(relativeTime(ago(120), NOW)).toBe('2 min ago')
   })
 
-  it('giờ', () => {
+  it('hours', () => {
     expect(relativeTime(ago(3 * 3600), NOW)).toBe('3 h ago')
   })
 
-  it('ngày', () => {
+  it('days', () => {
     expect(relativeTime(ago(2 * 86400), NOW)).toBe('2 d ago')
   })
 
-  it('thời gian trong tương lai không ra số âm', () => {
-    // Lệch đồng hồ giữa máy chủ và trình duyệt là chuyện thường.
-    // "-3 phút trước" làm người dùng nghĩ app hỏng.
+  it('future times do not go negative', () => {
+    // Clock skew between server and browser is common.
+    // "-3 min ago" makes users think the app is broken.
     expect(relativeTime(new Date(NOW + 60000).toISOString(), NOW)).toBe('just now')
   })
 
-  it('chuỗi rác không làm sập, trả về thông báo trung thực', () => {
-    expect(relativeTime('không-phải-ngày', NOW)).toBe('never connected')
+  it('garbage string does not crash, returns an honest message', () => {
+    expect(relativeTime('not-a-date', NOW)).toBe('never connected')
   })
 })
 
 describe('isRecentlyActive', () => {
-  it('trong 90 giây thì đang hoạt động', () => {
+  it('within 90 seconds it is active', () => {
     expect(isRecentlyActive(ago(30), NOW)).toBe(true)
   })
 
-  it('quá 90 giây thì không', () => {
-    // Đây là ranh giới giữa sự thật và lời nói dối: last_seen chỉ được cập nhật
-    // khi thiết bị mở WS, nên nói "đang hoạt động" cho một mốc cũ là bịa.
+  it('past 90 seconds it is not', () => {
+    // This is the line between truth and a lie: last_seen is only updated when the
+    // device opens a WS, so calling an old timestamp "active" is fabrication.
     expect(isRecentlyActive(ago(200), NOW)).toBe(false)
   })
 
-  it('null thì không', () => {
+  it('null is not', () => {
     expect(isRecentlyActive(null, NOW)).toBe(false)
   })
 })

@@ -10,11 +10,11 @@ export type Device = {
   revoked: boolean
 }
 
-/** Lấy thông báo lỗi của server ra, giữ nguyên chữ.
+/** Pull the server's error message out, keeping its wording verbatim.
  *
- * Server phân biệt "mã sai/hết hạn" với "phần cứng đã ghép rồi" -- hai tình
- * huống cần hai hành động khác nhau. Thay bằng một câu chung chung là lấy mất
- * của người dùng thứ họ cần để tự sửa.
+ * The server distinguishes "wrong/expired code" from "hardware already paired"
+ * -- two situations that need two different actions. Replacing them with one
+ * generic sentence robs the user of what they need to fix it themselves.
  */
 async function errorFrom(resp: Response): Promise<Error> {
   try {
@@ -22,17 +22,17 @@ async function errorFrom(resp: Response): Promise<Error> {
     const msg = body?.error ?? body?.detail
     if (typeof msg === 'string' && msg) return new Error(msg)
   } catch {
-    // body không phải JSON -- rơi xuống thông báo mặc định
+    // body isn't JSON -- fall through to the default message
   }
   return new Error(`Server returned error ${resp.status}`)
 }
 
-/** Dịch lỗi của server sang tiếng Việt hành động được.
+/** Translate the server's error into an actionable message.
  *
- * Giữ SỰ PHÂN BIỆT của server (mã sai vs phần cứng đã ghép) vì hai tình huống
- * cần hai hành động khác nhau -- nhưng không giữ tiếng Anh: người dùng cuối
- * không phải lập trình viên. Lỗi lạ thì trả nguyên văn, thà khó hiểu còn hơn
- * mất thông tin.
+ * Keep the server's DISTINCTION (wrong code vs hardware already paired) because
+ * the two situations need two different actions -- but drop the raw wording: the
+ * end user is not a programmer. For unknown errors, return them verbatim; better
+ * hard to read than information lost.
  */
 export function friendlyDeviceError(raw: string): string {
   if (/invalid or expired/i.test(raw)) {
@@ -45,8 +45,8 @@ export function friendlyDeviceError(raw: string): string {
 }
 
 export async function listDevices(): Promise<Device[]> {
-  // /v1/devices/mine, KHÔNG phải /v1/devices -- cái sau là endpoint admin và
-  // bearer sẽ nhận 403, đúng như thiết kế.
+  // /v1/devices/mine, NOT /v1/devices -- the latter is the admin endpoint and
+  // the bearer will get a 403, exactly as designed.
   const resp = await apiFetch('/v1/devices/mine')
   if (!resp.ok) throw await errorFrom(resp)
   const body = await resp.json()

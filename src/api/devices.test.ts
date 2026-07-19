@@ -21,29 +21,29 @@ describe('devices api', () => {
     vi.restoreAllMocks()
   })
 
-  it('listDevices trả mảng device', async () => {
+  it('listDevices returns an array of devices', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse({ success: true, data: [DEVICE] })))
     const list = await listDevices()
     expect(list).toHaveLength(1)
     expect(list[0].name).toBe('Loa bếp')
   })
 
-  it('listDevices gọi đúng endpoint CỦA TÔI, không phải endpoint admin', async () => {
+  it('listDevices calls MY endpoint, not the admin endpoint', async () => {
     const f = vi.fn().mockResolvedValue(jsonResponse({ success: true, data: [] }))
     vi.stubGlobal('fetch', f)
     await listDevices()
-    // /v1/devices là endpoint admin -- bearer sẽ 403 và đúng ra phải thế.
+    // /v1/devices is the admin endpoint -- the bearer will 403, and rightly so.
     expect(f.mock.calls[0][0]).toContain('/v1/devices/mine')
   })
 
-  it('listDevices gắn bearer (tức đi qua apiFetch, không tự fetch)', async () => {
+  it('listDevices attaches bearer (i.e. goes through apiFetch, not raw fetch)', async () => {
     const f = vi.fn().mockResolvedValue(jsonResponse({ success: true, data: [] }))
     vi.stubGlobal('fetch', f)
     await listDevices()
     expect(new Headers(f.mock.calls[0][1].headers).get('Authorization')).toBe('Bearer acc')
   })
 
-  it('claimDevice gửi code và name', async () => {
+  it('claimDevice sends code and name', async () => {
     const f = vi.fn().mockResolvedValue(jsonResponse({ success: true, data: DEVICE }))
     vi.stubGlobal('fetch', f)
     const d = await claimDevice('123456', 'Loa bếp')
@@ -52,16 +52,16 @@ describe('devices api', () => {
     expect(d.id).toBe('d1')
   })
 
-  it('claimDevice giữ nguyên thông báo lỗi của server', async () => {
-    // Server phân biệt "mã sai" với "phần cứng đã ghép rồi" -- hai lỗi đó cần
-    // hai cách xử lý khác nhau. Nuốt mất thông tin đó là hại người dùng.
+  it('claimDevice keeps the server error message verbatim', async () => {
+    // The server distinguishes "wrong code" from "hardware already paired" --
+    // those two errors need two different fixes. Swallowing that info hurts the user.
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(
       jsonResponse({ success: false, error: 'pairing code is invalid or expired' }, 400),
     ))
     await expect(claimDevice('000000', 'X')).rejects.toThrow(/invalid or expired/)
   })
 
-  it('revokeDevice gọi đúng đường của user', async () => {
+  it("revokeDevice calls the user's own path", async () => {
     const f = vi.fn().mockResolvedValue(jsonResponse({ success: true }))
     vi.stubGlobal('fetch', f)
     await revokeDevice('d1')
@@ -69,24 +69,24 @@ describe('devices api', () => {
     expect(f.mock.calls[0][1].method).toBe('POST')
   })
 
-  it('revokeDevice ném lỗi khi server từ chối', async () => {
+  it('revokeDevice throws when the server rejects', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse({ detail: 'not found' }, 404)))
     await expect(revokeDevice('nope')).rejects.toThrow()
   })
 })
 
 describe('friendlyDeviceError', () => {
-  it('dịch "invalid or expired" sang tiếng Anh hành động được', () => {
+  it('translates "invalid or expired" into an actionable English message', () => {
     const msg = friendlyDeviceError('pairing code is invalid or expired')
     expect(msg).toContain('wrong or expired')
   })
 
-  it('dịch "already paired" sang tiếng Anh hành động được', () => {
+  it('translates "already paired" into an actionable English message', () => {
     const msg = friendlyDeviceError('device already paired to another account')
     expect(msg).toContain('already paired to an account')
   })
 
-  it('lỗi lạ thì trả nguyên văn -- không được nuốt mất thông tin', () => {
+  it('returns unknown errors verbatim -- must not swallow information', () => {
     const raw = 'internal server error: db timeout'
     expect(friendlyDeviceError(raw)).toBe(raw)
   })

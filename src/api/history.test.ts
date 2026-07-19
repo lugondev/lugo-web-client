@@ -12,7 +12,7 @@ function jsonResponse(body: unknown, status = 200): Response {
 const ROW = {
   id: 's1', profile_id: 'p', user_id: 'u1',
   created_at: '2026-07-17T10:00:00Z', ended_at: null, meta: {},
-  message_count: 4, preview: 'Xin chào Lugo',
+  message_count: 4, preview: 'Hello Lugo',
 }
 
 describe('history api', () => {
@@ -22,21 +22,21 @@ describe('history api', () => {
     vi.restoreAllMocks()
   })
 
-  it('listSessions trả mảng phiên', async () => {
+  it('listSessions returns an array of sessions', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse({ success: true, data: [ROW] })))
     const rows = await listSessions()
     expect(rows).toHaveLength(1)
-    expect(rows[0].preview).toBe('Xin chào Lugo')
+    expect(rows[0].preview).toBe('Hello Lugo')
   })
 
-  it('listSessions gắn bearer (tức đi qua apiFetch)', async () => {
+  it('listSessions attaches bearer (i.e. goes through apiFetch)', async () => {
     const f = vi.fn().mockResolvedValue(jsonResponse({ success: true, data: [] }))
     vi.stubGlobal('fetch', f)
     await listSessions()
     expect(new Headers(f.mock.calls[0][1].headers).get('Authorization')).toBe('Bearer acc')
   })
 
-  it('listSessions truyền limit và offset', async () => {
+  it('listSessions passes limit and offset', async () => {
     const f = vi.fn().mockResolvedValue(jsonResponse({ success: true, data: [] }))
     vi.stubGlobal('fetch', f)
     await listSessions(50, 100)
@@ -44,7 +44,7 @@ describe('history api', () => {
     expect(String(f.mock.calls[0][0])).toContain('offset=100')
   })
 
-  it('getSession trả cả messages', async () => {
+  it('getSession returns messages too', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(
       jsonResponse({ success: true, data: { ...ROW, messages: [{ turn: 1, role: 'user', content: 'hi' }] } }),
     ))
@@ -53,14 +53,14 @@ describe('history api', () => {
     expect(d.messages[0].role).toBe('user')
   })
 
-  it('getSession 404 ném lỗi TIẾNG ANH thân thiện, không phải chuỗi của server', async () => {
-    // Người dùng cuối không đọc lỗi kỹ thuật thô. Một vòng trước ta đã lỡ hiện
-    // "pairing code is invalid or expired" thẳng vào mặt họ.
+  it('getSession 404 throws a friendly ENGLISH error, not the server string', async () => {
+    // End users don't read raw technical errors. Last round we accidentally
+    // showed "pairing code is invalid or expired" straight to their face.
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse({ detail: "Session 's1' not found" }, 404)))
     await expect(getSession('s1')).rejects.toThrow(/could not be found|deleted/i)
   })
 
-  it('deleteSession gọi đúng method DELETE', async () => {
+  it('deleteSession uses the DELETE method', async () => {
     const f = vi.fn().mockResolvedValue(jsonResponse({ success: true, data: { id: 's1', deleted: true } }))
     vi.stubGlobal('fetch', f)
     await deleteSession('s1')
@@ -68,14 +68,14 @@ describe('history api', () => {
     expect(f.mock.calls[0][1].method).toBe('DELETE')
   })
 
-  it('id được encode để không vỡ URL', async () => {
+  it('the id is encoded so it does not break the URL', async () => {
     const f = vi.fn().mockResolvedValue(jsonResponse({ success: true, data: {} }))
     vi.stubGlobal('fetch', f)
     await deleteSession('a/b c')
     expect(String(f.mock.calls[0][0])).toContain('a%2Fb%20c')
   })
 
-  it('deleteSession ném lỗi khi server từ chối', async () => {
+  it('deleteSession throws when the server rejects', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse({ detail: 'nope' }, 404)))
     await expect(deleteSession('s1')).rejects.toThrow()
   })

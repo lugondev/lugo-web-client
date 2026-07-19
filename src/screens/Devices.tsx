@@ -38,8 +38,8 @@ export function Devices() {
       setName('')
       await refresh()
     } catch (err) {
-      // Server phân biệt "mã sai" với "phần cứng đã ghép rồi" -- hai lỗi đó
-      // cần hai hành động khác nhau, nên GIỮ sự phân biệt.
+      // The server distinguishes "wrong code" from "hardware already paired" -- those two
+      // errors call for two different actions, so KEEP the distinction.
       setError(
         err instanceof Error ? friendlyDeviceError(err.message) : 'Pairing failed',
       )

@@ -1,12 +1,12 @@
-// Mã chạy TRONG AudioWorklet thread. Gói dưới dạng chuỗi rồi nạp qua blob URL:
-// worklet cần một file riêng, mà ta không muốn thêm một entry point vào build
-// chỉ vì mấy dòng này.
+// Code that runs INSIDE the AudioWorklet thread. Packaged as a string and loaded
+// via a blob URL: the worklet needs its own file, but we don't want to add a
+// build entry point just for these few lines.
 export const PCM_WORKLET_SRC = `
 class PcmCapture extends AudioWorkletProcessor {
   process(inputs) {
     const ch = inputs[0] && inputs[0][0]
     if (ch && ch.length) {
-      // Copy: buffer gốc được worklet tái sử dụng ngay sau khi process() trả về.
+      // Copy: the worklet reuses the source buffer right after process() returns.
       this.port.postMessage(new Float32Array(ch))
     }
     return true

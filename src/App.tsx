@@ -10,10 +10,10 @@ import { Profiles } from './screens/Profiles'
 import { Talk } from './screens/Talk'
 import { Tools } from './screens/Tools'
 
-// 5 màn -- ternary lồng nhau bắt đầu khó đọc. Bản đồ Screen -> component.
-const SCREENS: Record<Screen, ComponentType> = {
-  talk: Talk,
-  history: History,
+// Talk and History need props (session resume), so they're rendered
+// explicitly below rather than through the shared Screen -> component map
+// like the other three screens.
+const SCREENS: Record<Exclude<Screen, 'talk' | 'history'>, ComponentType> = {
   profiles: Profiles,
   devices: Devices,
   tools: Tools,
@@ -22,9 +22,11 @@ const SCREENS: Record<Screen, ComponentType> = {
 export default function App() {
   const [authed, setAuthed] = useState(isAuthed())
   const [screen, setScreen] = useState<Screen>('talk')
+  const [resumeSessionId, setResumeSessionId] = useState<string | null>(null)
 
-  // Refresh thất bại ở bất kỳ request nào -> quay về Login. Đây là lý do
-  // client.ts có onAuthLost thay vì tự điều hướng: lớp API không biết gì về UI.
+  // A refresh failure on any request -> back to Login. This is why
+  // client.ts has onAuthLost instead of navigating itself: the API layer
+  // knows nothing about the UI.
   useEffect(() => {
     onAuthLost(() => setAuthed(false))
   }, [])
@@ -37,11 +39,25 @@ export default function App() {
     setScreen('talk')
   }
 
-  const Active = SCREENS[screen]
+  // Continue from History -> go to Talk and auto-resume that exact session.
+  function goToTalk(id: string) {
+    setResumeSessionId(id)
+    setScreen('talk')
+  }
+
+  let active
+  if (screen === 'talk') {
+    active = <Talk resumeSessionId={resumeSessionId} onResumed={() => setResumeSessionId(null)} />
+  } else if (screen === 'history') {
+    active = <History onContinue={goToTalk} />
+  } else {
+    const Active = SCREENS[screen]
+    active = <Active />
+  }
 
   return (
     <>
-      <Active />
+      {active}
       <Nav current={screen} onGo={setScreen} onLogout={signOut} />
     </>
   )

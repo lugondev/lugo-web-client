@@ -20,7 +20,7 @@ export function Button({
   ]
     .filter(Boolean)
     .join(' ')
-  // type mặc định "button": một <button> lạc trong <form> mà type="submit"
-  // (mặc định của HTML) sẽ submit form ngoài ý muốn.
+  // type defaults to "button": a stray <button> inside a <form> with type="submit"
+  // (HTML's default) would submit the form unintentionally.
   return <button type={type} className={cls} {...rest} />
 }

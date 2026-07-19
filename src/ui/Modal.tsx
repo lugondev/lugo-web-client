@@ -18,17 +18,17 @@ export function Modal({
   useEffect(() => {
     if (!open) return
 
-    // Trả focus về nơi cũ khi đóng: người dùng bàn phím không bị "mất chỗ".
+    // Return focus to where it was on close: keyboard users don't "lose their place".
     const previouslyFocused = document.activeElement as HTMLElement | null
 
-    // Đưa focus vào dialog. Ưu tiên phần tử focus được đầu tiên, nếu không thì
-    // chính dialog (nó có tabIndex=-1).
+    // Move focus into the dialog. Prefer the first focusable element, otherwise the
+    // dialog itself (it has tabIndex=-1).
     const focusables = dialogRef.current?.querySelectorAll<HTMLElement>(
       'button, [href], input, textarea, select, [tabindex]:not([tabindex="-1"])',
     )
     ;(focusables && focusables.length ? focusables[0] : dialogRef.current)?.focus()
 
-    // Khoá cuộn nền.
+    // Lock background scroll.
     const prevOverflow = document.body.style.overflow
     document.body.style.overflow = 'hidden'
 
@@ -38,7 +38,7 @@ export function Modal({
         return
       }
       if (e.key !== 'Tab') return
-      // Focus trap: giữ Tab quẩn trong dialog.
+      // Focus trap: keep Tab cycling within the dialog.
       const items = dialogRef.current?.querySelectorAll<HTMLElement>(
         'button, [href], input, textarea, select, [tabindex]:not([tabindex="-1"])',
       )
@@ -80,7 +80,7 @@ export function Modal({
         aria-labelledby={titleId}
         tabIndex={-1}
         ref={dialogRef}
-        // Bấm bên trong không được lan ra backdrop (backdrop đóng modal).
+        // A click inside must not reach the backdrop (the backdrop closes the modal).
         onClick={(e) => e.stopPropagation()}
       >
         <h2 className="modal__title" id={titleId}>

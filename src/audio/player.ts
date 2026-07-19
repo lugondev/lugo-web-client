@@ -2,22 +2,24 @@ import { readLevel, smoothLevel } from './level'
 
 const OUTPUT_SAMPLE_RATE = 24000
 
-/** Thời điểm phát chunk kế tiếp trên đồng hồ AudioContext.
+/** When to play the next chunk on the AudioContext clock.
  *
- * Server gửi cả loạt packet một lúc (conversation_opus_pace=False), nên KHÔNG
- * được phát ngay khi nhận -- chúng sẽ chồng lên nhau. Nối đuôi theo cursor.
- * Nếu cursor đã tụt lại sau hiện tại (tab ngủ, máy lag) thì bắt kịp về now:
- * xếp lịch vào quá khứ khiến Web Audio phát tất cả cùng lúc thành tiếng ồn. */
+ * The server sends a whole burst of packets at once (conversation_opus_pace=False),
+ * so we must NOT play each on arrival -- they'd overlap. Queue them tail-to-tail
+ * via the cursor. If the cursor has fallen behind the present (tab asleep, machine
+ * lagging), catch up to now: scheduling into the past makes Web Audio play
+ * everything at once as noise. */
 export function nextStartTime(now: number, cursor: number): number {
   return Math.max(now, cursor)
 }
 
-/** Thời lượng thật của một chunk đã giải mã, tính bằng giây.
+/** Actual duration of a decoded chunk, in seconds.
  *
- * Bắt buộc lấy rate từ chính AudioData: WebCodecs BỎ QUA sampleRate ta đưa vào
- * configure() và luôn xuất 48kHz (Opus giải mã nội bộ ở 48k) -- đã đo trên
- * Chromium 149: 2880 frame/packet 60ms. Tin vào hằng 24000 ở đây làm audio phát
- * chậm một nửa và cursor trôi dần.
+ * You MUST take the rate from the AudioData itself: WebCodecs IGNORES the
+ * sampleRate we pass to configure() and always outputs 48kHz (Opus decodes
+ * internally at 48k) -- measured on Chromium 149: 2880 frames/packet at 60ms.
+ * Trusting the constant 24000 here makes audio play at half speed and the cursor
+ * drift.
  */
 export function chunkDuration(frames: number, sampleRate: number): number {
   return frames / sampleRate
@@ -57,11 +59,11 @@ export class Player {
       return
     }
     const frames = data.numberOfFrames
-    // Rate THẬT của dữ liệu đã giải mã, KHÔNG phải OUTPUT_SAMPLE_RATE đã cấu
-    // hình. WebCodecs bỏ qua sampleRate truyền vào configure() và luôn xuất
-    // 48kHz cho Opus (đo thật trên Chromium 149: 2880 frame/packet 60ms nghĩa
-    // là 48000Hz, không phải 24000Hz). Nếu giả định lại 24000 ở đây, buffer sẽ
-    // khai sai rate và cursor trôi dần -> phát chậm nửa tốc, tiếng rè.
+    // The REAL rate of the decoded data, NOT the configured OUTPUT_SAMPLE_RATE.
+    // WebCodecs ignores the sampleRate passed to configure() and always outputs
+    // 48kHz for Opus (measured on Chromium 149: 2880 frames/packet at 60ms means
+    // 48000Hz, not 24000Hz). Assuming 24000 here would tag the buffer with the
+    // wrong rate and drift the cursor -> half-speed playback, garbled audio.
     const sampleRate = data.sampleRate
     const pcm = new Float32Array(frames)
     data.copyTo(pcm, { planeIndex: 0, format: 'f32-planar' })
@@ -84,9 +86,9 @@ export class Player {
 
   push(packet: ArrayBuffer): void {
     this.ensure()
-    // Frame 60ms @ 24kHz. timestamp tính bằng micro giây.
+    // 60ms frame @ 24kHz. timestamp is in microseconds.
     const chunk = new EncodedAudioChunk({
-      type: 'key', // Opus: mọi frame đều độc lập
+      type: 'key', // Opus: every frame is independent
       timestamp: this.timestamp,
       data: packet,
     })
@@ -98,19 +100,19 @@ export class Player {
     return this.sources.length > 0
   }
 
-  /** Mức tiếng LUGO ĐANG NÓI, 0..1. Vòng tròn thở theo cái này. */
+  /** Level of LUGO's SPEECH, 0..1. The circle breathes with this. */
   get level(): number {
     this._level = smoothLevel(this._level, readLevel(this.analyser, this.buf), 0.4, 0.1)
     return this._level
   }
 
-  /** Barge-in: im NGAY. Người dùng đã nói đè lên -- nghe tiếp là sai. */
+  /** Barge-in: go silent NOW. The user has talked over us -- keeping playing is wrong. */
   stop(): void {
     this.sources.forEach((s) => {
       try {
         s.stop()
       } catch {
-        // đã dừng rồi
+        // already stopped
       }
     })
     this.sources = []
@@ -119,7 +121,7 @@ export class Player {
     try {
       this.decoder?.close()
     } catch {
-      // chưa configure
+      // not configured yet
     }
     this.decoder = null
     void this.ctx?.close()

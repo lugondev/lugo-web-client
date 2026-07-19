@@ -16,14 +16,14 @@ describe('tools api', () => {
     vi.restoreAllMocks()
   })
 
-  it('transcribeFile trả text', async () => {
+  it('transcribeFile returns text', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(
-      jsonResponse({ success: true, data: { engine: 'x', text: 'xin chào', is_final: true } }),
+      jsonResponse({ success: true, data: { engine: 'x', text: 'hello', is_final: true } }),
     ))
-    expect(await transcribeFile(new File(['x'], 'a.wav'))).toBe('xin chào')
+    expect(await transcribeFile(new File(['x'], 'a.wav'))).toBe('hello')
   })
 
-  it('transcribeFile gửi multipart với field tên "audio"', async () => {
+  it('transcribeFile sends multipart with a field named "audio"', async () => {
     const f = vi.fn().mockResolvedValue(jsonResponse({ success: true, data: { text: 'ok' } }))
     vi.stubGlobal('fetch', f)
     await transcribeFile(new File(['x'], 'a.wav'))
@@ -33,9 +33,9 @@ describe('tools api', () => {
     expect(body.get('audio')).toBeInstanceOf(File)
   })
 
-  it('transcribeFile KHÔNG tự đặt Content-Type', async () => {
-    // Trình duyệt phải tự sinh boundary cho multipart. Tự đặt Content-Type
-    // là làm hỏng boundary và server sẽ không parse được.
+  it('transcribeFile does NOT set Content-Type itself', async () => {
+    // The browser must generate the multipart boundary itself. Setting
+    // Content-Type manually breaks the boundary and the server can't parse it.
     const f = vi.fn().mockResolvedValue(jsonResponse({ success: true, data: { text: 'ok' } }))
     vi.stubGlobal('fetch', f)
     await transcribeFile(new File(['x'], 'a.wav'))
@@ -43,35 +43,35 @@ describe('tools api', () => {
     expect(h.get('Content-Type')).toBeNull()
   })
 
-  it('transcribeFile gắn bearer (đi qua apiFetch)', async () => {
+  it('transcribeFile attaches bearer (goes through apiFetch)', async () => {
     const f = vi.fn().mockResolvedValue(jsonResponse({ success: true, data: { text: 'ok' } }))
     vi.stubGlobal('fetch', f)
     await transcribeFile(new File(['x'], 'a.wav'))
     expect(new Headers(f.mock.calls[0][1].headers).get('Authorization')).toBe('Bearer acc')
   })
 
-  it('transcribeFile lỗi thì ném tiếng Anh thân thiện', async () => {
+  it('transcribeFile on error throws a friendly English message', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse({ detail: 'STT failed (vosk): boom' }, 500)))
     await expect(transcribeFile(new File(['x'], 'a.wav'))).rejects.toThrow(/could not|try/i)
   })
 
-  it('synthesize gửi CHỈ text', async () => {
+  it('synthesize sends ONLY text', async () => {
     const f = vi.fn().mockResolvedValue(jsonResponse({
       success: true, data: { engine: 'e', sample_rate: 24000, audio_url: '/artifacts/a.wav', duration_seconds: 1.5 },
     }))
     vi.stubGlobal('fetch', f)
-    const r = await synthesize('xin chào')
+    const r = await synthesize('hello')
     expect(String(f.mock.calls[0][0])).toContain('/v1/tts/synthesize')
-    // Không gửi engine/voice: chọn engine là việc của quản trị, không phải
-    // của người dùng cuối.
-    expect(JSON.parse(f.mock.calls[0][1].body)).toEqual({ text: 'xin chào' })
+    // Don't send engine/voice: choosing the engine is an admin job, not the
+    // end user's.
+    expect(JSON.parse(f.mock.calls[0][1].body)).toEqual({ text: 'hello' })
     expect(r.audioUrl).toContain('/artifacts/a.wav')
     expect(r.durationSeconds).toBe(1.5)
   })
 
-  it('synthesize trả URL tuyệt đối để thẻ audio dùng được', async () => {
-    // audio_url của server là đường dẫn tương đối. Client chạy ở domain KHÁC,
-    // nên để nguyên sẽ trỏ vào chính domain của client -> 404.
+  it('synthesize returns an absolute URL so the audio tag works', async () => {
+    // The server's audio_url is a relative path. The client runs on a DIFFERENT
+    // domain, so leaving it as-is would point at the client's own domain -> 404.
     const f = vi.fn().mockResolvedValue(jsonResponse({
       success: true, data: { audio_url: '/artifacts/a.wav', duration_seconds: null },
     }))
@@ -80,7 +80,7 @@ describe('tools api', () => {
     expect(r.audioUrl.startsWith('http')).toBe(true)
   })
 
-  it('synthesize lỗi thì ném tiếng Anh thân thiện', async () => {
+  it('synthesize on error throws a friendly English message', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse({ success: false, error: 'engine not found' }, 400)))
     await expect(synthesize('x')).rejects.toThrow(/could not|try/i)
   })

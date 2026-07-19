@@ -4,18 +4,18 @@ import { clearTokens, getAccessToken, getRefreshToken, saveTokens } from './toke
 describe('tokens', () => {
   beforeEach(() => localStorage.clear())
 
-  it('lưu rồi đọc lại được', () => {
+  it('saves then reads back', () => {
     saveTokens('acc', 'ref')
     expect(getAccessToken()).toBe('acc')
     expect(getRefreshToken()).toBe('ref')
   })
 
-  it('trả null khi chưa có gì', () => {
+  it('returns null when nothing is stored', () => {
     expect(getAccessToken()).toBeNull()
     expect(getRefreshToken()).toBeNull()
   })
 
-  it('clearTokens xoá cả hai', () => {
+  it('clearTokens removes both', () => {
     saveTokens('acc', 'ref')
     clearTokens()
     expect(getAccessToken()).toBeNull()

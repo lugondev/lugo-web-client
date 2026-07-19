@@ -15,7 +15,7 @@ describe('auth', () => {
     vi.restoreAllMocks()
   })
 
-  it('login lưu cả hai token', async () => {
+  it('login saves both tokens', async () => {
     vi.stubGlobal(
       'fetch',
       vi.fn().mockResolvedValue(
@@ -33,7 +33,7 @@ describe('auth', () => {
     expect(isAuthed()).toBe(true)
   })
 
-  it('login gọi /api/auth/token, KHÔNG gọi /api/auth/login', async () => {
+  it('login calls /api/auth/token, NOT /api/auth/login', async () => {
     const fetchMock = vi.fn().mockResolvedValue(
       jsonResponse({ success: true, data: { access_token: 'a', refresh_token: 'r', expires_in: 3600 } }),
     )
@@ -41,11 +41,11 @@ describe('auth', () => {
 
     await login('toan', 'pw12345678')
 
-    // /api/auth/login là lối cookie của admin webui -- client này không dùng
+    // /api/auth/login is the admin webui's cookie flow -- this client doesn't use it
     expect(fetchMock.mock.calls[0][0]).toContain('/api/auth/token')
   })
 
-  it('sai mật khẩu thì ném lỗi và không lưu token', async () => {
+  it('wrong password throws and saves no token', async () => {
     vi.stubGlobal(
       'fetch',
       vi.fn().mockResolvedValue(jsonResponse({ success: false, error: 'invalid username or password' }, 401)),
@@ -55,23 +55,23 @@ describe('auth', () => {
     expect(getAccessToken()).toBeNull()
   })
 
-  it('200 nhưng thiếu token thì KHÔNG lưu gì và báo lỗi', async () => {
+  it('200 but missing token saves NOTHING and reports an error', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse({ success: true, data: {} })))
 
     await expect(login('toan', 'pw12345678')).rejects.toThrow()
-    // localStorage ép undefined thành chuỗi "undefined" -- phải chặn từ đầu
+    // localStorage coerces undefined into the string "undefined" -- must block it upfront
     expect(getAccessToken()).toBeNull()
     expect(isAuthed()).toBe(false)
   })
 
-  it('200 nhưng thiếu hẳn data thì báo lỗi tử tế, không ném TypeError thô', async () => {
+  it('200 but data missing entirely reports a clean error, not a raw TypeError', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse({ success: true })))
 
     await expect(login('toan', 'pw12345678')).rejects.toThrow(/invalid data/i)
     expect(isAuthed()).toBe(false)
   })
 
-  it('logout xoá token', async () => {
+  it('logout clears the tokens', async () => {
     vi.stubGlobal(
       'fetch',
       vi.fn().mockResolvedValue(

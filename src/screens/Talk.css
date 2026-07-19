@@ -29,8 +29,8 @@
   text-align: center;
 }
 
-/* Lượt hiện tại, không phải log. Cỡ chữ này là chủ ý: bạn đang NÓI chuyện,
-   không phải đọc bản ghi. */
+/* Current turn, not a log. This font size is intentional: you're TALKING with it,
+   not reading a transcript. */
 .talk__reply {
   font-size: clamp(1.375rem, 3.6vw, 2rem);
   line-height: 1.45;
