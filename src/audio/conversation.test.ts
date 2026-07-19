@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest'
-import { buildParams, wsUrl } from './conversation'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { buildParams, Conversation, wsUrl } from './conversation'
 
 describe('wsUrl', () => {
   it('http becomes ws', () => {
@@ -38,5 +38,47 @@ describe('buildParams', () => {
     expect(buildParams(undefined, 's1').get('session_id')).toBe('s1')
     expect(buildParams().has('session_id')).toBe(false)
     expect(buildParams('esp32', 's1').get('session_id')).toBe('s1')
+  })
+})
+
+describe('disconnect while connecting', () => {
+  // A browser fires `onerror` when you close() a socket that is still in the
+  // CONNECTING state. React StrictMode double-invokes the resume effect, so the
+  // first Conversation is disconnect()ed mid-handshake -- and that self-inflicted
+  // teardown must NOT surface as a user-facing "connection lost".
+  class ConnectingWs {
+    static instances: ConnectingWs[] = []
+    onerror: ((e: unknown) => void) | null = null
+    onclose: (() => void) | null = null
+    onopen: (() => void) | null = null
+    onmessage: (() => void) | null = null
+    binaryType = ''
+    readyState = 0 // CONNECTING
+    constructor() { ConnectingWs.instances.push(this) }
+    close() {
+      // Aborting a still-connecting socket: the browser reports an error first,
+      // then closes.
+      this.onerror?.(new Event('error'))
+      this.onclose?.()
+    }
+    send() {}
+  }
+
+  beforeEach(() => {
+    ConnectingWs.instances = []
+    vi.stubGlobal('WebSocket', ConnectingWs as unknown as typeof WebSocket)
+    localStorage.setItem('lugo.access_token', 'test-token')
+  })
+  afterEach(() => {
+    vi.unstubAllGlobals()
+    localStorage.clear()
+  })
+
+  it('does not report an error when we disconnect our own connecting socket', async () => {
+    const onError = vi.fn()
+    const conv = new Conversation({ onError })
+    await conv.connect()
+    conv.disconnect()
+    expect(onError).not.toHaveBeenCalled()
   })
 })

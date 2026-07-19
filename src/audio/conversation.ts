@@ -38,6 +38,11 @@ export class Conversation {
   private cb: ConversationCallbacks
   private profile?: string
   private sessionId?: string
+  // Set when WE initiate the close (disconnect). Closing a still-CONNECTING
+  // socket makes the browser fire onerror -- but a teardown we asked for is not
+  // a connection failure, so we must not report it. React StrictMode tears down
+  // the first resume connection this way on every mount.
+  private closing = false
 
   constructor(cb: ConversationCallbacks = {}, profile?: string, sessionId?: string) {
     this.cb = cb
@@ -76,8 +81,11 @@ export class Conversation {
 
     this.ws.onmessage = (e) => this.onMessage(e)
     this.ws.onerror = () => {
+      // A close WE asked for (disconnect) surfaces here when the socket was
+      // still connecting -- that's not a failure the user needs to see.
+      if (this.closing) return
       this.setState('error')
-      this.cb.onError?.('mất kết nối')
+      this.cb.onError?.('connection lost')
     }
     this.ws.onclose = () => {
       this.mic.stop()
@@ -160,6 +168,7 @@ export class Conversation {
   }
 
   disconnect(): void {
+    this.closing = true
     this.mic.stop()
     this.player.stop()
     this.ws?.close()
