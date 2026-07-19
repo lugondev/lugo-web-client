@@ -2,6 +2,10 @@ import { readLevel, smoothLevel } from './level'
 import { PCM_WORKLET_SRC } from './pcm-worklet'
 
 const SAMPLE_RATE = 16000
+// Gộp mic lại thành gói ~32ms (512 mẫu = đúng 4 render-quantum 128-mẫu của
+// AudioWorklet) trước khi gửi WS -- xem createMicBatcher. 32ms vẫn đủ nhanh
+// cho STT thời gian thực, chỉ thêm tối đa 32ms độ trễ so với gửi ngay.
+const MIC_BATCH_SAMPLES = 512
 
 export function floatToPcm16(input: Float32Array): ArrayBuffer {
   const out = new Int16Array(input.length)
@@ -12,6 +16,33 @@ export function floatToPcm16(input: Float32Array): ArrayBuffer {
     out[i] = s < 0 ? s * 0x8000 : s * 0x7fff
   }
   return out.buffer
+}
+
+/** Gộp các chunk từ AudioWorklet (mỗi lần cố định 128 mẫu, ~8ms ở 16kHz) lại
+ * trước khi gọi onFrame, thay vì gửi WS ngay mỗi 8ms (~125 gói/giây, 256
+ * byte/gói -- trông như "spam" trong Network tab và tốn overhead framing).
+ * Trả về hàm push(chunk); khi tổng số mẫu tích lũy >= targetSamples thì gộp
+ * lại, đổi sang PCM16, gọi onFrame một lần rồi reset về rỗng. */
+export function createMicBatcher(
+  targetSamples: number,
+  onFrame: (pcm: ArrayBuffer) => void,
+): (chunk: Float32Array) => void {
+  let pending: Float32Array[] = []
+  let count = 0
+  return (chunk: Float32Array) => {
+    pending.push(chunk)
+    count += chunk.length
+    if (count < targetSamples) return
+    const merged = new Float32Array(count)
+    let offset = 0
+    for (const c of pending) {
+      merged.set(c, offset)
+      offset += c.length
+    }
+    pending = []
+    count = 0
+    onFrame(floatToPcm16(merged))
+  }
 }
 
 export class Mic {
@@ -39,7 +70,8 @@ export class Mic {
 
     const source = this.ctx.createMediaStreamSource(this.stream)
     const node = new AudioWorkletNode(this.ctx, 'pcm-capture')
-    node.port.onmessage = (e) => onFrame(floatToPcm16(e.data as Float32Array))
+    const pushBatch = createMicBatcher(MIC_BATCH_SAMPLES, onFrame)
+    node.port.onmessage = (e) => pushBatch(e.data as Float32Array)
     source.connect(node)
     // Worklet phải nối tới destination mới chạy, nhưng ta KHÔNG muốn nghe lại
     // tiếng mình -- nối qua một gain 0.
