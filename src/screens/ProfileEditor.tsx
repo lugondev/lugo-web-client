@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { createProfile, updateProfile, listLlmOptions, type LlmOption, type McpServer, type ProfileInput } from '../api/profiles'
 import { listTtsProfiles, type TtsProfileSummary } from '../api/tts'
+import { listSttModelOptions, type SttModelOption } from '../api/stt'
 import { parseHeaders, serializeHeaders } from './profileForm'
 import { Button } from '../ui/Button'
 import './Profiles.css'
@@ -13,6 +14,12 @@ import './Profiles.css'
 // Each MCP row keeps headers as a JSON string so the user can type freely; only
 // parse on Save (a parse error blocks Save, without corrupting the in-progress state).
 type McpRow = Omit<McpServer, 'headers'> & { headersText: string }
+
+// Encode a profile's (engine, model) pair as the select's option value.
+// '' = inherit server default. Mirrors the playground UI's flat STT select.
+function sttKey(stt: { engine: string; model: string }): string {
+  return stt.engine ? `${stt.engine}|${stt.model}` : ''
+}
 
 export function ProfileEditor({
   mode, initial, onDone, onCancel,
@@ -27,12 +34,14 @@ export function ProfileEditor({
     initial.mcp_servers.map((s) => ({ ...s, headersText: serializeHeaders(s.headers) })))
   const [llmOptions, setLlmOptions] = useState<LlmOption[]>([])
   const [ttsProfiles, setTtsProfiles] = useState<TtsProfileSummary[]>([])
+  const [sttOptions, setSttOptions] = useState<SttModelOption[]>([])
   const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
     listLlmOptions().then(setLlmOptions).catch(() => setLlmOptions([]))
     listTtsProfiles().then(setTtsProfiles).catch(() => setTtsProfiles([]))
+    listSttModelOptions().then(setSttOptions).catch(() => setSttOptions([]))
   }, [])
 
   function patch(p: Partial<ProfileInput>): void { setForm((f) => ({ ...f, ...p })) }
@@ -121,17 +130,26 @@ export function ProfileEditor({
 
       <fieldset className="pe__group">
         <legend>STT</legend>
-        <label className="pe__field">Engine
-          <input className="input" aria-label="STT engine" value={form.stt.engine}
-            onChange={(e) => patch({ stt: { ...form.stt, engine: e.target.value } })} />
+        <label className="pe__field">Model
+          <select className="input" aria-label="STT model" value={sttKey(form.stt)}
+            onChange={(e) => {
+              const [engine = '', model = ''] = e.target.value ? e.target.value.split('|') : ['', '']
+              patch({ stt: { ...form.stt, engine, model } })
+            }}>
+            <option value="">(server default)</option>
+            {sttOptions.map((o) => (
+              <option key={`${o.engine}|${o.model}`} value={`${o.engine}|${o.model}`}>{o.label}</option>
+            ))}
+            {form.stt.engine && !sttOptions.some((o) => o.engine === form.stt.engine && o.model === form.stt.model) && (
+              <option value={sttKey(form.stt)}>
+                {form.stt.engine}{form.stt.model ? ` — ${form.stt.model}` : ''} (unavailable)
+              </option>
+            )}
+          </select>
         </label>
         <label className="pe__field">Language
           <input className="input" aria-label="STT language" value={form.stt.language}
             onChange={(e) => patch({ stt: { ...form.stt, language: e.target.value } })} />
-        </label>
-        <label className="pe__field">Model
-          <input className="input" aria-label="STT model" value={form.stt.model}
-            onChange={(e) => patch({ stt: { ...form.stt, model: e.target.value } })} />
         </label>
       </fieldset>
 
