@@ -7,7 +7,7 @@ export function emptyProfileInput(): ProfileInput {
     llm: { base_url: '', api_key: '', model: '', engine: '' },
     system_prompt: '',
     voice_optimized: false,
-    stt: { profile: '', engine: '', language: '', model: '' },
+    stt: { engine: '', language: '', model: '' },
     tts: { profile_name: '' },
     mcp_servers: [],
     memory: {

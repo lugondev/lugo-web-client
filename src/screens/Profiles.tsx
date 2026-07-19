@@ -17,7 +17,7 @@ function ProfileMeta({ p }: { p: Profile }) {
   return (
     <p className="profiles__meta">
       <span>LLM {p.llm.engine || '—'} · {p.llm.model || '—'}</span>
-      <span>STT {p.stt.engine || p.stt.profile || '—'}</span>
+      <span>STT {p.stt.engine || '—'}</span>
       <span>TTS {p.tts.profile_name || '—'}</span>
       {p.llm.api_key && <span className="profiles__apikey">API key set</span>}
     </p>

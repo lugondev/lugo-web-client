@@ -2,7 +2,7 @@ import { apiFetch } from './client'
 
 export interface LlmConfig { base_url: string; api_key: string; model: string; engine: string }
 export interface TtsConfig { profile_name: string }
-export interface SttConfig { profile: string; engine: string; language: string; model: string }
+export interface SttConfig { engine: string; language: string; model: string }
 export interface McpServer { name: string; url: string; headers: Record<string, string>; enabled: boolean }
 export interface MemoryConfig {
   enabled: boolean; mode: string; top_k: number; extractor_model: string; embed_model: string

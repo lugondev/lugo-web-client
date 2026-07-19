@@ -10,8 +10,6 @@ import './Profiles.css'
 // (props = {label,id} & InputHTMLAttributes), không phải onChange(v). Raw +
 // aria-label giữ form gọn và cho test query bằng getByLabelText.
 
-const STT_PRESETS = ['', 'vi', 'en', 'multi', 'en_vi']
-
 // Mỗi dòng MCP giữ headers dưới dạng chuỗi JSON để người dùng gõ tự do; chỉ
 // parse khi Save (lỗi parse chặn Save, không làm hỏng state đang gõ).
 type McpRow = Omit<McpServer, 'headers'> & { headersText: string }
@@ -123,12 +121,6 @@ export function ProfileEditor({
 
       <fieldset className="pe__group">
         <legend>STT</legend>
-        <label className="pe__field">Preset
-          <select className="input" aria-label="STT preset" value={form.stt.profile}
-            onChange={(e) => patch({ stt: { ...form.stt, profile: e.target.value } })}>
-            {STT_PRESETS.map((p) => <option key={p} value={p}>{p || '(server default)'}</option>)}
-          </select>
-        </label>
         <label className="pe__field">Engine
           <input className="input" aria-label="STT engine" value={form.stt.engine}
             onChange={(e) => patch({ stt: { ...form.stt, engine: e.target.value } })} />
