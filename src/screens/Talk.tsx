@@ -5,6 +5,7 @@ import { Conversation, type TalkState } from '../audio/conversation'
 import { LugoMark } from '../components/LugoMark'
 import { Button } from '../ui/Button'
 import { PROFILE_KEY, resolveInitialProfile } from './talkProfile'
+import { controlFor } from './talkControl'
 import './Talk.css'
 
 const STATE_LABEL: Record<TalkState, string> = {
@@ -90,7 +91,12 @@ export function Talk() {
     setState('idle')
   }
 
+  function skip() {
+    convRef.current?.abort()
+  }
+
   const live = state !== 'idle' && state !== 'error'
+  const control = controlFor(state)
 
   return (
     <main className="talk" data-surface="talk">
@@ -136,13 +142,13 @@ export function Talk() {
       </div>
 
       <div className="talk__controls">
-        {live ? (
-          <Button variant="secondary" onClick={stop}>
-            Stop
+        {control.kind === 'start' ? (
+          <Button variant="primary" onClick={start}>
+            {control.label}
           </Button>
         ) : (
-          <Button variant="primary" onClick={start}>
-            Start talking
+          <Button variant="secondary" onClick={control.kind === 'skip' ? skip : stop}>
+            {control.label}
           </Button>
         )}
       </div>
