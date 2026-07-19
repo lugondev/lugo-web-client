@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { listSessions } from '../api/history'
 import { listProfiles, type Profile } from '../api/profiles'
 import { checkAudioSupport } from '../audio/capability'
 import { Conversation, type TalkState } from '../audio/conversation'
@@ -6,6 +7,7 @@ import { LugoMark } from '../components/LugoMark'
 import { Button } from '../ui/Button'
 import { PROFILE_KEY, resolveInitialProfile } from './talkProfile'
 import { controlFor } from './talkControl'
+import { latestSessionId } from './talkSession'
 import './Talk.css'
 
 const STATE_LABEL: Record<TalkState, string> = {
@@ -17,7 +19,10 @@ const STATE_LABEL: Record<TalkState, string> = {
   error: 'Error',
 }
 
-export function Talk() {
+export function Talk({
+  resumeSessionId = null,
+  onResumed,
+}: { resumeSessionId?: string | null; onResumed?: () => void } = {}) {
   const [state, setState] = useState<TalkState>('idle')
   const [reply, setReply] = useState('')
   const [you, setYou] = useState('')
@@ -54,12 +59,20 @@ export function Talk() {
     return () => { alive = false }
   }, [])
 
+  // Đến từ History (Continue) -> tự kết nối luôn, không chờ bấm Start talking
+  // lần nữa. resumeSessionId chỉ tiêu thụ một lần: onResumed() báo cho App
+  // xoá nó đi, nên quay lại Talk sau đó không tự resume lại phiên cũ.
+  useEffect(() => {
+    if (!resumeSessionId) return
+    void start(resumeSessionId).then(() => onResumed?.())
+  }, [resumeSessionId])
+
   function chooseProfile(name: string): void {
     setProfile(name)
     localStorage.setItem(PROFILE_KEY, name)
   }
 
-  async function start() {
+  async function start(explicitSessionId?: string) {
     const support = checkAudioSupport()
     if (!support.ok) {
       // Nói thật thiếu gì, và nói cách sửa. Không "trình duyệt không hỗ trợ".
@@ -70,6 +83,16 @@ export function Talk() {
     setError(null)
     setReply('')
     setYou('')
+    // Có id chỉ định (đến từ History/Continue) -> dùng thẳng, không tra cứu.
+    // Không thì lấy phiên gần nhất; tra cứu lỗi không được chặn Start talking.
+    let sessionId = explicitSessionId
+    if (!sessionId) {
+      try {
+        sessionId = latestSessionId(await listSessions(1))
+      } catch {
+        // bỏ qua -- cứ bắt đầu phiên mới như trước khi có tính năng này
+      }
+    }
     const conv = new Conversation({
       onState: (s) => {
         setState(s)
@@ -80,7 +103,7 @@ export function Talk() {
       onUserText: setYou,
       onReplyText: (t) => setReply((prev) => (prev ? `${prev} ${t}` : t)),
       onError: (m) => setError(m),
-    }, profile || undefined)
+    }, profile || undefined, sessionId)
     convRef.current = conv
     await conv.connect()
   }
@@ -143,7 +166,7 @@ export function Talk() {
 
       <div className="talk__controls">
         {control.kind === 'start' ? (
-          <Button variant="primary" onClick={start}>
+          <Button variant="primary" onClick={() => void start()}>
             {control.label}
           </Button>
         ) : (
