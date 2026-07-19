@@ -10,10 +10,11 @@ async function viError(resp: Response, fallback: string): Promise<Error> {
 export async function transcribeFile(file: File): Promise<string> {
   const body = new FormData()
   body.append('audio', file)
-  // Chỉ gửi file. engine/language/denoise/vad đều optional -> server dùng mặc
-  // định của nó. Chọn engine là việc của quản trị, không phải người dùng cuối.
+  // Only send the file. engine/language/denoise/vad are all optional -> the
+  // server uses its own defaults. Choosing the engine is an admin job, not the
+  // end user's.
   //
-  // KHÔNG đặt Content-Type: trình duyệt phải tự sinh boundary cho multipart.
+  // Do NOT set Content-Type: the browser must generate the multipart boundary itself.
   const resp = await apiFetch('/v1/stt/transcribe', { method: 'POST', body })
   if (!resp.ok) {
     throw await viError(resp, 'Could not transcribe this file. Try a different wav or mp3.')
@@ -38,8 +39,8 @@ export async function synthesize(text: string): Promise<{
   const url = json.data?.audio_url as string | undefined
   if (!url) throw new Error('The server returned no audio.')
   return {
-    // audio_url là đường dẫn tương đối của API. Client chạy domain KHÁC, nên
-    // phải ghép base URL vào, không thì thẻ <audio> trỏ vào domain client -> 404.
+    // audio_url is a relative API path. The client runs on a DIFFERENT domain, so
+    // we must prepend the base URL, otherwise the <audio> tag points at the client domain -> 404.
     audioUrl: url.startsWith('http') ? url : ApiUrl(url),
     durationSeconds: (json.data?.duration_seconds ?? null) as number | null,
   }

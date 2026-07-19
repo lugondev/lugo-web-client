@@ -15,11 +15,11 @@ export type SessionRow = {
 
 export type SessionDetail = SessionRow & { messages: Message[] }
 
-/** Lỗi tiếng Việt cho người dùng cuối.
+/** User-facing error messages.
  *
- * Server trả 404 cho CẢ "không tồn tại" LẪN "không phải của bạn" -- nó cố ý
- * không phân biệt. Nên copy ở đây không được khẳng định phiên "đã bị xoá":
- * ta không biết điều đó.
+ * The server returns 404 for BOTH "doesn't exist" AND "not yours" -- it
+ * deliberately doesn't distinguish them. So the copy here must not assert the
+ * session "was deleted": we don't actually know that.
  */
 async function errorFrom(resp: Response): Promise<Error> {
   if (resp.status === 404) {

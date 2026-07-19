@@ -11,8 +11,8 @@ export function wsUrl(base: string, path: string): string {
 
 export function buildParams(profile?: string, sessionId?: string): URLSearchParams {
   const p = new URLSearchParams({
-    // Opus qua chính socket đã xác thực: audio_out=url sẽ trỏ vào /artifacts,
-    // vốn KHÔNG có auth -- ai có URL cũng nghe được hội thoại.
+    // Opus over the already-authenticated socket: audio_out=url would point
+    // at /artifacts, which has NO auth -- anyone with the URL could listen in.
     audio_out: 'opus',
     output: 'audio,text',
     sample_rate: '16000',
@@ -45,8 +45,8 @@ export class Conversation {
     this.sessionId = sessionId
   }
 
-  /** Mức để vẽ vòng tròn: khi Lugo nói thì lấy theo tiếng nó, còn lại lấy theo
-   * giọng bạn. Đúng quy tắc "ai hoạt động thì phần đó động". */
+  /** Level for drawing the circle: when Lugo is speaking, follow its audio;
+   * otherwise follow your voice. Honors the "whoever is active drives it" rule. */
   get level(): number {
     return this.state === 'speaking' ? this.player.level : this.mic.level
   }
@@ -62,12 +62,12 @@ export class Conversation {
     const token = getAccessToken()
     if (!token) {
       this.setState('error')
-      this.cb.onError?.('chưa đăng nhập')
+      this.cb.onError?.('not signed in')
       return
     }
 
-    // Token đi qua subprotocol, KHÔNG qua query string: query string bị ghi vào
-    // access log và lịch sử proxy.
+    // Token goes through the subprotocol, NOT the query string: query strings
+    // get written to access logs and proxy history.
     this.ws = new WebSocket(wsUrl(ApiUrl(''), `/v1/conversation/stream?${buildParams(this.profile, this.sessionId)}`), [
       'bearer',
       token,
@@ -86,10 +86,12 @@ export class Conversation {
     }
     this.ws.onopen = async () => {
       await this.mic.start((pcm) => {
-        // Half-duplex: đừng gửi mic khi trợ lý đang nói. Loa phát tiếng trợ lý,
-        // mic thu lại (echo) -> endpointer ở server tưởng người dùng chen ngang
-        // -> abort giữa chừng, tiếng bị ngắt sau một đoạn ngắn. Chặn tại nguồn.
-        // Đánh đổi: không ngắt lời bằng giọng khi trợ lý đang nói (chờ nói xong).
+        // Half-duplex: don't send mic while the assistant is speaking. The
+        // speaker plays the assistant's voice, the mic picks it back up (echo)
+        // -> the server's endpointer thinks the user is barging in -> aborts
+        // mid-turn, cutting the audio off after a short burst. Block it at the
+        // source. Trade-off: no voice barge-in while the assistant speaks
+        // (wait until it finishes).
         if (this.state === 'speaking' || this.player.playing) return
         if (this.ws?.readyState === WebSocket.OPEN) this.ws.send(pcm)
       })
@@ -110,8 +112,9 @@ export class Conversation {
     }
     switch (msg.event) {
       case 'speech_start':
-        // Barge-in: người dùng nói đè khi trợ lý đang nói -> im ngay và bảo
-        // server bỏ lượt đang chạy. Không làm thế thì hai giọng chồng nhau.
+        // Barge-in: the user talks over the assistant -> go quiet immediately
+        // and tell the server to drop the running turn. Without this, the two
+        // voices overlap.
         if (this.player.playing) {
           this.player.stop()
           this.send({ type: 'abort' })
@@ -137,7 +140,7 @@ export class Conversation {
         break
       case 'error':
         this.setState('error')
-        this.cb.onError?.(String(msg.message ?? 'lỗi không rõ'))
+        this.cb.onError?.(String(msg.message ?? 'unknown error'))
         break
     }
   }

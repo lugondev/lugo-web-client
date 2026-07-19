@@ -5,15 +5,15 @@ import { parseHeaders, serializeHeaders } from './profileForm'
 import { Button } from '../ui/Button'
 import './Profiles.css'
 
-// Dùng <input>/<textarea> thô với aria-label thay vì ui/TextInput|TextArea:
-// hai component đó tự render <label htmlFor=id> và onChange là event thuần
-// (props = {label,id} & InputHTMLAttributes), không phải onChange(v). Raw +
-// aria-label giữ form gọn và cho test query bằng getByLabelText.
+// Use raw <input>/<textarea> with aria-label instead of ui/TextInput|TextArea:
+// those two components render their own <label htmlFor=id> and their onChange is a
+// plain event (props = {label,id} & InputHTMLAttributes), not onChange(v). Raw +
+// aria-label keeps the form compact and lets tests query by getByLabelText.
 
 const STT_PRESETS = ['', 'vi', 'en', 'multi', 'en_vi']
 
-// Mỗi dòng MCP giữ headers dưới dạng chuỗi JSON để người dùng gõ tự do; chỉ
-// parse khi Save (lỗi parse chặn Save, không làm hỏng state đang gõ).
+// Each MCP row keeps headers as a JSON string so the user can type freely; only
+// parse on Save (a parse error blocks Save, without corrupting the in-progress state).
 type McpRow = Omit<McpServer, 'headers'> & { headersText: string }
 
 export function ProfileEditor({

@@ -1,5 +1,5 @@
-/* Bộ nhận diện Lugo. Cam CHỈ dùng cho trạng thái hoạt động và hành động
-   chính -- cam dùng cho mọi thứ thì không còn báo hiệu gì. */
+/* Lugo brand identity. Orange is used ONLY for active states and the primary
+   action -- orange used for everything signals nothing. */
 :root {
   --lugo-ink: #111111;
   --lugo-ink-soft: #2a2a2a;
@@ -9,17 +9,17 @@
   --lugo-accent-warm: #ffc857;
   --lugo-accent-gradient: linear-gradient(135deg, #ff8a00, #ffc857);
 
-  /* Bảng màu Lugo không có màu lỗi. Cam thì đã dành cho trạng thái hoạt động
-     và hành động chính -- dùng lại cam cho lỗi khiến một màu vừa nghĩa "đi"
-     vừa nghĩa "hỏng". */
+  /* The Lugo palette has no error color. Orange is already reserved for active states
+     and the primary action -- reusing orange for errors makes one color mean both "go"
+     and "broken". */
   --lugo-danger: #c9372c;
 
   --lugo-bg: var(--lugo-cream);
   --lugo-fg: var(--lugo-ink);
 }
 
-/* Talk là màn dùng lâu, thường buổi tối, và logo trắng trên nền tối là bản
-   mạnh nhất của bộ nhận diện -> nền tối là mặc định ở đó. */
+/* Talk is a long-used screen, usually in the evening, and the white logo on a dark
+   background is the strongest form of the brand -> a dark background is the default there. */
 [data-surface='talk'] {
   --lugo-bg: var(--lugo-ink);
   --lugo-fg: var(--lugo-cream);

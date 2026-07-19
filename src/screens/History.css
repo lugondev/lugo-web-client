@@ -48,7 +48,7 @@
 .his__preview {
   font-weight: 500;
   margin: 0;
-  /* Cắt ở một dòng: đây là danh sách để quét mắt, không phải để đọc. */
+  /* Clamp to one line: this is a list to scan, not to read. */
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -93,8 +93,8 @@
 
 .his__turn { margin: 0; }
 
-/* Nhãn ai nói. Không dùng bong bóng chat -- đây là bản ghi để đọc lại,
-   không phải một cuộc chat đang diễn ra. */
+/* Speaker label. No chat bubbles -- this is a transcript to read back,
+   not a live chat in progress. */
 .his__who {
   font-size: 0.75rem;
   letter-spacing: 0.08em;

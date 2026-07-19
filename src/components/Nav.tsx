@@ -2,10 +2,10 @@ import './Nav.css'
 
 export type Screen = 'talk' | 'history' | 'devices' | 'tools' | 'profiles'
 
-// Chỉ liệt kê màn CÓ THẬT. Nav trỏ tới màn không có là nói dối người dùng.
-// Thứ tự thưa dần theo tần suất dùng: Nói là việc chính, Lịch sử là thứ bạn
-// xem sau khi nói, Hồ sơ là cấu hình assistant, Thiết bị là cấu hình thiết
-// bị, Công cụ là việc lặt vặt thỉnh thoảng.
+// Only list screens that ACTUALLY exist. A nav pointing to a missing screen lies
+// to the user. Ordered by decreasing frequency of use: Talk is the main thing,
+// History is what you check after talking, Profiles configures the assistant,
+// Devices configures hardware, Tools is the occasional odd job.
 const ITEMS: { id: Screen; label: string }[] = [
   { id: 'talk', label: 'Talk' },
   { id: 'history', label: 'History' },
@@ -25,8 +25,8 @@ export function Nav({
 }) {
   return (
     <nav className="nav" aria-label="Main navigation">
-      {/* Bốn màn thật, ngang hàng nhau -- nhóm riêng và canh giữa trong phần
-          còn lại sau khi trừ chỗ cho Đăng xuất. */}
+      {/* Four real screens, level with each other -- grouped separately and centered in
+          the space left after making room for Sign out. */}
       <div className="nav__tabs">
         {ITEMS.map((it) => (
           <button
@@ -40,9 +40,9 @@ export function Nav({
         ))}
       </div>
       <span className="nav__divider" aria-hidden="true" />
-      {/* Đăng xuất là HÀNH ĐỘNG, không phải một màn -- cố tình KHÔNG dùng
-          nav__btn (không aria-current, không dáng pill/tab) để không đọc
-          nhầm thành một mục ngang hàng với Nói/Lịch sử/Thiết bị/Công cụ. */}
+      {/* Sign out is an ACTION, not a screen -- deliberately NOT using nav__btn (no
+          aria-current, no pill/tab look) so it doesn't read as a peer of
+          Talk/History/Devices/Tools. */}
       <button className="nav__logout" onClick={onLogout}>
         Sign out
       </button>

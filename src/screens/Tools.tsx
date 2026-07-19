@@ -91,8 +91,9 @@ function ToVoice() {
         </p>
       )}
       {url && (
-        // URL tuyệt đối do synthesize() trả về (API khác domain với client) --
-        // KHÔNG đổi thành đường dẫn tương đối, sẽ trỏ nhầm vào domain client.
+        // Absolute URL returned by synthesize() (the API is on a different domain from the
+        // client) -- do NOT change it to a relative path, it would wrongly point at the
+        // client domain.
         <audio className="tool__audio" controls src={url} autoPlay />
       )}
       <Button variant="primary" onClick={run} disabled={!input.trim() || busy}>

@@ -11,7 +11,7 @@ import { History } from './History'
 
 const ROW = {
   id: 's1', profile_id: 'p', user_id: null, created_at: '2026-07-17T10:00:00Z',
-  ended_at: null, meta: {}, message_count: 2, preview: 'Xin chào',
+  ended_at: null, meta: {}, message_count: 2, preview: 'Hello',
 }
 
 describe('History continue', () => {
@@ -30,7 +30,7 @@ describe('History continue', () => {
   it('still opens the detail view when the row itself is tapped', async () => {
     vi.mocked(getSession).mockResolvedValue({ ...ROW, messages: [] } as never)
     render(<History onContinue={vi.fn()} />)
-    fireEvent.click(await screen.findByText('Xin chào'))
+    fireEvent.click(await screen.findByText('Hello'))
     expect(await screen.findByText('Back')).toBeTruthy()
   })
 
@@ -38,7 +38,7 @@ describe('History continue', () => {
     vi.mocked(getSession).mockResolvedValue({ ...ROW, messages: [] } as never)
     const onContinue = vi.fn()
     render(<History onContinue={onContinue} />)
-    fireEvent.click(await screen.findByText('Xin chào'))
+    fireEvent.click(await screen.findByText('Hello'))
     fireEvent.click(await screen.findByText('Continue'))
     expect(onContinue).toHaveBeenCalledWith('s1')
   })

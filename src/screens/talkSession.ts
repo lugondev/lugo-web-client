@@ -1,8 +1,9 @@
 import type { SessionRow } from '../api/history'
 
-/** id của phiên gần nhất, nếu có -- dùng để Start talking nối tiếp thay vì
- * luôn tạo phiên mới. Không có phiên nào (mới tinh, hoặc tra cứu lỗi) ->
- * undefined, Start talking vẫn chạy như trước khi có tính năng này. */
+/** id of the most recent session, if any -- used so Start talking resumes
+ * instead of always creating a new session. No sessions (brand new, or a
+ * failed lookup) -> undefined, and Start talking still runs as it did before
+ * this feature existed. */
 export function latestSessionId(rows: SessionRow[]): string | undefined {
   return rows[0]?.id
 }

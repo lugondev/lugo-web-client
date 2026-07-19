@@ -96,7 +96,7 @@ export function History({ onContinue }: { onContinue: (id: string) => void }) {
 
   async function refresh() {
     try {
-      // Server đã sắp theo created_at DESC -- không sắp lại ở client.
+      // The server already orders by created_at DESC -- don't re-sort on the client.
       setRows(await listSessions(50))
       setError(null)
     } catch (e) {

@@ -18,7 +18,7 @@ export function Login({ onDone }: { onDone: () => void }) {
       await login(username, password)
       onDone()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Đăng nhập thất bại')
+      setError(err instanceof Error ? err.message : 'Sign-in failed')
     } finally {
       setBusy(false)
     }

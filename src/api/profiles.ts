@@ -37,7 +37,7 @@ async function errorFrom(resp: Response): Promise<Error> {
       msg = raw.map((e: { msg?: string }) => e?.msg).filter(Boolean).join('; ')
     }
   } catch {
-    // body không phải JSON -- rơi xuống thông báo mặc định
+    // body isn't JSON -- fall through to the default message
   }
   if (resp.status === 409) return new Error(msg || 'That name is already taken.')
   return new Error(msg || `Server returned error ${resp.status}`)

@@ -65,8 +65,8 @@ describe('Talk session continuity', () => {
     vi.clearAllMocks()
     localStorage.clear()
     vi.mocked(listProfiles).mockResolvedValue([] as never)
-    // Cần đủ "khả năng" để start() không tự rẽ vào state 'error' trước khi
-    // chạm tới logic session -- xem src/audio/capability.test.ts.
+    // Need enough "capability" that start() doesn't branch into the 'error'
+    // state before reaching the session logic -- see src/audio/capability.test.ts.
     vi.stubGlobal('AudioDecoder', class {})
     vi.stubGlobal('AudioContext', class {})
     vi.stubGlobal('navigator', { mediaDevices: { getUserMedia: () => {} } })

@@ -2,9 +2,9 @@ import type { TalkState } from '../audio/conversation'
 
 export type Control = { label: string; kind: 'start' | 'skip' | 'stop' }
 
-/** Nút điều khiển duy nhất đổi theo state: đang nói/nghĩ thì Skip chỉ bỏ
- * lượt hiện tại (mic vẫn nối), đang nghe/đang kết nối thì Stop mới dừng
- * hẳn cuộc gọi. */
+/** The single control button changes with state: while speaking/thinking,
+ * Skip only drops the current turn (mic stays connected); while
+ * listening/connecting, Stop ends the call entirely. */
 export function controlFor(state: TalkState): Control {
   switch (state) {
     case 'thinking':

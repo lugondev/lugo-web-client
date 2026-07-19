@@ -2,27 +2,29 @@ import { readLevel, smoothLevel } from './level'
 import { PCM_WORKLET_SRC } from './pcm-worklet'
 
 const SAMPLE_RATE = 16000
-// Gộp mic lại thành gói ~32ms (512 mẫu = đúng 4 render-quantum 128-mẫu của
-// AudioWorklet) trước khi gửi WS -- xem createMicBatcher. 32ms vẫn đủ nhanh
-// cho STT thời gian thực, chỉ thêm tối đa 32ms độ trễ so với gửi ngay.
+// Batch mic into ~32ms packets (512 samples = exactly 4 of AudioWorklet's
+// 128-sample render quanta) before sending over WS -- see createMicBatcher.
+// 32ms is still fast enough for realtime STT, adding at most 32ms of latency
+// versus sending immediately.
 const MIC_BATCH_SAMPLES = 512
 
 export function floatToPcm16(input: Float32Array): ArrayBuffer {
   const out = new Int16Array(input.length)
   for (let i = 0; i < input.length; i += 1) {
-    // Cắt ngưỡng TRƯỚC khi nhân: bỏ qua bước này thì giá trị ngoài [-1,1] quấn
-    // vòng và đỉnh sóng thành tiếng nổ lách tách.
+    // Clamp BEFORE scaling: skip this and values outside [-1,1] wrap around,
+    // turning waveform peaks into crackling pops.
     const s = Math.max(-1, Math.min(1, input[i]))
     out[i] = s < 0 ? s * 0x8000 : s * 0x7fff
   }
   return out.buffer
 }
 
-/** Gộp các chunk từ AudioWorklet (mỗi lần cố định 128 mẫu, ~8ms ở 16kHz) lại
- * trước khi gọi onFrame, thay vì gửi WS ngay mỗi 8ms (~125 gói/giây, 256
- * byte/gói -- trông như "spam" trong Network tab và tốn overhead framing).
- * Trả về hàm push(chunk); khi tổng số mẫu tích lũy >= targetSamples thì gộp
- * lại, đổi sang PCM16, gọi onFrame một lần rồi reset về rỗng. */
+/** Batch chunks from the AudioWorklet (a fixed 128 samples each, ~8ms at 16kHz)
+ * before calling onFrame, instead of hitting the WS every 8ms (~125 packets/sec,
+ * 256 bytes/packet -- looks like "spam" in the Network tab and wastes framing
+ * overhead). Returns a push(chunk) function; once accumulated samples reach
+ * targetSamples it merges them, converts to PCM16, calls onFrame once, then
+ * resets to empty. */
 export function createMicBatcher(
   targetSamples: number,
   onFrame: (pcm: ArrayBuffer) => void,
@@ -53,8 +55,8 @@ export class Mic {
   private _level = 0
 
   async start(onFrame: (pcm: ArrayBuffer) => void): Promise<void> {
-    // Xin AudioContext đúng 16kHz để trình duyệt tự resample -- rẻ hơn và
-    // đúng hơn là ta tự viết resampler.
+    // Request a 16kHz AudioContext so the browser resamples for us -- cheaper
+    // and more correct than writing our own resampler.
     this.ctx = new AudioContext({ sampleRate: SAMPLE_RATE })
     this.stream = await navigator.mediaDevices.getUserMedia({
       audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true },
@@ -73,21 +75,21 @@ export class Mic {
     const pushBatch = createMicBatcher(MIC_BATCH_SAMPLES, onFrame)
     node.port.onmessage = (e) => pushBatch(e.data as Float32Array)
     source.connect(node)
-    // Worklet phải nối tới destination mới chạy, nhưng ta KHÔNG muốn nghe lại
-    // tiếng mình -- nối qua một gain 0.
+    // The worklet only runs if it's connected to the destination, but we do NOT
+    // want to hear ourselves -- route through a gain of 0.
     const mute = this.ctx.createGain()
     mute.gain.value = 0
     node.connect(mute)
     mute.connect(this.ctx.destination)
 
-    // Analyser song song với worklet (KHÔNG nối tiếp) -- worklet vẫn phải
-    // nhận nguyên tín hiệu để STT không bị suy giảm.
+    // Analyser runs in parallel with the worklet (NOT in series) -- the worklet
+    // must still receive the full signal so STT quality isn't degraded.
     this.analyser = this.ctx.createAnalyser()
     this.analyser.fftSize = 2048
     source.connect(this.analyser)
   }
 
-  /** Mức giọng NÓI CỦA BẠN, 0..1. Chấm trong logo là "bạn" -- nó nở theo cái này. */
+  /** Level of YOUR OWN voice, 0..1. The dot in the logo is "you" -- it grows with this. */
   get level(): number {
     this._level = smoothLevel(this._level, readLevel(this.analyser, this.buf), 0.5, 0.12)
     return this._level

@@ -12,8 +12,8 @@
   border-top: 1px solid color-mix(in srgb, currentColor 12%, transparent);
 }
 
-/* Nói + Thiết bị: chiếm phần còn lại sau khi trừ chỗ cho Đăng xuất, và canh
-   giữa trong phần đó -- nên vẫn trông cân đối, không bị dạt hẳn sang trái. */
+/* Talk + Devices: take the space left after making room for Sign out, and center within
+   it -- so it still looks balanced, not shoved off to the left. */
 .nav__tabs {
   flex: 1;
   min-width: 0;
@@ -22,9 +22,9 @@
   gap: 1px;
 }
 
-/* white-space: nowrap là điều kiện CẦN nhưng không đủ -- một mình nó sẽ làm
-   hàng tràn ngang. Bù lại bằng padding/gap/cỡ chữ nhỏ hơn (xem các quy tắc
-   dưới) để bốn nhãn vẫn vừa một hàng ở 320px mà không bị cắt hay xuống dòng. */
+/* white-space: nowrap is NECESSARY but not sufficient -- on its own it would make the row
+   overflow sideways. Compensate with smaller padding/gap/font-size (see the rules below) so
+   all four labels still fit on one row at 320px without clipping or wrapping. */
 .nav__btn {
   font: inherit;
   font-size: 0.75rem;
@@ -41,8 +41,8 @@
 }
 .nav__btn:hover { opacity: 0.8; }
 
-/* Màn đang xem. KHÔNG dùng cam: cam dành cho trạng thái hoạt động và hành
-   động chính, còn "bạn đang ở đây" thì không phải hành động. */
+/* Currently viewed screen. NOT orange: orange is for active states and the primary action,
+   and "you are here" is not an action. */
 .nav__btn[aria-current='page'] {
   opacity: 1;
   background: color-mix(in srgb, currentColor 10%, transparent);
@@ -53,8 +53,8 @@
   outline-offset: 2px;
 }
 
-/* Vạch chia -- tách Đăng xuất ra thành một LOẠI điều khiển khác, không phải
-   thêm một điểm đến trong hàng tab. */
+/* Divider -- sets Sign out apart as a different KIND of control, not one more destination
+   in the tab row. */
 .nav__divider {
   align-self: stretch;
   width: 1px;
@@ -62,10 +62,10 @@
   background: color-mix(in srgb, currentColor 14%, transparent);
 }
 
-/* Đăng xuất: chữ nhỏ hơn, mờ hơn nav__btn, không nền pill, không hover kiểu
-   tab -- để KHÔNG đọc như một mục thứ ba ngang hàng Nói/Thiết bị. Vẫn giữ
-   tối thiểu ~40px chiều cao chạm và outline focus-visible rõ ràng. Padding
-   ngang được siết lại (thay vì cỡ chữ) để không phải hẹp hơn nav__btn. */
+/* Sign out: smaller text, dimmer than nav__btn, no pill background, no tab-style hover --
+   so it does NOT read as a third peer alongside Talk/Devices. Still keeps a minimum ~40px
+   touch height and a clear focus-visible outline. Horizontal padding is tightened (instead
+   of font size) so it needn't be narrower than nav__btn. */
 .nav__logout {
   font: inherit;
   font-size: 0.6875rem;

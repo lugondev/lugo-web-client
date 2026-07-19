@@ -1,39 +1,40 @@
 import type { TalkState } from '../audio/conversation'
 import './LugoMark.css'
 
-// Dấu nhận diện Lugo — cùng ngôn ngữ với brand sheet (lugo-branding): vòng HỞ là
-// LUGO, chấm cam là BẠN chèn vào khe hở. Khác landing ở chỗ App có âm thật: chấm
-// nở theo giọng bạn (listening) và vòng thở theo tiếng Lugo (speaking) qua `level`,
-// không phải chuyển động CSS giả. Thêm hai trạng thái App-only: connecting, error.
+// Lugo brand mark — same language as the brand sheet (lugo-branding): the OPEN ring
+// is LUGO, the orange dot is YOU slotting into the gap. Unlike the landing page, the
+// App has real audio: the dot swells with your voice (listening) and the ring breathes
+// with Lugo's voice (speaking) via `level`, not fake CSS motion. Two App-only states
+// added: connecting, error.
 
 const R = 38
 const CIRC = 2 * Math.PI * R // 238.76
-const GAP = 34 // độ dài khoảng hở trên chu vi -> ~51 độ. Hở vừa đủ để chấm CHÈN
-// vào, không phải khe rộng khiến chấm trông như lơ lửng bên ngoài.
+const GAP = 34 // gap length along the circumference -> ~51 degrees. Wide enough for the
+// dot to SLOT in, not so wide the dot looks like it's floating outside.
 const DASH = CIRC - GAP
 
-// Chấm NẰM TRÊN chính đường tròn của vòng: cùng tâm (50,50), cùng bán kính R, tại
-// góc -45 độ (hướng 1:30, trên-phải). Nhờ đó chấm bịt kín khoảng hở, không trôi ra.
+// The dot SITS ON the ring's own circle: same center (50,50), same radius R, at angle
+// -45 degrees (1:30 o'clock, upper-right). This lets the dot seal the gap without drifting.
 const DOT_ANGLE = -45
 const DOT_X = 50 + R * Math.cos((DOT_ANGLE * Math.PI) / 180)
 const DOT_Y = 50 + R * Math.sin((DOT_ANGLE * Math.PI) / 180)
 
-// <circle> vẽ từ 3 giờ, thuận chiều kim đồng hồ; với dasharray này TÂM khoảng hở
-// nằm ở GAP_CENTER độ. Xoay đúng bằng ROT để tâm khe trùng góc chấm, nên chấm luôn
-// ngồi CHÍNH GIỮA khe. Đổi R hay GAP thì ROT tự tính lại. (~-19.4)
+// <circle> is drawn from 3 o'clock, clockwise; with this dasharray the CENTER of the gap
+// lands at GAP_CENTER degrees. Rotate by exactly ROT so the gap center aligns with the dot
+// angle, keeping the dot DEAD CENTER in the gap. Change R or GAP and ROT recomputes. (~-19.4)
 const GAP_CENTER = ((DASH / CIRC) * 360 + 360) / 2
 const ROT = 360 + DOT_ANGLE - GAP_CENTER
 
 export function LugoMark({ state, level }: { state: TalkState; level: number }) {
-  // Chấm là BẠN: nở theo giọng bạn khi bạn đang nói.
+  // The dot is YOU: swells with your voice when you're speaking.
   const dotScale = state === 'listening' ? 1 + level * 0.85 : 1
-  // Vòng là LUGO: thở nhẹ theo tiếng nó khi nó đang nói (kèm mấp máy "miệng" bằng CSS).
+  // The ring is LUGO: breathes gently with its voice when it's speaking (with a "mouth" flicker in CSS).
   const ringScale = state === 'speaking' ? 1 + level * 0.06 : 1
 
   return (
     <svg className="mark" data-state={state} viewBox="0 0 100 100" role="img" aria-hidden="true">
       <defs>
-        {/* Đường cam→trắng cho trạng thái thinking (màu branding). */}
+        {/* Orange→white stroke for the thinking state (branding colors). */}
         <linearGradient id="lugo-runner" x1="0" y1="0" x2="1" y2="1">
           <stop offset="0" stopColor="#ff8a00" />
           <stop offset="1" stopColor="#ffffff" />
@@ -54,9 +55,10 @@ export function LugoMark({ state, level }: { state: TalkState; level: number }) 
         />
       </g>
 
-      {/* Đường cam→trắng TỰ VẼ quanh vòng khi Lugo nghĩ (thanh tiến trình tròn).
-          Cùng cung với vòng nền, chừa đúng khoảng hở ở chấm; vẽ dần bằng CSS. Nằm
-          DƯỚI chấm nên chấm "bạn" luôn ở trên. Chỉ hiện ở state thinking. */}
+      {/* Orange→white stroke that DRAWS ITSELF around the ring while Lugo thinks (circular
+          progress bar). Same arc as the base ring, leaving exactly the gap at the dot; drawn
+          gradually in CSS. Sits BELOW the dot so "your" dot stays on top. Only shows in the
+          thinking state. */}
       <circle
         className="mark__runner"
         cx="50"

@@ -10,8 +10,9 @@ import { Profiles } from './screens/Profiles'
 import { Talk } from './screens/Talk'
 import { Tools } from './screens/Tools'
 
-// Talk và History cần props (nối tiếp phiên) nên render riêng bên dưới,
-// không qua bản đồ Screen -> component chung như 3 màn còn lại.
+// Talk and History need props (session resume), so they're rendered
+// explicitly below rather than through the shared Screen -> component map
+// like the other three screens.
 const SCREENS: Record<Exclude<Screen, 'talk' | 'history'>, ComponentType> = {
   profiles: Profiles,
   devices: Devices,
@@ -23,8 +24,9 @@ export default function App() {
   const [screen, setScreen] = useState<Screen>('talk')
   const [resumeSessionId, setResumeSessionId] = useState<string | null>(null)
 
-  // Refresh thất bại ở bất kỳ request nào -> quay về Login. Đây là lý do
-  // client.ts có onAuthLost thay vì tự điều hướng: lớp API không biết gì về UI.
+  // A refresh failure on any request -> back to Login. This is why
+  // client.ts has onAuthLost instead of navigating itself: the API layer
+  // knows nothing about the UI.
   useEffect(() => {
     onAuthLost(() => setAuthed(false))
   }, [])
@@ -37,7 +39,7 @@ export default function App() {
     setScreen('talk')
   }
 
-  // Từ History bấm Continue -> sang Talk và tự resume đúng phiên đó.
+  // Continue from History -> go to Talk and auto-resume that exact session.
   function goToTalk(id: string) {
     setResumeSessionId(id)
     setScreen('talk')

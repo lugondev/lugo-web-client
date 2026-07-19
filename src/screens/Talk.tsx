@@ -32,8 +32,8 @@ export function Talk({
   const [profile, setProfile] = useState<string>('')
   const convRef = useRef<Conversation | null>(null)
 
-  // Đọc level ~mỗi khung hình. Không đưa vào state của Conversation vì đây
-  // thuần túy là chuyện vẽ -- lớp audio không cần biết có ai đang vẽ.
+  // Read the level ~every frame. Kept out of Conversation's state because
+  // this is purely a drawing concern -- the audio layer needn't know anyone's drawing.
   useEffect(() => {
     let raf = 0
     const tick = () => {
@@ -55,13 +55,13 @@ export function Talk({
         setProfiles(list)
         setProfile(resolveInitialProfile(localStorage.getItem(PROFILE_KEY), list.map((p) => p.name)))
       })
-      .catch(() => { /* danh sách hỏng thì cứ để trống -> Start chạy bằng default server */ })
+      .catch(() => { /* broken list -> just leave it empty; Start runs with the server default */ })
     return () => { alive = false }
   }, [])
 
-  // Đến từ History (Continue) -> tự kết nối luôn, không chờ bấm Start talking
-  // lần nữa. resumeSessionId chỉ tiêu thụ một lần: onResumed() báo cho App
-  // xoá nó đi, nên quay lại Talk sau đó không tự resume lại phiên cũ.
+  // Coming from History (Continue) -> connect right away, don't wait for
+  // another Start talking tap. resumeSessionId is consumed once: onResumed()
+  // tells App to clear it, so returning to Talk later won't re-resume the old session.
   useEffect(() => {
     if (!resumeSessionId) return
     void start(resumeSessionId).then(() => onResumed?.())
@@ -75,7 +75,7 @@ export function Talk({
   async function start(explicitSessionId?: string) {
     const support = checkAudioSupport()
     if (!support.ok) {
-      // Nói thật thiếu gì, và nói cách sửa. Không "trình duyệt không hỗ trợ".
+      // Say honestly what's missing, and how to fix it. Not "browser not supported".
       setError(`This browser is missing ${support.missing.join(', ')}. Open it in a recent Chrome or Edge, over HTTPS.`)
       setState('error')
       return
@@ -83,21 +83,21 @@ export function Talk({
     setError(null)
     setReply('')
     setYou('')
-    // Có id chỉ định (đến từ History/Continue) -> dùng thẳng, không tra cứu.
-    // Không thì lấy phiên gần nhất; tra cứu lỗi không được chặn Start talking.
+    // An explicit id (from History/Continue) -> use it directly, no lookup.
+    // Otherwise take the most recent session; a lookup failure must not block Start talking.
     let sessionId = explicitSessionId
     if (!sessionId) {
       try {
         sessionId = latestSessionId(await listSessions(1))
       } catch {
-        // bỏ qua -- cứ bắt đầu phiên mới như trước khi có tính năng này
+        // ignore -- just start a new session like before this feature existed
       }
     }
     const conv = new Conversation({
       onState: (s) => {
         setState(s)
-        // Lượt mới bắt đầu -> xoá lượt cũ. Không làm thế thì các lượt dính
-        // vào nhau thành một khối chữ dài vô tận.
+        // A new turn begins -> clear the old one. Without this, turns run
+        // together into one endless block of text.
         if (s === 'thinking') setReply('')
       },
       onUserText: setYou,
@@ -145,8 +145,8 @@ export function Talk({
       <div className="talk__stage">
         <LugoMark state={state} level={level} />
 
-        {/* Vòng tròn đã nói trạng thái cho người nhìn thấy nó. Dòng này dành
-            cho người dùng trình đọc màn hình -- khác đối tượng, không trùng việc. */}
+        {/* The circle already conveys state to anyone who can see it. This line
+            is for screen-reader users -- a different audience, not a duplicate. */}
         <p className="sr-only" aria-live="polite">
           {STATE_LABEL[state]}
         </p>
