@@ -1,9 +1,9 @@
 <!doctype html>
 <meta charset="utf-8">
 <title>Lugo talk probe</title>
-<button id="go">Nối &amp; nói</button>
-<button id="say">Gửi text</button>
-<button id="stop">Dừng</button>
+<button id="go">Connect &amp; talk</button>
+<button id="say">Send text</button>
+<button id="stop">Stop</button>
 <pre id="log"></pre>
 <script type="module">
 import { Conversation } from '/src/audio/conversation.ts'
@@ -13,9 +13,9 @@ const log = (m) => (document.getElementById('log').textContent += m + '\n')
 window.__state = []
 const conv = new Conversation({
   onState: (s) => { window.__state.push(s); log('state: ' + s) },
-  onUserText: (t) => log('ban: ' + t),
+  onUserText: (t) => log('you: ' + t),
   onReplyText: (t) => log('lugo: ' + t),
-  onError: (e) => log('LOI: ' + e),
+  onError: (e) => log('ERROR: ' + e),
 })
 window.__conv = conv
 document.getElementById('go').onclick = async () => {
@@ -23,11 +23,11 @@ document.getElementById('go').onclick = async () => {
     await login('e2e-user', 'pw12345678')
     log('login ok')
     await conv.connect()
-  } catch (e) { log('LOI login: ' + e) }
+  } catch (e) { log('ERROR login: ' + e) }
 }
 document.getElementById('stop').onclick = () => conv.disconnect()
 document.getElementById('say').onclick = () => {
-  log('gui text...')
-  conv.sendText('Xin chao, ban khoe khong?')
+  log('sending text...')
+  conv.sendText('Hello, how are you?')
 }
 </script>

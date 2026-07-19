@@ -1,6 +1,6 @@
 <!doctype html>
 <meta charset="utf-8">
-<pre id="out">đang kiểm tra...</pre>
+<pre id="out">checking...</pre>
 <script type="module">
 const out = document.getElementById('out')
 const lines = []
@@ -13,7 +13,7 @@ if (typeof AudioDecoder !== 'undefined') {
     const sup = await AudioDecoder.isConfigSupported(cfg)
     lines.push('opus 24k mono decode: ' + sup.supported)
   } catch (e) {
-    lines.push('opus check ném lỗi: ' + e)
+    lines.push('opus check threw: ' + e)
   }
 }
 out.textContent = lines.join('\n')

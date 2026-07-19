@@ -10,7 +10,7 @@ function jsonResponse(body: unknown, status = 200): Response {
 }
 
 const DEVICE = {
-  id: 'd1', user_id: 'u1', name: 'Loa bếp', serial: 'ABC123',
+  id: 'd1', user_id: 'u1', name: 'Kitchen speaker', serial: 'ABC123',
   created_at: '2026-07-17T10:00:00Z', last_seen_at: null, revoked: false,
 }
 
@@ -25,7 +25,7 @@ describe('devices api', () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse({ success: true, data: [DEVICE] })))
     const list = await listDevices()
     expect(list).toHaveLength(1)
-    expect(list[0].name).toBe('Loa bếp')
+    expect(list[0].name).toBe('Kitchen speaker')
   })
 
   it('listDevices calls MY endpoint, not the admin endpoint', async () => {
@@ -46,9 +46,9 @@ describe('devices api', () => {
   it('claimDevice sends code and name', async () => {
     const f = vi.fn().mockResolvedValue(jsonResponse({ success: true, data: DEVICE }))
     vi.stubGlobal('fetch', f)
-    const d = await claimDevice('123456', 'Loa bếp')
+    const d = await claimDevice('123456', 'Kitchen speaker')
     expect(f.mock.calls[0][0]).toContain('/v1/devices/pair/claim')
-    expect(JSON.parse(f.mock.calls[0][1].body)).toEqual({ code: '123456', name: 'Loa bếp' })
+    expect(JSON.parse(f.mock.calls[0][1].body)).toEqual({ code: '123456', name: 'Kitchen speaker' })
     expect(d.id).toBe('d1')
   })
 

@@ -1,10 +1,12 @@
 import { chromium } from 'playwright'
 const b = await chromium.launch()
 const errors = []
-const VN = ['Đăng xuất','Thiết bị','Lịch sử','Công cụ','Ghép','Xoá','Quay lại','Bắt đầu','Dừng','Đang nghe','Đang nghĩ','phút trước','vừa xong','chưa kết nối','Mật khẩu','Tên đăng nhập','Những gì','Hai việc','Nhấn để','Cứ nói','Đọc lên','Chuyển thành']
+// The UI is English now; this guard flags any leftover Vietnamese by scanning
+// for the full Vietnamese Unicode range (toned/circumflex vowels included).
+const VN_RANGE = /[À-ỹ]/
 async function vnHits(page) {
   const txt = await page.evaluate(() => document.body.innerText)
-  return VN.filter(w => txt.includes(w))
+  return txt.split(/\s+/).filter(w => VN_RANGE.test(w))
 }
 const p = await b.newPage({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2 })
 p.on('pageerror', e => errors.push(String(e)))
