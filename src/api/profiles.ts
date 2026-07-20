@@ -25,7 +25,7 @@ export interface Profile {
 }
 
 export type ProfileInput = Omit<Profile, 'owner_id'>
-export interface LlmOption { id: string; engine: string; model_id: string; label: string }
+export interface LlmOption { engine: string; model_id: string; label: string }
 
 async function errorFrom(resp: Response): Promise<Error> {
   let msg = ''
@@ -84,5 +84,5 @@ export async function cloneProfile(name: string, newName: string): Promise<Profi
 }
 
 export async function listLlmOptions(): Promise<LlmOption[]> {
-  return jsonData<LlmOption[]>(await apiFetch('/v1/profiles/llm-options'))
+  return jsonData<LlmOption[]>(await apiFetch('/v1/model_registry/options?kind=llm'))
 }

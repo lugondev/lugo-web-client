@@ -76,9 +76,17 @@ describe('profiles api', () => {
 
   it('listLlmOptions returns the options array', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse({
-      success: true, data: [{ id: 'x', engine: 'openai', model_id: 'gpt', label: 'GPT' }],
+      success: true, data: [{ engine: 'openai', model_id: 'gpt', label: 'GPT' }],
     })))
-    expect((await listLlmOptions())[0].engine).toBe('openai')
+    const opts = await listLlmOptions()
+    expect(opts).toEqual([{ engine: 'openai', model_id: 'gpt', label: 'GPT' }])
+  })
+
+  it('listLlmOptions hits the registry options endpoint with kind=llm', async () => {
+    const f = vi.fn().mockResolvedValue(jsonResponse({ success: true, data: [] }))
+    vi.stubGlobal('fetch', f)
+    await listLlmOptions()
+    expect(f.mock.calls[0][0]).toContain('/v1/model_registry/options?kind=llm')
   })
 
   it('surfaces the server error text; maps 409 to a name-taken message', async () => {
