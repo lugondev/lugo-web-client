@@ -21,6 +21,11 @@ function sttKey(stt: { engine: string; model: string }): string {
   return stt.engine ? `${stt.engine}|${stt.model}` : ''
 }
 
+// Same encoding for the LLM select's (engine, model) pair.
+function llmKey(llm: { engine: string; model: string }): string {
+  return llm.engine ? `${llm.engine}|${llm.model}` : ''
+}
+
 export function ProfileEditor({
   mode, initial, onDone, onCancel,
 }: {
@@ -97,28 +102,30 @@ export function ProfileEditor({
 
       <fieldset className="pe__group">
         <legend>LLM</legend>
-        <label className="pe__field">Engine
-          <input className="input" aria-label="LLM engine" list="llm-engines" value={form.llm.engine}
-            onChange={(e) => patch({ llm: { ...form.llm, engine: e.target.value } })} />
-        </label>
         <label className="pe__field">Model
-          <input className="input" aria-label="LLM model" list="llm-models" value={form.llm.model}
-            onChange={(e) => patch({ llm: { ...form.llm, model: e.target.value } })} />
-        </label>
-        <datalist id="llm-engines">
-          {[...new Set(llmOptions.map((o) => o.engine))].map((e) => <option key={e} value={e} />)}
-        </datalist>
-        <datalist id="llm-models">
-          {llmOptions.map((o) => <option key={o.id} value={o.model_id}>{o.label}</option>)}
-        </datalist>
-        <label className="pe__field">Base URL
-          <input className="input" aria-label="LLM base_url" value={form.llm.base_url}
-            onChange={(e) => patch({ llm: { ...form.llm, base_url: e.target.value } })} />
-        </label>
-        <label className="pe__field">API key
-          <input className="input" aria-label="API key" type="password" placeholder="leave blank to keep existing"
-            value={form.llm.api_key}
-            onChange={(e) => patch({ llm: { ...form.llm, api_key: e.target.value } })} />
+          <select className="input" aria-label="LLM model" value={llmKey(form.llm)}
+            onChange={(e) => {
+              const [engine = '', model = ''] = e.target.value ? e.target.value.split('|') : ['', '']
+              // The registry now carries credentials for each engine/model, so
+              // the profile no longer stores its own base_url/api_key.
+              patch({ llm: { engine, model, base_url: '', api_key: '' } })
+            }}>
+            {llmOptions.length === 0 ? (
+              <option value="" disabled>(no LLM models — add one in Model Registry)</option>
+            ) : (
+              <>
+                <option value="">(server default)</option>
+                {llmOptions.map((o) => (
+                  <option key={`${o.engine}|${o.model_id}`} value={`${o.engine}|${o.model_id}`}>{o.label}</option>
+                ))}
+              </>
+            )}
+            {form.llm.engine && !llmOptions.some((o) => o.engine === form.llm.engine && o.model_id === form.llm.model) && (
+              <option value={llmKey(form.llm)}>
+                {form.llm.engine}{form.llm.model ? ` — ${form.llm.model}` : ''} (unavailable)
+              </option>
+            )}
+          </select>
         </label>
       </fieldset>
 

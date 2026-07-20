@@ -75,3 +75,35 @@ it('surfaces a server error on save', async () => {
   fireEvent.click(screen.getByRole('button', { name: 'Save' }))
   expect(await screen.findByText(/already taken/i)).toBeTruthy()
 })
+
+it('LLM model select: selecting an option sets engine/model and blanks base_url/api_key', async () => {
+  vi.mocked(listLlmOptions).mockResolvedValue([
+    { engine: 'openai', model_id: 'gpt-4o', label: 'OpenAI — GPT-4o' },
+  ])
+  render(<ProfileEditor mode="create" initial={emptyProfileInput()} onDone={() => {}} onCancel={() => {}} />)
+  await screen.findByText('OpenAI — GPT-4o')
+  fireEvent.change(screen.getByLabelText('LLM model'), { target: { value: 'openai|gpt-4o' } })
+  fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'x' } })
+  fireEvent.click(screen.getByRole('button', { name: 'Save' }))
+  await waitFor(() => expect(createProfile).toHaveBeenCalled())
+  const payload = vi.mocked(createProfile).mock.calls[0][0]
+  expect(payload.llm).toEqual({ engine: 'openai', model: 'gpt-4o', base_url: '', api_key: '' })
+})
+
+it('LLM model select shows a disabled placeholder when no options are available', async () => {
+  render(<ProfileEditor mode="create" initial={emptyProfileInput()} onDone={() => {}} onCancel={() => {}} />)
+  await waitFor(() => expect(listLlmOptions).toHaveBeenCalled())
+  const opt = screen.getByText('(no LLM models — add one in Model Registry)') as HTMLOptionElement
+  expect(opt.disabled).toBe(true)
+})
+
+it('preselects an existing (unavailable) LLM choice not present in llmOptions', async () => {
+  const loaded = toEditableInput({
+    ...emptyProfileInput(), owner_id: 'u1',
+    llm: { base_url: '', api_key: '***', model: 'gpt', engine: 'openai' },
+    name: 'mine',
+  } as never)
+  render(<ProfileEditor mode="edit" initial={loaded} onDone={() => {}} onCancel={() => {}} />)
+  await waitFor(() => expect(listLlmOptions).toHaveBeenCalled())
+  expect((screen.getByLabelText('LLM model') as HTMLSelectElement).value).toBe('openai|gpt')
+})
