@@ -43,11 +43,23 @@ export class Conversation {
   // a connection failure, so we must not report it. React StrictMode tears down
   // the first resume connection this way on every mount.
   private closing = false
+  // Auto-interrupt (barge-in): true -> your voice cuts Lugo off mid-turn the
+  // moment it's heard (the original behavior). false -> Lugo finishes its turn
+  // no matter what the mic picks up; only the Skip button ends it. This matters
+  // in noisy rooms, where stray sound would otherwise chop every reply short.
+  private autoInterrupt: boolean
 
-  constructor(cb: ConversationCallbacks = {}, profile?: string, sessionId?: string) {
+  constructor(cb: ConversationCallbacks = {}, profile?: string, sessionId?: string, autoInterrupt = true) {
     this.cb = cb
     this.profile = profile
     this.sessionId = sessionId
+    this.autoInterrupt = autoInterrupt
+  }
+
+  /** Flip interrupt mode on a live call -- the toggle in the UI takes effect
+   * without dropping the connection. */
+  setAutoInterrupt(on: boolean): void {
+    this.autoInterrupt = on
   }
 
   /** Level for drawing the circle: when Lugo is speaking, follow its audio;
@@ -101,6 +113,11 @@ export class Conversation {
         // source. Trade-off: no voice barge-in while the assistant speaks
         // (wait until it finishes).
         if (this.state === 'speaking' || this.player.playing) return
+        // Manual-skip mode: the whole point is that Lugo is NOT interrupted by
+        // sound. The server's endpointer would still abort the turn if it heard
+        // mic audio while thinking, so withhold the mic for the entire turn --
+        // only the Skip button ends it early.
+        if (!this.autoInterrupt && this.state === 'thinking') return
         if (this.ws?.readyState === WebSocket.OPEN) this.ws.send(pcm)
       })
       this.setState('listening')
@@ -120,6 +137,10 @@ export class Conversation {
     }
     switch (msg.event) {
       case 'speech_start':
+        // Manual-skip mode: the user has asked Lugo to keep talking until they
+        // hit Skip, so a stray noise (or their own "mm-hm") must NOT kill the
+        // turn. Ignore the endpointer entirely while a turn is in flight.
+        if (!this.autoInterrupt && this.player.playing) break
         // Barge-in: the user talks over the assistant -> go quiet immediately
         // and tell the server to drop the running turn. Without this, the two
         // voices overlap.

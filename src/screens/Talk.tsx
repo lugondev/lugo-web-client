@@ -6,6 +6,7 @@ import { Conversation, type TalkState } from '../audio/conversation'
 import { LugoMark } from '../components/LugoMark'
 import { Button } from '../ui/Button'
 import { PROFILE_KEY, resolveInitialProfile } from './talkProfile'
+import { INTERRUPT_KEY, resolveAutoInterrupt } from './talkInterrupt'
 import { controlFor } from './talkControl'
 import { latestSessionId } from './talkSession'
 import './Talk.css'
@@ -30,6 +31,11 @@ export function Talk({
   const [level, setLevel] = useState(0)
   const [profiles, setProfiles] = useState<Profile[]>([])
   const [profile, setProfile] = useState<string>('')
+  // Read once, lazily, so we don't touch localStorage on every render. Default
+  // true = the original "your voice interrupts" behavior; see talkInterrupt.ts.
+  const [autoInterrupt, setAutoInterrupt] = useState<boolean>(() =>
+    resolveAutoInterrupt(localStorage.getItem(INTERRUPT_KEY)),
+  )
   const convRef = useRef<Conversation | null>(null)
 
   // Read the level ~every frame. Kept out of Conversation's state because
@@ -72,6 +78,14 @@ export function Talk({
     localStorage.setItem(PROFILE_KEY, name)
   }
 
+  // Persist so the choice sticks across visits, and push it to a live call so
+  // the toggle takes effect immediately -- no need to Stop and Start again.
+  function chooseAutoInterrupt(on: boolean): void {
+    setAutoInterrupt(on)
+    localStorage.setItem(INTERRUPT_KEY, String(on))
+    convRef.current?.setAutoInterrupt(on)
+  }
+
   async function start(explicitSessionId?: string) {
     const support = checkAudioSupport()
     if (!support.ok) {
@@ -103,7 +117,7 @@ export function Talk({
       onUserText: setYou,
       onReplyText: (t) => setReply((prev) => (prev ? `${prev} ${t}` : t)),
       onError: (m) => setError(m),
-    }, profile || undefined, sessionId)
+    }, profile || undefined, sessionId, autoInterrupt)
     convRef.current = conv
     await conv.connect()
   }
@@ -125,21 +139,33 @@ export function Talk({
     <main className="talk" data-surface="talk">
       <div className="talk__bar">
         <span className="talk__wordmark">LUGO</span>
-        {profiles.length > 0 && (
-          <label className="talk__profile">
-            <span className="sr-only">Assistant</span>
-            <select
-              aria-label="Assistant"
-              value={profile}
-              disabled={live}
-              onChange={(e) => chooseProfile(e.target.value)}
-            >
-              {profiles.map((p) => (
-                <option key={p.name} value={p.name}>{p.nickname || p.name}</option>
-              ))}
-            </select>
+        <div className="talk__opts">
+          {/* Unlike the profile (locked once a call starts), this is safe to flip
+              mid-call -- setAutoInterrupt applies it to the running conversation. */}
+          <label className="talk__interrupt" title="When on, your voice cuts Lugo off mid-reply. When off, Lugo finishes and only Skip stops it.">
+            <input
+              type="checkbox"
+              checked={autoInterrupt}
+              onChange={(e) => chooseAutoInterrupt(e.target.checked)}
+            />
+            <span>Interrupt on voice</span>
           </label>
-        )}
+          {profiles.length > 0 && (
+            <label className="talk__profile">
+              <span className="sr-only">Assistant</span>
+              <select
+                aria-label="Assistant"
+                value={profile}
+                disabled={live}
+                onChange={(e) => chooseProfile(e.target.value)}
+              >
+                {profiles.map((p) => (
+                  <option key={p.name} value={p.name}>{p.nickname || p.name}</option>
+                ))}
+              </select>
+            </label>
+          )}
+        </div>
       </div>
 
       <div className="talk__stage">

@@ -80,7 +80,47 @@
 }
 
 .talk__bar { display: flex; align-items: center; gap: 0.75rem; }
+.talk__opts { display: flex; align-items: center; gap: 0.75rem; }
+.talk__interrupt {
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  font-size: 0.8125rem; opacity: 0.7; cursor: pointer; user-select: none;
+}
+.talk__interrupt input { accent-color: currentColor; cursor: pointer; }
+
 .talk__profile select {
-  background: transparent; color: inherit; border: 1px solid currentColor;
-  border-radius: 6px; padding: 2px 6px; font: inherit;
+  /* Strip the native chrome so we can draw our own caret and match the app's
+     rounded, subtle-surface idiom (see ui.css .input). currentColor keeps it
+     legible on the dark Talk surface without hardcoding a color. */
+  appearance: none;
+  font: inherit;
+  color: inherit;
+  padding: 6px 30px 6px 12px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, currentColor 25%, transparent);
+  background-color: color-mix(in srgb, currentColor 6%, transparent);
+  /* Chevron drawn as an inline SVG so it inherits currentColor via `stroke`. */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6' fill='none' stroke='%23ffffff' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M1 1l4 4 4-4'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  cursor: pointer;
+  transition: border-color 160ms ease, background-color 160ms ease, opacity 160ms ease;
+}
+.talk__profile select:hover:not(:disabled) {
+  border-color: color-mix(in srgb, currentColor 45%, transparent);
+  background-color: color-mix(in srgb, currentColor 10%, transparent);
+}
+.talk__profile select:focus-visible {
+  outline: 2px solid var(--lugo-accent-warm);
+  outline-offset: 2px;
+  border-color: transparent;
+}
+.talk__profile select:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+/* The popup list renders with the OS palette, not the dark surface -- pin
+   readable colors so options aren't white-on-white in light-mode browsers. */
+.talk__profile option {
+  color: var(--lugo-ink);
+  background: var(--lugo-cream);
 }

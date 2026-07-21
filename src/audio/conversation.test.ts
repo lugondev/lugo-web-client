@@ -82,3 +82,35 @@ describe('disconnect while connecting', () => {
     expect(onError).not.toHaveBeenCalled()
   })
 })
+
+describe('barge-in mode', () => {
+  // A speech_start arriving while Lugo is mid-reply. Auto mode drops the turn;
+  // manual mode ignores it so stray noise can't chop the reply short. We poke
+  // the private player/ws stubs directly -- exercising the real onMessage switch
+  // without standing up AudioContext/WebSocket.
+  function drive(autoInterrupt: boolean) {
+    const sent: string[] = []
+    let playing = true
+    const conv = new Conversation({}, undefined, undefined, autoInterrupt) as unknown as {
+      player: { playing: boolean; stop: () => void }
+      ws: { readyState: number; send: (d: string) => void }
+      onMessage: (e: MessageEvent) => void
+    }
+    conv.player = { get playing() { return playing }, stop: () => { playing = false } }
+    conv.ws = { readyState: 1 /* OPEN */, send: (d: string) => sent.push(d) }
+    conv.onMessage({ data: JSON.stringify({ event: 'speech_start' }) } as MessageEvent)
+    return { sent, stopped: () => !playing }
+  }
+
+  it('auto mode stops playback and aborts the turn', () => {
+    const { sent, stopped } = drive(true)
+    expect(stopped()).toBe(true)
+    expect(sent).toContainEqual(JSON.stringify({ type: 'abort' }))
+  })
+
+  it('manual mode keeps playing and sends no abort', () => {
+    const { sent, stopped } = drive(false)
+    expect(stopped()).toBe(false)
+    expect(sent).toHaveLength(0)
+  })
+})
