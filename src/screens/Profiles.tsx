@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react'
 import {
-  cloneProfile, deleteProfile, getProfile, listProfiles,
-  type Profile, type ProfileInput,
+  cloneProfile, deleteProfile, getProfile, listProfiles, listLlmOptions,
+  type Profile, type ProfileInput, type LlmOption,
 } from '../api/profiles'
+import { listSttModelOptions, type SttModelOption } from '../api/stt'
+import { listTtsProfiles, type TtsProfileSummary } from '../api/tts'
 import { emptyProfileInput, toEditableInput } from './profileForm'
 import { ProfileEditor } from './ProfileEditor'
 import { Button } from '../ui/Button'
@@ -13,13 +15,24 @@ import './Profiles.css'
 
 type Editing = { mode: 'create' | 'edit'; initial: ProfileInput } | null
 
-function ProfileMeta({ p }: { p: Profile }) {
+// The user-facing summary shows only the Model Registry label — never the raw
+// engine name or model id. A profile stores (engine, model), so we resolve each
+// pair back to its label via the same options lists the editor's dropdowns use.
+// Empty engine = server default; a pair with no matching registry row = unavailable.
+type Catalog = { llm: LlmOption[]; stt: SttModelOption[]; tts: TtsProfileSummary[] }
+
+function ProfileMeta({ p, catalog }: { p: Profile; catalog: Catalog }) {
+  const llmLabel = !p.llm.engine ? '—'
+    : catalog.llm.find((o) => o.engine === p.llm.engine && o.model_id === p.llm.model)?.label ?? 'Unavailable'
+  const sttLabel = !p.stt.engine ? '—'
+    : catalog.stt.find((o) => o.engine === p.stt.engine && o.model === p.stt.model)?.label ?? 'Unavailable'
+  const ttsProfile = catalog.tts.find((t) => t.name === p.tts.profile_name)
+  const ttsLabel = !p.tts.profile_name ? '—' : (ttsProfile?.nickname || ttsProfile?.name || 'Unavailable')
   return (
     <p className="profiles__meta">
-      <span>LLM {p.llm.engine || '—'} · {p.llm.model || '—'}</span>
-      <span>STT {p.stt.engine || '—'}</span>
-      <span>TTS {p.tts.profile_name || '—'}</span>
-      {p.llm.api_key && <span className="profiles__apikey">API key set</span>}
+      <span>LLM {llmLabel}</span>
+      <span>STT {sttLabel}</span>
+      <span>TTS {ttsLabel}</span>
     </p>
   )
 }
@@ -31,12 +44,22 @@ export function Profiles() {
   const [toDelete, setToDelete] = useState<string | null>(null)
   const [cloneOf, setCloneOf] = useState<string | null>(null)
   const [cloneName, setCloneName] = useState('')
+  const [catalog, setCatalog] = useState<Catalog>({ llm: [], stt: [], tts: [] })
 
   function refresh(): void {
     setError(null)
     listProfiles().then(setProfiles).catch((e) => setError((e as Error).message))
   }
   useEffect(refresh, [])
+  // Labels for the summary come from the registry; load once. A failed list just
+  // falls back to "Unavailable" for that column rather than blocking the page.
+  useEffect(() => {
+    Promise.all([
+      listLlmOptions().catch(() => []),
+      listSttModelOptions().catch(() => []),
+      listTtsProfiles().catch(() => []),
+    ]).then(([llm, stt, tts]) => setCatalog({ llm, stt, tts }))
+  }, [])
 
   async function openEdit(name: string): Promise<void> {
     try { setEditing({ mode: 'edit', initial: toEditableInput(await getProfile(name)) }) }
@@ -97,7 +120,7 @@ export function Profiles() {
                     <Button data-act="delete" variant="danger" size="sm" onClick={() => setToDelete(p.name)}>Delete</Button>
                   </span>
                 </div>
-                <ProfileMeta p={p} />
+                <ProfileMeta p={p} catalog={catalog} />
               </Card>
             ))}
           </div>
@@ -117,7 +140,7 @@ export function Profiles() {
                   <Button data-act="clone" variant="secondary" size="sm"
                     onClick={() => { setCloneOf(p.name); setCloneName(`${p.name}-copy`) }}>Clone</Button>
                 </div>
-                <ProfileMeta p={p} />
+                <ProfileMeta p={p} catalog={catalog} />
               </Card>
             ))}
           </div>
