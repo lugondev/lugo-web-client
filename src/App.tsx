@@ -9,6 +9,7 @@ import { Login } from './screens/Login'
 import { Profiles } from './screens/Profiles'
 import { Talk } from './screens/Talk'
 import { Tools } from './screens/Tools'
+import { Usage } from './screens/Usage'
 
 // Talk and History need props (session resume), so they're rendered
 // explicitly below rather than through the shared Screen -> component map
@@ -17,6 +18,7 @@ const SCREENS: Record<Exclude<Screen, 'talk' | 'history'>, ComponentType> = {
   profiles: Profiles,
   devices: Devices,
   tools: Tools,
+  usage: Usage,
 }
 
 export default function App() {

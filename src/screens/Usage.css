@@ -1,0 +1,72 @@
+.usage {
+  min-height: 100dvh;
+  padding: 20px 20px 88px;
+  max-width: 34rem;
+  margin: 0 auto;
+}
+
+.usage__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.usage__h {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 8px 0 4px;
+}
+
+.usage__sub {
+  margin: 0 0 24px;
+  opacity: 0.6;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+}
+
+.usage__period {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.875rem;
+  opacity: 0.75;
+}
+
+.usage__period .input {
+  width: 7.5rem;
+}
+
+.usage__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9375rem;
+}
+
+.usage__table th,
+.usage__table td {
+  text-align: left;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--lugo-cream-deep);
+}
+
+.usage__table tfoot td {
+  border-bottom: none;
+  border-top: 1px solid var(--lugo-cream-deep);
+}
+
+.usage__empty {
+  border: 1px dashed var(--lugo-cream-deep);
+  border-radius: 12px;
+  padding: 24px 20px;
+  text-align: center;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  opacity: 0.7;
+}
+
+.usage__err {
+  color: var(--lugo-danger);
+  font-size: 0.9375rem;
+}

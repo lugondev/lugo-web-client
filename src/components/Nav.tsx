@@ -1,17 +1,19 @@
 import './Nav.css'
 
-export type Screen = 'talk' | 'history' | 'devices' | 'tools' | 'profiles'
+export type Screen = 'talk' | 'history' | 'devices' | 'tools' | 'profiles' | 'usage'
 
 // Only list screens that ACTUALLY exist. A nav pointing to a missing screen lies
 // to the user. Ordered by decreasing frequency of use: Talk is the main thing,
 // History is what you check after talking, Profiles configures the assistant,
-// Devices configures hardware, Tools is the occasional odd job.
+// Devices configures hardware, Tools is the occasional odd job, Usage is the
+// least-visited (checked occasionally, not part of the core loop).
 const ITEMS: { id: Screen; label: string }[] = [
   { id: 'talk', label: 'Talk' },
   { id: 'history', label: 'History' },
   { id: 'profiles', label: 'Profiles' },
   { id: 'devices', label: 'Devices' },
   { id: 'tools', label: 'Tools' },
+  { id: 'usage', label: 'My Usage' },
 ]
 
 export function Nav({
