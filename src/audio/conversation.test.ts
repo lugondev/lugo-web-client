@@ -39,6 +39,13 @@ describe('buildParams', () => {
     expect(buildParams().has('session_id')).toBe(false)
     expect(buildParams('esp32', 's1').get('session_id')).toBe('s1')
   })
+
+  it('disables server-side real-time pacing (browser owns the jitter buffer)', () => {
+    // See docs/superpowers/specs/2026-07-28-web-audio-jitter-buffer-design.md --
+    // the 300ms server prebuffer is sized for ESP32/RPi ring buffers, not
+    // browsers, which can hold seconds of audio in AudioContext instead.
+    expect(buildParams().get('opus_pace')).toBe('0')
+  })
 })
 
 describe('disconnect while connecting', () => {

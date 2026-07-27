@@ -17,6 +17,12 @@ export function buildParams(profile?: string, sessionId?: string): URLSearchPara
     output: 'audio,text',
     sample_rate: '16000',
     output_sample_rate: '24000',
+    // Disable the server's ~300ms real-time pacer (sized for ESP32/RPi ring
+    // buffers). AudioContext can hold seconds of scheduled audio, so letting
+    // packets arrive as fast as they're synthesized -- instead of drip-fed to
+    // match playback speed -- gives the browser a much bigger natural jitter
+    // cushion. See docs/superpowers/specs/2026-07-28-web-audio-jitter-buffer-design.md.
+    opus_pace: '0',
   })
   if (profile) p.set('profile', profile)
   if (sessionId) p.set('session_id', sessionId)
