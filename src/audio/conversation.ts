@@ -170,7 +170,19 @@ export class Conversation {
         this.setState('speaking')
         break
       case 'turn_done':
+        // turn_done means the SERVER finished sending, not that we finished
+        // playing. With pacing off (opus_pace=0) it sends far faster than
+        // realtime, so seconds of this turn can still be scheduled ahead in the
+        // AudioContext. Going 'listening' now would swap the Skip button for
+        // Stop and announce "Listening" while Lugo is still audibly talking --
+        // stay 'speaking' until the audio actually drains.
+        if (this.player.playing) this.player.onDrained(() => this.setState('listening'))
+        else this.setState('listening')
+        break
       case 'aborted':
+        // Nothing to wait for: every path that asks the server to abort
+        // (abort(), and the speech_start barge-in above) calls player.stop()
+        // first, so the tail is already gone by the time this arrives.
         this.setState('listening')
         break
       case 'error':

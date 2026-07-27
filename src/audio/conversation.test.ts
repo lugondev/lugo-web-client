@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { buildParams, Conversation, wsUrl } from './conversation'
+import { buildParams, Conversation, wsUrl, type TalkState } from './conversation'
 
 describe('wsUrl', () => {
   it('http becomes ws', () => {
@@ -119,5 +119,65 @@ describe('barge-in mode', () => {
     const { sent, stopped } = drive(false)
     expect(stopped()).toBe(false)
     expect(sent).toHaveLength(0)
+  })
+})
+
+describe('turn_done vs. still-draining playback', () => {
+  // With server pacing disabled (opus_pace=0) the server finishes SENDING a
+  // turn far ahead of realtime, so turn_done lands while the browser still has
+  // seconds of that turn scheduled in AudioContext. Flipping to 'listening'
+  // right then swaps the Skip button for Stop (see screens/talkControl.ts) and
+  // announces "Listening" while Lugo is still audibly talking.
+  function harness(playing: boolean) {
+    const drainCbs: Array<() => void> = []
+    const conv = new Conversation({}) as unknown as {
+      player: { playing: boolean; stop: () => void; onDrained: (cb: () => void) => void }
+      ws: { readyState: number; send: (d: string) => void }
+      state: TalkState
+      onMessage: (e: MessageEvent) => void
+    }
+    conv.player = {
+      playing,
+      stop: () => {
+        conv.player.playing = false
+      },
+      onDrained: (cb: () => void) => {
+        drainCbs.push(cb)
+      },
+    }
+    conv.ws = { readyState: 1 /* OPEN */, send: () => {} }
+    conv.state = 'speaking'
+    const send = (event: string) => conv.onMessage({ data: JSON.stringify({ event }) } as MessageEvent)
+    return { conv, send, drain: () => drainCbs.forEach((cb) => cb()) }
+  }
+
+  it('stays speaking on turn_done while the player still has audio scheduled', () => {
+    const { conv, send } = harness(true)
+    send('turn_done')
+    expect(conv.state).toBe('speaking')
+  })
+
+  it('becomes listening once the player drains', () => {
+    const { conv, send, drain } = harness(true)
+    send('turn_done')
+    expect(conv.state).not.toBe('listening') // deferred, not dropped
+    drain()
+    expect(conv.state).toBe('listening')
+  })
+
+  it('turn_done with nothing playing still transitions immediately', () => {
+    const { conv, send } = harness(false)
+    send('turn_done')
+    expect(conv.state).toBe('listening')
+  })
+
+  it('aborted transitions immediately regardless of player.playing', () => {
+    // abort() and the speech_start barge-in path both call player.stop() BEFORE
+    // the server can echo 'aborted', so there is never a tail left to wait for.
+    for (const playing of [true, false]) {
+      const { conv, send } = harness(playing)
+      send('aborted')
+      expect(conv.state).toBe('listening')
+    }
   })
 })

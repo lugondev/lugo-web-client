@@ -42,6 +42,15 @@ describe('scheduleStartTime', () => {
   it('still catches up to now for a mid-turn stall (cursor behind, nonzero)', () => {
     expect(scheduleStartTime(20, 10)).toBeGreaterThanOrEqual(20)
   })
+
+  it('leads again on a later turn, whose cursor is stale but not 0', () => {
+    // Player.cursor is only reset to 0 by stop() (barge-in/abort/disconnect) --
+    // a turn that simply finished leaves the cursor at its old, now-past value.
+    // Turn 2 of a call is therefore the SAME situation as turn 1 (nothing
+    // scheduled ahead) and must get the same cushion; a literal `cursor === 0`
+    // check silently skipped it for every turn after the first.
+    expect(scheduleStartTime(100, 5)).toBeCloseTo(100.1)
+  })
 })
 
 describe('chunkDuration', () => {

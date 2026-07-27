@@ -1,31 +1,36 @@
 import { readLevel, smoothLevel } from './level'
 
 const OUTPUT_SAMPLE_RATE = 24000
-// Extra lead for the very first chunk of a turn (cursor === 0, nothing
-// scheduled yet). Every later chunk in the turn already queues onto audio
-// that's already scheduled (see scheduleStartTime) and needs no help -- only
-// the first one has zero cushion against main-thread jank at the exact
-// moment it arrives. See
+// Extra lead for a chunk that arrives with nothing scheduled ahead of it (the
+// start of a turn, or after the buffer fully drained). Every later chunk in the
+// turn already queues onto audio that's already scheduled (see
+// scheduleStartTime) and needs no help -- only a chunk landing on an empty
+// schedule has zero cushion against main-thread jank at the exact moment it
+// arrives. See
 // docs/superpowers/specs/2026-07-28-web-audio-jitter-buffer-design.md.
 const STARTUP_LEAD_S = 0.1
 
 /** When to play the next chunk on the AudioContext clock.
  *
- * The server sends a whole burst of packets at once (conversation_opus_pace=False),
- * so we must NOT play each on arrival -- they'd overlap. Queue them tail-to-tail
- * via the cursor. If the cursor has fallen behind the present (tab asleep, machine
- * lagging), catch up to now: scheduling into the past makes Web Audio play
- * everything at once as noise. */
+ * For web sessions the server's real-time pacer is switched off per connection
+ * (opus_pace=0, see conversation.ts buildParams -- the server-wide default
+ * conversation_opus_pace stays True for ESP32/RPi), so a whole turn's packets
+ * arrive in a burst. We must NOT play each on arrival -- they'd overlap. Queue
+ * them tail-to-tail via the cursor. If the cursor has fallen behind the present
+ * (tab asleep, machine lagging), catch up to now: scheduling into the past makes
+ * Web Audio play everything at once as noise. */
 export function nextStartTime(now: number, cursor: number): number {
   return Math.max(now, cursor)
 }
 
-/** Where to start playing THIS chunk. Delegates to nextStartTime, except the
- * very first chunk of a turn (cursor still 0) gets an extra STARTUP_LEAD_S of
- * lead -- every later chunk already has real scheduled audio ahead of it to
- * absorb jank, but the first one has nothing yet. */
+/** Where to start playing THIS chunk. Delegates to nextStartTime, except that a
+ * chunk arriving with nothing scheduled ahead of it -- cursor not ahead of now,
+ * i.e. a fresh Player (cursor 0) OR a cursor left in the past by a previous,
+ * fully-played turn -- gets an extra STARTUP_LEAD_S of lead. Chunks that land
+ * mid-turn already have real scheduled audio ahead of them to absorb jank;
+ * these have nothing. */
 export function scheduleStartTime(now: number, cursor: number): number {
-  return nextStartTime(cursor === 0 ? now + STARTUP_LEAD_S : now, cursor)
+  return nextStartTime(cursor <= now ? now + STARTUP_LEAD_S : now, cursor)
 }
 
 /** Actual duration of a decoded chunk, in seconds.
@@ -49,6 +54,7 @@ export class Player {
   private analyser: AnalyserNode | null = null
   private buf = new Float32Array(1024)
   private _level = 0
+  private drainCbs: Array<() => void> = []
 
   private ensure(): void {
     if (this.ctx) return
@@ -96,7 +102,29 @@ export class Player {
     this.sources.push(src)
     src.onended = () => {
       this.sources = this.sources.filter((s) => s !== src)
+      if (this.sources.length === 0) this.flushDrained()
     }
+  }
+
+  private flushDrained(): void {
+    const cbs = this.drainCbs
+    this.drainCbs = []
+    cbs.forEach((cb) => cb())
+  }
+
+  /** One-shot: run cb when everything currently scheduled has finished playing.
+   *
+   * The server stops sending long before the browser stops playing (pacing is
+   * off, so a whole turn arrives in a burst and sits scheduled in the
+   * AudioContext), so `turn_done` is NOT "done talking" -- this is. Fires
+   * immediately if nothing is scheduled. Cancelled by stop(): a barge-in means
+   * the tail will never play, so waiters must not fire. */
+  onDrained(cb: () => void): void {
+    if (!this.playing) {
+      cb()
+      return
+    }
+    this.drainCbs.push(cb)
   }
 
   push(packet: ArrayBuffer): void {
@@ -123,6 +151,10 @@ export class Player {
 
   /** Barge-in: go silent NOW. The user has talked over us -- keeping playing is wrong. */
   stop(): void {
+    // Drop drain waiters FIRST: the tail we're killing will never play, so a
+    // deferred "turn finished" transition must not fire behind the barge-in
+    // (or after disconnect, where it would drag the UI back out of 'idle').
+    this.drainCbs = []
     this.sources.forEach((s) => {
       try {
         s.stop()
