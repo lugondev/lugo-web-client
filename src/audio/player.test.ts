@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { chunkDuration, nextStartTime } from './player'
+import { chunkDuration, nextStartTime, scheduleStartTime } from './player'
 
 describe('nextStartTime', () => {
   it('plays immediately the first time (cursor is behind)', () => {
@@ -22,6 +22,25 @@ describe('nextStartTime', () => {
     for (const [now, cur] of [[0, 0], [100, 1], [3.3, 3.29], [1e6, 0]]) {
       expect(nextStartTime(now, cur)).toBeGreaterThanOrEqual(now)
     }
+  })
+})
+
+describe('scheduleStartTime', () => {
+  it('gives the first chunk of a turn extra lead beyond "now"', () => {
+    // cursor === 0 means nothing has been scheduled yet this turn -- nothing
+    // is queued ahead to absorb a main-thread hiccup at this exact moment, so
+    // this one chunk gets a small explicit cushion instead.
+    expect(scheduleStartTime(5, 0)).toBeCloseTo(5.1)
+  })
+
+  it('adds no extra lead once the turn has already started (cursor ahead)', () => {
+    // Later chunks already queue onto real scheduled audio -- behaves exactly
+    // like nextStartTime.
+    expect(scheduleStartTime(5, 10)).toBe(10)
+  })
+
+  it('still catches up to now for a mid-turn stall (cursor behind, nonzero)', () => {
+    expect(scheduleStartTime(20, 10)).toBeGreaterThanOrEqual(20)
   })
 })
 

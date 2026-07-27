@@ -1,6 +1,13 @@
 import { readLevel, smoothLevel } from './level'
 
 const OUTPUT_SAMPLE_RATE = 24000
+// Extra lead for the very first chunk of a turn (cursor === 0, nothing
+// scheduled yet). Every later chunk in the turn already queues onto audio
+// that's already scheduled (see scheduleStartTime) and needs no help -- only
+// the first one has zero cushion against main-thread jank at the exact
+// moment it arrives. See
+// docs/superpowers/specs/2026-07-28-web-audio-jitter-buffer-design.md.
+const STARTUP_LEAD_S = 0.1
 
 /** When to play the next chunk on the AudioContext clock.
  *
@@ -11,6 +18,14 @@ const OUTPUT_SAMPLE_RATE = 24000
  * everything at once as noise. */
 export function nextStartTime(now: number, cursor: number): number {
   return Math.max(now, cursor)
+}
+
+/** Where to start playing THIS chunk. Delegates to nextStartTime, except the
+ * very first chunk of a turn (cursor still 0) gets an extra STARTUP_LEAD_S of
+ * lead -- every later chunk already has real scheduled audio ahead of it to
+ * absorb jank, but the first one has nothing yet. */
+export function scheduleStartTime(now: number, cursor: number): number {
+  return nextStartTime(cursor === 0 ? now + STARTUP_LEAD_S : now, cursor)
 }
 
 /** Actual duration of a decoded chunk, in seconds.
@@ -75,7 +90,7 @@ export class Player {
     src.buffer = buf
     src.connect(this.analyser ?? ctx.destination)
 
-    const at = nextStartTime(ctx.currentTime, this.cursor)
+    const at = scheduleStartTime(ctx.currentTime, this.cursor)
     src.start(at)
     this.cursor = at + chunkDuration(frames, sampleRate)
     this.sources.push(src)
