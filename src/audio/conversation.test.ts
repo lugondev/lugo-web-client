@@ -181,3 +181,41 @@ describe('turn_done vs. still-draining playback', () => {
     }
   })
 })
+
+describe('abort()', () => {
+  // Skip is tapped while turn_done already fired but playback is still
+  // draining (see 'turn_done vs. still-draining playback' above): state is
+  // 'speaking' with a pending onDrained callback and no server turn left in
+  // flight. abort() cancels that pending callback via player.stop() -- so if
+  // abort() doesn't ALSO transition state itself, nothing ever will: the
+  // server's turn already finished, so no 'aborted' event is coming either.
+  // The call would be wedged in 'speaking' forever (mic gated shut, Skip now
+  // inert) until the user navigates away.
+  it('transitions to listening even when no server response will ever arrive', () => {
+    const sent: string[] = []
+    let playing = true
+    const conv = new Conversation({}) as unknown as {
+      player: { playing: boolean; stop: () => void; onDrained: (cb: () => void) => void }
+      ws: { readyState: number; send: (d: string) => void }
+      state: TalkState
+      abort: () => void
+    }
+    conv.player = {
+      get playing() { return playing },
+      stop: () => { playing = false },
+      onDrained: () => {
+        // Simulates the pending drain callback registered by turn_done: it
+        // never fires because player.stop() (below, inside abort()) cancels
+        // it. If that were the only path to 'listening', this test would
+        // fail with state stuck at 'speaking'.
+      },
+    }
+    conv.ws = { readyState: 1 /* OPEN */, send: (d: string) => sent.push(d) }
+    conv.state = 'speaking'
+
+    conv.abort()
+
+    expect(conv.state).toBe('listening')
+    expect(sent).toContainEqual(JSON.stringify({ type: 'abort' }))
+  })
+})

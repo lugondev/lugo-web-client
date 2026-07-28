@@ -204,6 +204,7 @@ export class Conversation {
   abort(): void {
     this.player.stop()
     this.send({ type: 'abort' })
+    this.setState('listening')
   }
 
   disconnect(): void {
