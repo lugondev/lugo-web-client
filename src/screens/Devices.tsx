@@ -7,6 +7,13 @@ import { ConfirmModal } from '../ui/ConfirmModal'
 import { TextInput } from '../ui/TextInput'
 import './Devices.css'
 
+// Kept in one place so the input cap, the submit guard and the user-facing copy
+// can never drift apart again -- they were three separate hardcoded 6s when the
+// server widened its code to 8 digits (api_gateway app/services/auth/pairing.py,
+// `_CODE_DIGITS`), which silently made pairing impossible from this screen: the
+// submit button stayed disabled at 6 chars and the input refused the last two.
+const PAIR_CODE_LENGTH = 8
+
 export function Devices() {
   const [items, setItems] = useState<Device[]>([])
   const [code, setCode] = useState('')
@@ -72,8 +79,8 @@ export function Devices() {
 
       {active.length === 0 ? (
         <p className="dev__empty">
-          No devices yet. Turn on your Lugo device — it&apos;ll show a 6-digit code. Enter it
-          below.
+          No devices yet. Turn on your Lugo device — it&apos;ll show a {PAIR_CODE_LENGTH}-digit
+          code. Enter it below.
         </p>
       ) : (
         <ul className="dev__list">
@@ -101,11 +108,11 @@ export function Devices() {
       <form className="dev__form" onSubmit={pair}>
         <TextInput
           id="dev-code"
-          label="6-digit code"
+          label={`${PAIR_CODE_LENGTH}-digit code`}
           className="dev__code"
           value={code}
-          onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-          placeholder="000000"
+          onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, PAIR_CODE_LENGTH))}
+          placeholder={'0'.repeat(PAIR_CODE_LENGTH)}
           inputMode="numeric"
           autoComplete="one-time-code"
         />
@@ -121,7 +128,11 @@ export function Devices() {
             {error}
           </p>
         )}
-        <Button variant="primary" type="submit" disabled={busy || code.length !== 6 || !name.trim()}>
+        <Button
+          variant="primary"
+          type="submit"
+          disabled={busy || code.length !== PAIR_CODE_LENGTH || !name.trim()}
+        >
           {busy ? 'Pairing…' : 'Pair device'}
         </Button>
       </form>
