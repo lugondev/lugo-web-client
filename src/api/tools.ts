@@ -1,4 +1,4 @@
-import { ApiUrl, apiFetch } from './client'
+import { apiFetch } from './client'
 
 async function viError(resp: Response, fallback: string): Promise<Error> {
   if (resp.status === 401 || resp.status === 403) {
@@ -23,10 +23,7 @@ export async function transcribeFile(file: File): Promise<string> {
   return (json.data?.text ?? '') as string
 }
 
-export async function synthesize(text: string): Promise<{
-  audioUrl: string
-  durationSeconds: number | null
-}> {
+export async function synthesize(text: string): Promise<{ audioUrl: string }> {
   const resp = await apiFetch('/v1/tts/synthesize', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -35,13 +32,7 @@ export async function synthesize(text: string): Promise<{
   if (!resp.ok) {
     throw await viError(resp, 'Could not read this out. Try again in a moment.')
   }
-  const json = await resp.json()
-  const url = json.data?.audio_url as string | undefined
-  if (!url) throw new Error('The server returned no audio.')
-  return {
-    // audio_url is a relative API path. The client runs on a DIFFERENT domain, so
-    // we must prepend the base URL, otherwise the <audio> tag points at the client domain -> 404.
-    audioUrl: url.startsWith('http') ? url : ApiUrl(url),
-    durationSeconds: (json.data?.duration_seconds ?? null) as number | null,
-  }
+  // The endpoint returns raw audio bytes, not JSON: an object URL keeps the
+  // audio in this tab's memory and never round-trips through the server.
+  return { audioUrl: URL.createObjectURL(await resp.blob()) }
 }

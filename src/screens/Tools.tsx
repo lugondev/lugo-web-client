@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { synthesize, transcribeFile } from '../api/tools'
 import { Button } from '../ui/Button'
 import { Card } from '../ui/Card'
@@ -63,7 +63,10 @@ function ToVoice() {
   async function run() {
     setBusy(true)
     setError(null)
-    setUrl(null)
+    setUrl((prev) => {
+      if (prev) URL.revokeObjectURL(prev)
+      return null
+    })
     try {
       const r = await synthesize(input.trim())
       setUrl(r.audioUrl)
@@ -73,6 +76,10 @@ function ToVoice() {
       setBusy(false)
     }
   }
+
+  useEffect(() => () => {
+    if (url) URL.revokeObjectURL(url)
+  }, [url])
 
   return (
     <Card className="tool__section">
@@ -91,9 +98,8 @@ function ToVoice() {
         </p>
       )}
       {url && (
-        // Absolute URL returned by synthesize() (the API is on a different domain from the
-        // client) -- do NOT change it to a relative path, it would wrongly point at the
-        // client domain.
+        // Local blob URL created by synthesize() from the raw audio bytes.
+        // It lives only in this tab's memory and is revoked once replaced or on unmount.
         <audio className="tool__audio" controls src={url} autoPlay />
       )}
       <Button variant="primary" onClick={run} disabled={!input.trim() || busy}>

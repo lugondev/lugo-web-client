@@ -55,29 +55,18 @@ describe('tools api', () => {
     await expect(transcribeFile(new File(['x'], 'a.wav'))).rejects.toThrow(/could not|try/i)
   })
 
-  it('synthesize sends ONLY text', async () => {
-    const f = vi.fn().mockResolvedValue(jsonResponse({
-      success: true, data: { engine: 'e', sample_rate: 24000, audio_url: '/artifacts/a.wav', duration_seconds: 1.5 },
-    }))
-    vi.stubGlobal('fetch', f)
-    const r = await synthesize('hello')
-    expect(String(f.mock.calls[0][0])).toContain('/v1/tts/synthesize')
-    // Don't send engine/voice: choosing the engine is an admin job, not the
-    // end user's.
-    expect(JSON.parse(f.mock.calls[0][1].body)).toEqual({ text: 'hello' })
-    expect(r.audioUrl).toContain('/artifacts/a.wav')
-    expect(r.durationSeconds).toBe(1.5)
-  })
+  it('turns the audio response into an object URL', async () => {
+    const blob = new Blob([new Uint8Array([0x52, 0x49, 0x46, 0x46])], { type: 'audio/wav' })
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(blob, {
+      status: 200, headers: { 'Content-Type': 'audio/wav' },
+    })))
+    const createObjectURL = vi.fn().mockReturnValue('blob:fake')
+    vi.stubGlobal('URL', { ...URL, createObjectURL, revokeObjectURL: vi.fn() })
 
-  it('synthesize returns an absolute URL so the audio tag works', async () => {
-    // The server's audio_url is a relative path. The client runs on a DIFFERENT
-    // domain, so leaving it as-is would point at the client's own domain -> 404.
-    const f = vi.fn().mockResolvedValue(jsonResponse({
-      success: true, data: { audio_url: '/artifacts/a.wav', duration_seconds: null },
-    }))
-    vi.stubGlobal('fetch', f)
-    const r = await synthesize('x')
-    expect(r.audioUrl.startsWith('http')).toBe(true)
+    const r = await synthesize('xin chao')
+
+    expect(createObjectURL).toHaveBeenCalledOnce()
+    expect(r.audioUrl).toBe('blob:fake')
   })
 
   it('synthesize on error throws a friendly English message', async () => {
