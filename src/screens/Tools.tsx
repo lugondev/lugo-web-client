@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { synthesize, transcribeFile } from '../api/tools'
 import { Button } from '../ui/Button'
 import { Card } from '../ui/Card'
@@ -59,21 +59,32 @@ function ToVoice() {
   const [url, setUrl] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+  const mounted = useRef(true)
+  useEffect(() => {
+    mounted.current = true
+    return () => {
+      mounted.current = false
+    }
+  }, [])
 
   async function run() {
     setBusy(true)
     setError(null)
-    setUrl((prev) => {
-      if (prev) URL.revokeObjectURL(prev)
-      return null
-    })
+    if (url) URL.revokeObjectURL(url)
+    setUrl(null)
     try {
       const r = await synthesize(input.trim())
+      if (!mounted.current) {
+        // The component went away while the request was in flight: no state
+        // update can capture this URL for later cleanup, so revoke it now.
+        URL.revokeObjectURL(r.audioUrl)
+        return
+      }
       setUrl(r.audioUrl)
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not read this out')
+      if (mounted.current) setError(e instanceof Error ? e.message : 'Could not read this out')
     } finally {
-      setBusy(false)
+      if (mounted.current) setBusy(false)
     }
   }
 
