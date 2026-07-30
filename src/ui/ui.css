@@ -203,10 +203,30 @@ select.input:focus-visible {
   border: 1px solid var(--line);
   border-radius: var(--r-2);
   box-shadow: var(--sh-1);
-  overflow: hidden;
 }
 
 .list > li + li { border-top: 1px solid var(--line); }
+
+/* The end rows round themselves rather than the panel clipping them.
+   `overflow: hidden` here would also clip the overflow menu a row opens, which
+   escapes the panel by design (see MenuButton). Inset by the 1px border so the
+   corner sits inside it, not on it.
+ *
+ * `:only-child` because that is exactly the case where the child fills the row
+ * and so owns its corners. A row holding several elements (History pairs a link
+ * with a Continue button) keeps the radius on the <li>, which is what carries
+ * the hover there anyway -- rounding one of two side-by-side children would put
+ * a curve in the middle of a straight edge. */
+.list > li:first-child,
+.list > li:first-child > :only-child {
+  border-top-left-radius: calc(var(--r-2) - 1px);
+  border-top-right-radius: calc(var(--r-2) - 1px);
+}
+.list > li:last-child,
+.list > li:last-child > :only-child {
+  border-bottom-left-radius: calc(var(--r-2) - 1px);
+  border-bottom-right-radius: calc(var(--r-2) - 1px);
+}
 
 /* ---- Badge -------------------------------------------------------------- */
 

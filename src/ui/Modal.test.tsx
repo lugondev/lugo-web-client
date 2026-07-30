@@ -46,4 +46,30 @@ describe('Modal', () => {
     // focus should be within the dialog, not left on <body>
     expect(screen.getByRole('dialog').contains(document.activeElement)).toBe(true)
   })
+
+  it('does not steal focus back to the first field when the parent re-renders', () => {
+    // A parent almost always passes an inline arrow as onClose, so its identity
+    // changes on every render -- including the render caused by typing into a
+    // field inside the modal. If that re-runs the focus effect, the caret jumps
+    // out of whatever the user is typing in and back to the first input, one
+    // character at a time (PairWizard: every keystroke in "Device name" landed
+    // back in the code box).
+    const { rerender } = render(
+      <Modal open onClose={() => {}} title="X">
+        <input aria-label="first" />
+        <input aria-label="second" />
+      </Modal>,
+    )
+    const second = screen.getByLabelText('second')
+    second.focus()
+
+    rerender(
+      <Modal open onClose={() => {}} title="X">
+        <input aria-label="first" />
+        <input aria-label="second" />
+      </Modal>,
+    )
+
+    expect(document.activeElement).toBe(second)
+  })
 })
