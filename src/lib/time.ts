@@ -24,6 +24,32 @@ export function relativeTime(iso: string | null, now: number = Date.now()): stri
   return `${Math.floor(sec / 86400)} d ago`
 }
 
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+
+const pad = (n: number) => String(n).padStart(2, '0')
+
+/** When one message in a transcript was said, in the reader's own timezone.
+ *
+ * A transcript is read back in order, so the useful unit is the clock, not
+ * "3 d ago". Anything from an earlier day carries its date too: a bare "09:05"
+ * on a week-old conversation reads as this morning.
+ *
+ * Formatted by hand rather than via toLocaleTimeString: 24h with a stable
+ * shape, so it lines up down the column and doesn't shift with the host locale.
+ */
+export function messageTime(iso: string | null | undefined, now: number = Date.now()): string {
+  const t = parse(iso ?? null)
+  if (t === null) return ''
+  const d = new Date(t)
+  const clock = `${pad(d.getHours())}:${pad(d.getMinutes())}`
+  const today = new Date(now)
+  const sameDay =
+    d.getFullYear() === today.getFullYear() &&
+    d.getMonth() === today.getMonth() &&
+    d.getDate() === today.getDate()
+  return sameDay ? clock : `${d.getDate()} ${MONTHS[d.getMonth()]} ${clock}`
+}
+
 export function isRecentlyActive(iso: string | null, now: number = Date.now()): boolean {
   const t = parse(iso)
   if (t === null) return false

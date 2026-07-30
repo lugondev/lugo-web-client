@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { deleteSession, getSession, listSessions, type SessionDetail, type SessionRow } from '../api/history'
 import { listProfiles } from '../api/profiles'
-import { relativeTime } from '../lib/time'
+import { messageTime, relativeTime } from '../lib/time'
 import { Button } from '../ui/Button'
 import { ConfirmModal } from '../ui/ConfirmModal'
 import './History.css'
@@ -16,16 +16,36 @@ function Detail({
   const [error, setError] = useState<string | null>(null)
   const [confirming, setConfirming] = useState(false)
   const [removing, setRemoving] = useState(false)
+  const [loading, setLoading] = useState(false)
 
+  // A ref rather than an effect-scoped flag, because the Refresh button fires
+  // outside any effect and still has to stop writing state after unmount.
+  const alive = useRef(true)
   useEffect(() => {
-    let alive = true
-    getSession(id)
-      .then((d) => alive && setData(d))
-      .catch((e) => alive && setError(e instanceof Error ? e.message : 'Could not load'))
+    alive.current = true
     return () => {
-      alive = false
+      alive.current = false
+    }
+  }, [])
+
+  const load = useCallback(async () => {
+    setLoading(true)
+    try {
+      const d = await getSession(id)
+      if (alive.current) {
+        setData(d)
+        setError(null)
+      }
+    } catch (e) {
+      if (alive.current) setError(e instanceof Error ? e.message : 'Could not load')
+    } finally {
+      if (alive.current) setLoading(false)
     }
   }, [id])
+
+  useEffect(() => {
+    void load()
+  }, [load])
 
   async function remove() {
     setRemoving(true)
@@ -46,6 +66,16 @@ function Detail({
           Back
         </Button>
         <div className="his__bar-right">
+          {/* The other side keeps talking while this transcript sits open. */}
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => void load()}
+            disabled={loading}
+            aria-busy={loading}
+          >
+            Refresh
+          </Button>
           <Button variant="primary" size="sm" onClick={() => onContinue(id)}>
             Continue
           </Button>
@@ -67,12 +97,18 @@ function Detail({
 
       {data && data.messages.length > 0 && (
         <div className="his__turns">
-          {data.messages.map((m, i) => (
-            <div className={`his__turn his__turn--${m.role}`} key={`${m.turn}-${i}`}>
-              <p className="his__who">{m.role === 'user' ? 'YOU' : 'LUGO'}</p>
-              <p className="his__said">{m.content}</p>
-            </div>
-          ))}
+          {data.messages.map((m, i) => {
+            const at = messageTime(m.created_at)
+            return (
+              <div className={`his__turn his__turn--${m.role}`} key={`${m.turn}-${i}`}>
+                <p className="his__who">
+                  {m.role === 'user' ? 'YOU' : 'LUGO'}
+                  {at && <span className="his__at">{at}</span>}
+                </p>
+                <p className="his__said">{m.content}</p>
+              </div>
+            )
+          })}
         </div>
       )}
 
@@ -114,14 +150,20 @@ export function History({
   // name often enough, and a heading that pops in beats one that pops from
   // nothing.
   const [title, setTitle] = useState<string | undefined>(profile)
+  const [loading, setLoading] = useState(false)
 
   async function refresh() {
+    setLoading(true)
     try {
       // The server already orders by created_at DESC -- don't re-sort on the client.
       setRows(await listSessions(50, 0, profile))
       setError(null)
     } catch (e) {
+      // Keep whatever is on screen: a failed reload should not empty a list that
+      // loaded fine a moment ago.
       setError(e instanceof Error ? e.message : 'Could not load history')
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -171,6 +213,17 @@ export function History({
       )}
       <div className="page__head">
         <h1 className="page__title">History</h1>
+        {/* Conversations are made on the devices, not here, so this list goes
+            stale while the screen sits open. */}
+        <Button
+          variant="secondary"
+          size="sm"
+          onClick={() => void refresh()}
+          disabled={loading}
+          aria-busy={loading}
+        >
+          Refresh
+        </Button>
       </div>
       <p className="page__sub">
         {title ? `Conversations with ${title}.` : 'Everything you and Lugo have said.'}

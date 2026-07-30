@@ -1,6 +1,8 @@
 import { apiFetch } from './client'
 
-export type Message = { turn: number; role: string; content: string }
+// created_at is optional: rows the server wrote before it started sending
+// per-message times still parse, they just have no time to show.
+export type Message = { turn: number; role: string; content: string; created_at?: string | null }
 
 export type SessionRow = {
   id: string

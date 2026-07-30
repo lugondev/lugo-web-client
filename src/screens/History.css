@@ -79,6 +79,17 @@
   margin: 0 0 5px;
 }
 
+/* When it was said. Sits on the speaker label rather than beside the text: the
+   transcript stays one column to read down, and the time is there when you go
+   looking for it. Lighter than the label, so the speaker still leads. */
+.his__at {
+  margin-left: 8px;
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  color: var(--ink-3);
+  opacity: 0.8;
+}
+
 .his__said {
   margin: 0;
   line-height: 1.65;
