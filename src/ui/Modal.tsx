@@ -15,6 +15,19 @@ export function Modal({
   const dialogRef = useRef<HTMLDivElement>(null)
   const titleId = useId()
 
+  // Escape has to call the CURRENT onClose, but onClose must not be a dependency
+  // of the effect below: callers pass an inline arrow, so its identity changes on
+  // every parent render -- including the render that typing into a field inside
+  // the modal causes. With onClose in the dependency list the effect tore down
+  // and set up again on each keystroke, and its setup moves focus to the first
+  // focusable element, so the caret jumped out of the field being typed in and
+  // back to the first one. Reading it from a ref keeps the handler fresh while
+  // the effect runs only when the modal actually opens or closes.
+  const onCloseRef = useRef(onClose)
+  useEffect(() => {
+    onCloseRef.current = onClose
+  })
+
   useEffect(() => {
     if (!open) return
 
@@ -34,7 +47,7 @@ export function Modal({
 
     function onKey(e: KeyboardEvent) {
       if (e.key === 'Escape') {
-        onClose()
+        onCloseRef.current()
         return
       }
       if (e.key !== 'Tab') return
@@ -63,7 +76,7 @@ export function Modal({
       document.body.style.overflow = prevOverflow
       previouslyFocused?.focus()
     }
-  }, [open, onClose])
+  }, [open])
 
   if (!open) return null
 
