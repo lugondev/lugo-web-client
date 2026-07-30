@@ -20,10 +20,13 @@ const ITEMS: { id: SettingsPanel; label: string; hint: string }[] = [
  */
 export function Settings({ onOpen }: { onOpen: (panel: SettingsPanel) => void }) {
   return (
-    <main className="set">
-      <h1 className="set__h">Settings</h1>
+    <main className="page">
+      <div className="page__head">
+        <h1 className="page__title">Settings</h1>
+      </div>
+      <p className="page__sub">Devices, tools and this account.</p>
 
-      <ul className="set__list">
+      <ul className="list set__list">
         {ITEMS.map((it) => (
           <li key={it.id}>
             <button className="set__row" onClick={() => onOpen(it.id)}>

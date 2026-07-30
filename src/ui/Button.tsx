@@ -10,11 +10,11 @@ export function Button({
   className = '',
   type = 'button',
   ...rest
-}: { variant: Variant; size?: 'md' | 'sm'; fullWidth?: boolean } & ButtonHTMLAttributes<HTMLButtonElement>) {
+}: { variant: Variant; size?: 'lg' | 'md' | 'sm'; fullWidth?: boolean } & ButtonHTMLAttributes<HTMLButtonElement>) {
   const cls = [
     'btn',
     `btn--${variant}`,
-    size === 'sm' ? 'btn--sm' : '',
+    size === 'md' ? '' : `btn--${size}`,
     fullWidth ? 'btn--full' : '',
     className,
   ]

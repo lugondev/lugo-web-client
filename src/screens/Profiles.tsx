@@ -26,7 +26,7 @@ type Catalog = { llm: LlmOption[]; tts: TtsProfileSummary[] }
 
 // How many recent sessions to scan for "last used". One request for the whole
 // grid instead of one per card. Assistants missing from this page are shown as
-// "Not used recently" -- deliberately NOT "never", which a truncated page cannot
+// "Not recently" -- deliberately NOT "never", which a truncated page cannot
 // establish.
 const RECENT_SESSION_SCAN = 100
 
@@ -42,7 +42,9 @@ function metaFor(p: Profile, catalog: Catalog, lastUsedIso: string | null): Prof
   return {
     voice,
     model,
-    lastUsed: lastUsedIso ? relativeTime(lastUsedIso) : 'Not used recently',
+    // Short enough to survive a third of a card: the longer wording ellipsised
+    // to "Not used rece…" on every card that had never run.
+    lastUsed: lastUsedIso ? relativeTime(lastUsedIso) : 'Not recently',
   }
 }
 
@@ -141,32 +143,32 @@ export function Profiles({
   }
 
   return (
-    <main className="profiles">
-      <div className="profiles__head">
-        <h1 className="profiles__h">Assistants</h1>
+    <main className="page page--wide">
+      <div className="page__head">
+        <h1 className="page__title">Assistants</h1>
         <Button variant="primary" size="sm"
           onClick={() => setEditing({ mode: 'create', initial: emptyProfileInput() })}>New</Button>
       </div>
-      <p className="profiles__sub">Each assistant has its own voice, model, history and devices.</p>
+      <p className="page__sub">Each assistant has its own voice, model, history and devices.</p>
 
-      {error && <p role="alert" className="pe__error">{error}</p>}
+      {error && <p role="alert" className="error-text">{error}</p>}
 
       <section className="profiles__section">
         {/* "My assistants", not "Mine" -- a nickname can legitimately be "Mine"
             (see Profiles.test.tsx fixture), which would collide with getByText
             queries against a bare "Mine" heading. */}
-        <h2 className="profiles__section-h">My assistants</h2>
+        <h2 className="eyebrow">My assistants</h2>
         {mine.length === 0 ? (
-          <p className="profiles__empty">No assistants yet. Tap New to create one.</p>
+          <p className="empty">No assistants yet. Tap New to create one.</p>
         ) : (
           <div className="profiles__list">{mine.map((p) => card(p, false))}</div>
         )}
       </section>
 
       <section className="profiles__section">
-        <h2 className="profiles__section-h">Shared templates</h2>
+        <h2 className="eyebrow">Shared templates</h2>
         {shared.length === 0 ? (
-          <p className="profiles__empty">No shared templates.</p>
+          <p className="empty">No shared templates.</p>
         ) : (
           <div className="profiles__list">{shared.map((p) => card(p, true))}</div>
         )}

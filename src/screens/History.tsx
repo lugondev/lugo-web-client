@@ -39,7 +39,7 @@ function Detail({
   }
 
   return (
-    <main className="his">
+    <main className="page">
       <div className="his__bar">
         <Button variant="secondary" size="sm" onClick={onBack}>
           Back
@@ -55,13 +55,13 @@ function Detail({
       </div>
 
       {error && (
-        <p className="his__err" role="alert">
+        <p className="error-text" role="alert">
           {error}
         </p>
       )}
 
       {data && data.messages.length === 0 && (
-        <p className="his__empty">This conversation has no content.</p>
+        <p className="empty">This conversation has no content.</p>
       )}
 
       {data && data.messages.length > 0 && (
@@ -140,29 +140,31 @@ export function History({
   }
 
   return (
-    <main className="his">
+    <main className="page">
       {onBack && (
-        <div className="his__backbar">
+        <div className="page__back">
           <Button variant="ghost" size="sm" onClick={onBack}>
             ‹ Assistants
           </Button>
         </div>
       )}
-      <h1 className="his__h">History</h1>
-      <p className="his__sub">
+      <div className="page__head">
+        <h1 className="page__title">History</h1>
+      </div>
+      <p className="page__sub">
         {profileTitle ? `Conversations with ${profileTitle}.` : 'Everything you and Lugo have said.'}
       </p>
 
       {error && (
-        <p className="his__err" role="alert">
+        <p className="error-text" role="alert">
           {error}
         </p>
       )}
 
       {!error && rows.length === 0 ? (
-        <p className="his__empty">No conversations yet. Head to Talk to start.</p>
+        <p className="empty">No conversations yet. Head to Talk to start.</p>
       ) : (
-        <ul className="his__list">
+        <ul className="list his__list">
           {rows.map((r) => (
             <li key={r.id} className="his__item">
               <button className="his__row" onClick={() => setOpen(r.id)}>

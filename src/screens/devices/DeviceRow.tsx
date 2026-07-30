@@ -1,5 +1,4 @@
 import { isRecentlyActive, relativeTime } from '../../lib/time'
-import { Card } from '../../ui/Card'
 import { MenuButton } from '../../ui/MenuButton'
 import type { Device } from '../../api/devices'
 
@@ -18,14 +17,15 @@ export function DeviceRow({
   onMove: () => void
   onRemove: () => void
 }) {
+  const live = isRecentlyActive(device.last_seen_at)
+
   return (
-    <Card className="drow">
+    <div className="drow">
       <div className="drow__body">
         <p className="drow__name">{device.name}</p>
         <p className="drow__status">
-          {isRecentlyActive(device.last_seen_at)
-            ? 'Active'
-            : `Last seen: ${relativeTime(device.last_seen_at)}`}
+          <span className={live ? 'dot' : 'dot dot--idle'} aria-hidden="true" />
+          {live ? 'Active' : `Last seen ${relativeTime(device.last_seen_at)}`}
         </p>
         <p className="drow__serial">{device.serial}</p>
       </div>
@@ -39,6 +39,6 @@ export function DeviceRow({
           { label: 'Remove device', onSelect: onRemove, destructive: true },
         ]}
       />
-    </Card>
+    </div>
   )
 }

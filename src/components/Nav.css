@@ -1,53 +1,77 @@
+/* Three tabs, fixed to the bottom.
+ *
+ * The bar reads --surface/--line from :root, and theme.css flips those when a
+ * dark screen is mounted -- so Talk no longer sits on black with a cream bar
+ * bolted to its foot. */
 .nav {
   position: fixed;
   left: 0;
   right: 0;
   bottom: 0;
+  z-index: 30;
   display: flex;
-  align-items: center;
-  gap: 2px;
-  padding: 8px 6px calc(8px + env(safe-area-inset-bottom));
-  background: color-mix(in srgb, var(--lugo-bg) 92%, transparent);
-  backdrop-filter: blur(8px);
-  border-top: 1px solid color-mix(in srgb, currentColor 12%, transparent);
+  padding: 6px 8px calc(6px + env(safe-area-inset-bottom));
+  background: color-mix(in srgb, var(--surface) 86%, transparent);
+  backdrop-filter: blur(14px) saturate(1.4);
+  border-top: 1px solid var(--line);
 }
 
-/* Three tabs, centred. Sign out no longer sits in this bar (it moved to
-   Settings > Account), so the row is free to be evenly spaced. */
 .nav__tabs {
   flex: 1;
   min-width: 0;
   display: flex;
   justify-content: center;
-  gap: 4px;
+  gap: 2px;
 }
 
-/* Roomier than the six-tab version it replaces: with three labels there is space
-   for a readable size and a real touch target at 320px. */
+/* The label is the target; the dot above it is the "you are here".
+ *
+ * NOT a filled pill: a grey capsule behind the active label was the heaviest
+ * object on every light screen, and it competed with the actual content. The dot
+ * is the same primitive as the live indicator on a device and the dot in the
+ * Lugo mark -- one vocabulary for "this one is on". */
 .nav__btn {
   font: inherit;
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   font-weight: 500;
   white-space: nowrap;
-  padding: 10px 20px;
-  min-height: 44px;
+  padding: 6px 18px 8px;
+  min-height: 48px;
   border: 0;
-  border-radius: 999px;
+  border-radius: var(--r-1);
   background: none;
-  color: inherit;
-  opacity: 0.5;
+  color: var(--ink-3);
   cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: color 160ms ease;
 }
-.nav__btn:hover { opacity: 0.8; }
 
-/* Currently viewed screen. NOT orange: orange is for active states and the primary action,
-   and "you are here" is not an action. */
+.nav__btn::before {
+  content: '';
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: transparent;
+  transition: background-color 200ms ease, box-shadow 200ms ease;
+}
+
+.nav__btn:hover { color: var(--ink-2); }
+
 .nav__btn[aria-current='page'] {
-  opacity: 1;
-  background: color-mix(in srgb, currentColor 10%, transparent);
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.nav__btn[aria-current='page']::before {
+  background: var(--signal);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--signal) 20%, transparent);
 }
 
 .nav__btn:focus-visible {
-  outline: 2px solid var(--lugo-accent-warm);
-  outline-offset: 2px;
+  outline: 2px solid var(--signal);
+  outline-offset: -2px;
 }

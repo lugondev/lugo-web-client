@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { login } from '../api/auth'
+import { LugoMark } from '../components/LugoMark'
 import { Button } from '../ui/Button'
 import { TextInput } from '../ui/TextInput'
 import './Login.css'
@@ -27,13 +28,23 @@ export function Login({ onDone }: { onDone: () => void }) {
   return (
     <main className="login">
       <form onSubmit={submit} className="login__form">
-        <h1 className="login__title">LUGO</h1>
+        <div className="login__mark">
+          {/* The mark idles here the same way it idles on Talk: the first thing
+              the app shows is the thing that will be listening to you. */}
+          <div className="login__lockup">
+            <LugoMark state="idle" level={0} />
+            <h1 className="login__title">LUGO</h1>
+          </div>
+          <p className="login__tag">Sign in to reach your assistants and their devices.</p>
+        </div>
+        {/* No placeholders that repeat the label: two identical words stacked on
+            top of each other is noise, and the placeholder vanishes on typing
+            while the label has to stay. */}
         <TextInput
           id="login-username"
           label="Username"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
-          placeholder="Username"
           autoComplete="username"
         />
         <TextInput
@@ -42,11 +53,10 @@ export function Login({ onDone }: { onDone: () => void }) {
           type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          placeholder="Password"
           autoComplete="current-password"
         />
         {error && <p role="alert" className="login__error">{error}</p>}
-        <Button variant="primary" type="submit" fullWidth disabled={busy}>
+        <Button variant="primary" size="lg" type="submit" fullWidth disabled={busy}>
           {busy ? 'Signing in…' : 'Sign in'}
         </Button>
       </form>

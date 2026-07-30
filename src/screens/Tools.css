@@ -1,67 +1,72 @@
-.tool {
-  min-height: 100dvh;
-  padding: 20px 20px 88px;
-  max-width: 34rem;
-  margin: 0 auto;
-}
-
-.tool__h {
-  font-size: 1.5rem;
-  font-weight: 600;
-  margin: 8px 0 4px;
-}
-
-.tool__sub {
-  margin: 0 0 28px;
-  opacity: 0.6;
-  font-size: 0.9375rem;
-  line-height: 1.5;
-}
-
-/* Card handles the border/padding; here it's only this screen's own spacing. */
+/* Card handles the surface; here it's only this screen's own spacing. */
 .tool__section {
-  margin-bottom: 16px;
+  margin-bottom: 14px;
   display: grid;
   gap: 12px;
 }
 
 .tool__card-h {
-  font-size: 1rem;
+  font-size: 0.9375rem;
   font-weight: 600;
+  letter-spacing: -0.01em;
   margin: 0;
 }
 
 .tool__hint {
   font-size: 0.8125rem;
-  opacity: 0.55;
-  margin: 0;
-  line-height: 1.5;
+  color: var(--ink-2);
+  margin: -6px 0 0;
+  line-height: 1.55;
 }
 
+/* The native file control can't be replaced, but its button half can be dressed
+   to match .btn--secondary so the card doesn't have one stray OS widget in it. */
 .tool__file {
   font: inherit;
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
+  color: var(--ink-2);
 }
+.tool__file::file-selector-button {
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  height: 30px;
+  padding: 0 10px;
+  margin-right: 10px;
+  border-radius: var(--r-1);
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  color: var(--ink);
+  cursor: pointer;
+}
+.tool__file::file-selector-button:hover { background: var(--surface-2); }
 .tool__file:focus-visible {
-  outline: 2px solid var(--lugo-accent-warm);
+  outline: 2px solid var(--signal);
   outline-offset: 2px;
+}
+
+/* The button is one control, not a banner: keep it to its own width at the end
+   of the card instead of letting the card's grid stretch it edge to edge. */
+.tool__actions {
+  display: flex;
+  justify-content: flex-end;
 }
 
 .tool__out {
   margin: 0;
   padding: 12px 14px;
-  border-radius: 10px;
-  background: color-mix(in srgb, currentColor 5%, transparent);
-  line-height: 1.6;
+  border-radius: var(--r-1);
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  line-height: 1.65;
+  font-size: 0.875rem;
   white-space: pre-wrap;
 }
 
 .tool__err {
-  color: var(--lugo-danger);
-  font-size: 0.9375rem;
+  color: var(--danger);
+  font-size: 0.875rem;
   margin: 0;
 }
 
 .tool__audio { width: 100%; }
-
-.tool__bar { display: flex; align-items: center; margin: 0 0 4px -8px; }

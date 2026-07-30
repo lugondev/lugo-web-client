@@ -4,8 +4,8 @@ const p = await b.newPage({ viewport: { width: 420, height: 860 }, deviceScaleFa
 const errors = []
 p.on('pageerror', e => errors.push(String(e)))
 await p.goto('http://localhost:5173/')
-await p.fill('input[placeholder="Username"]', 'e2e-user')
-await p.fill('input[placeholder="Password"]', 'pw12345678')
+await p.fill('#login-username', 'e2e-user')
+await p.fill('#login-password', 'pw12345678')
 await p.click('button[type="submit"]')
 await p.waitForTimeout(1800)
 const m = await p.evaluate(() => {

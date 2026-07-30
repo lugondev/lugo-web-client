@@ -15,7 +15,7 @@
    as a CSS transform, so adding transform-origin here would shift the rotation center and
    knock the ring OFF the dot. Keep the static rotation on the attribute; put scale/spin on
    .mark__ringwrap (<g>). */
-/* Ring follows the text color (--lugo-fg via currentColor): dark on light backgrounds,
+/* Ring follows the text color (--ink via currentColor): dark on light backgrounds,
    cream on dark. Emphasize state with color (orange) or motion, don't drop opacity to gray. */
 .mark__ring {
   stroke: currentColor;
@@ -24,7 +24,7 @@
 }
 
 .mark__dot {
-  fill: var(--lugo-accent);
+  fill: var(--signal);
   opacity: 0.9;
   transform-box: view-box;
   transition: opacity 400ms ease, fill 400ms ease;
@@ -64,7 +64,7 @@
 /* speaking: orange ring, the GAP closes and opens like a mouth talking (dash via CSS); plus
    gentle breathing with volume (scale set by JS on .mark__ringwrap). */
 .mark[data-state='speaking'] .mark__ring {
-  stroke: var(--lugo-accent);
+  stroke: var(--signal);
   opacity: 1;
   animation: mark-mouth 1.9s ease-in-out infinite;
 }
@@ -72,11 +72,11 @@
 
 /* error: ring + dot turn danger red. */
 .mark[data-state='error'] .mark__ring {
-  stroke: var(--lugo-danger);
+  stroke: var(--danger);
   opacity: 0.9;
 }
 .mark[data-state='error'] .mark__dot {
-  fill: var(--lugo-danger);
+  fill: var(--danger);
   opacity: 0.9;
 }
 

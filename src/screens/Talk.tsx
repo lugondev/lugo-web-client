@@ -151,7 +151,7 @@ export function Talk({
   const control = controlFor(state)
 
   return (
-    <main className="talk" data-surface="talk">
+    <main className="talk" data-surface="dark">
       <div className="talk__bar">
         <span className="talk__wordmark">LUGO</span>
         <div className="talk__opts">
@@ -207,11 +207,11 @@ export function Talk({
 
       <div className="talk__controls">
         {control.kind === 'start' ? (
-          <Button variant="primary" onClick={() => void start()}>
+          <Button variant="primary" size="lg" onClick={() => void start()}>
             {control.label}
           </Button>
         ) : (
-          <Button variant="secondary" onClick={control.kind === 'skip' ? skip : stop}>
+          <Button variant="secondary" size="lg" onClick={control.kind === 'skip' ? skip : stop}>
             {control.label}
           </Button>
         )}

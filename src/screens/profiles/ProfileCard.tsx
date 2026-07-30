@@ -1,4 +1,4 @@
-import { avatarGradient, avatarInitial } from '../../lib/avatar'
+import { avatarColors, avatarInitial } from '../../lib/avatar'
 import { Button } from '../../ui/Button'
 import { Card } from '../../ui/Card'
 import { MenuButton, type MenuItem } from '../../ui/MenuButton'
@@ -41,6 +41,7 @@ export function ProfileCard({
   onDelete?: () => void
 }) {
   const title = profile.nickname || profile.name
+  const face = avatarColors(profile.name)
 
   // Shared templates are read-only to a normal user (only an admin can write to
   // one), so offering Delete would be a button that always fails.
@@ -54,26 +55,28 @@ export function ProfileCard({
       <div className="pcard__head">
         <span
           className="pcard__avatar"
-          style={{ background: avatarGradient(profile.name) }}
+          style={{ background: face.bg, color: face.fg }}
           aria-hidden="true"
         >
           {avatarInitial(title)}
         </span>
         <span className="pcard__title">
           {title}
-          {shared && <span className="pcard__badge">shared</span>}
+          {shared && <span className="badge">shared</span>}
         </span>
         <MenuButton label={`More actions for ${title}`} items={menu} />
       </div>
 
+      {/* title carries the untruncated value: a voice name can still outrun its
+          row on a narrow card, and hovering is cheaper than opening Configure. */}
       <dl className="pcard__meta">
         <div className="pcard__cell">
           <dt>Voice</dt>
-          <dd>{meta.voice}</dd>
+          <dd title={meta.voice}>{meta.voice}</dd>
         </div>
         <div className="pcard__cell">
           <dt>Model</dt>
-          <dd>{meta.model}</dd>
+          <dd title={meta.model}>{meta.model}</dd>
         </div>
         <div className="pcard__cell">
           <dt>Last used</dt>
