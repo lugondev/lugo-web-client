@@ -159,7 +159,7 @@ it('says "not used recently" rather than "never" when the scanned page has no se
   // A truncated page cannot establish "never" -- claiming it would be a lie.
   await waitFor(() =>
     expect(cardOf('Mine').querySelector('.pcard__meta')?.textContent)
-      .toContain('Not used recently'))
+      .toContain('Not recently'))
 })
 
 it('still lists assistants when device and session lookups fail', async () => {

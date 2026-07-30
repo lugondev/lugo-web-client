@@ -1,29 +1,93 @@
-/* Lugo brand identity. Orange is used ONLY for active states and the primary
-   action -- orange used for everything signals nothing. */
+/* Lugo design tokens.
+ *
+ * Direction: a front panel, not a dashboard. Lugo is hardware you talk to, so the
+ * web client is styled like the instrument that runs it -- quiet paper surfaces,
+ * hairline structure, machine facts set in mono, and exactly ONE warm signal
+ * colour that means "this is live / this is the action".
+ *
+ * Two rules that the previous theme broke and this one holds:
+ *
+ * 1. Hierarchy comes from INK TOKENS, never from `opacity`. Dimming text with
+ *    opacity is what made the light theme read as washed-out grey on grey: every
+ *    level ended up the same hue at a different strength, and none of them had a
+ *    contrast guarantee.
+ * 2. The surface is cool, the signal is warm. Orange on cream is warm-on-warm --
+ *    the accent had nothing to push against, so it looked muddy AND had to be
+ *    huge to register. Against a cool paper the same orange reads at a seventh of
+ *    the area.
+ */
 :root {
-  --lugo-ink: #111111;
-  --lugo-ink-soft: #2a2a2a;
-  --lugo-cream: #f7f4ee;
-  --lugo-cream-deep: #e8e1d6;
-  --lugo-accent: #ff8a00;
-  --lugo-accent-warm: #ffc857;
-  --lugo-accent-gradient: linear-gradient(135deg, #ff8a00, #ffc857);
+  color-scheme: light;
 
-  /* The Lugo palette has no error color. Orange is already reserved for active states
-     and the primary action -- reusing orange for errors makes one color mean both "go"
-     and "broken". */
-  --lugo-danger: #c9372c;
+  /* Surfaces, lightest content on top of the darkest page. */
+  --bg: #f1f2f4;
+  --surface: #ffffff;
+  --surface-2: #f6f7f9;
+  --line: #e3e5e9;
+  --line-strong: #cdd2d9;
 
-  --lugo-bg: var(--lugo-cream);
-  --lugo-fg: var(--lugo-ink);
+  /* Ink. Three steps, every one of them >= 4.5:1 on --surface (17 / 7.5 / 4.5),
+     so the palest is still legal for the smallest label -- which the previous
+     `opacity: 0.45` grey was not, at roughly 2.9:1. */
+  --ink: #15171b;
+  --ink-2: #4e555e;
+  --ink-3: #6f7780;
+
+  /* The signal. Live state, and the one primary action per screen.
+     Dark text on it, not white: at this brightness orange/white fails contrast,
+     and orange/near-black clears 7:1. */
+  --signal: #ee6a11;
+  --signal-press: #d55c07;
+  --signal-tint: #fff2e6;
+  --on-signal: #1c1204;
+
+  --danger: #c0392b;
+  --danger-tint: #fdeceb;
+  --on-danger: #ffffff;
+
+  --r-1: 8px;
+  --r-2: 12px;
+  --r-3: 16px;
+
+  --sh-1: 0 1px 2px rgba(17, 20, 26, 0.05);
+  --sh-pop: 0 24px 48px -20px rgba(17, 20, 26, 0.35);
+
+  --font: 'Be Vietnam Pro', system-ui, sans-serif;
+  --mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* Space under a screen for the fixed nav. */
+  --nav-h: 76px;
 }
 
-/* Talk is a long-used screen, usually in the evening, and the white logo on a dark
-   background is the strongest form of the brand -> a dark background is the default there. */
-[data-surface='talk'] {
-  --lugo-bg: var(--lugo-ink);
-  --lugo-fg: var(--lugo-cream);
-  --lugo-danger: #ff8a80;
+/* Dark surface. Talk owns it today: it's a long screen, usually used in the
+   evening, and the white mark on black is the strongest form of the brand.
+   Applied at :root via :has so the fixed nav -- a SIBLING of the screen, not a
+   child -- turns dark with it instead of leaving a cream bar under a black page. */
+[data-surface='dark'],
+:root:has([data-surface='dark']) {
+  color-scheme: dark;
+
+  --bg: #0d0e10;
+  --surface: #17191d;
+  --surface-2: #202329;
+  --line: #262a31;
+  --line-strong: #383d46;
+
+  --ink: #f2f3f5;
+  --ink-2: #a0a7b0;
+  --ink-3: #737a83;
+
+  --signal: #ff8a2b;
+  --signal-press: #ffa155;
+  --signal-tint: #2b1c0c;
+  --on-signal: #17110a;
+
+  --danger: #ff7f6f;
+  --danger-tint: #2c1614;
+  --on-danger: #1a0f0d;
+
+  --sh-1: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --sh-pop: 0 24px 48px -20px rgba(0, 0, 0, 0.8);
 }
 
 *,
@@ -34,10 +98,142 @@
 
 body {
   margin: 0;
-  background: var(--lugo-bg);
-  color: var(--lugo-fg);
-  font-family: 'Be Vietnam Pro', system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font);
+  font-size: 0.9375rem;
+  line-height: 1.5;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ---- Page frame -------------------------------------------------------- */
+/* Every screen is the same column: back link, title, one line of subtitle, then
+   content. It was reimplemented per screen before, with margins that disagreed. */
+
+.page {
+  min-height: 100dvh;
+  max-width: 34rem;
+  margin: 0 auto;
+  padding: 18px 20px calc(var(--nav-h) + env(safe-area-inset-bottom));
+}
+
+/* A grid of cards needs more room than a column of rows. Assistants is the only
+   screen that lays out two-up, so it is the only one that widens. */
+.page--wide { max-width: 52rem; }
+
+.page__back {
+  display: flex;
+  align-items: center;
+  margin: -6px 0 2px -10px;
+}
+
+.page__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 32px;
+}
+
+.page__title {
+  font-size: 1.375rem;
+  font-weight: 700;
+  letter-spacing: -0.022em;
+  line-height: 1.2;
+  margin: 0;
+}
+
+.page__sub {
+  margin: 6px 0 22px;
+  color: var(--ink-2);
+  font-size: 0.875rem;
+  line-height: 1.5;
+  max-width: 42ch;
+}
+
+/* Screen-printed section label. Mono, because on a panel these are stencilled
+   labels for the block underneath, not sentences -- and the rule runs from the
+   label to the edge of the block it heads, so the grouping is drawn rather than
+   only implied by spacing. */
+.eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: var(--mono);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin: 0 0 10px;
+}
+
+.eyebrow::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--line);
+}
+
+/* ---- The signal dot ---------------------------------------------------- */
+/* The one thing this app is ever really saying is "something is live". The dot
+   in the Lugo mark, the active nav tab and an online device are the same object
+   at three sizes -- so it is a shared primitive, not three lookalikes. */
+
+.dot {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--signal);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--signal) 20%, transparent);
+}
+
+.dot--idle {
+  background: var(--ink-3);
+  box-shadow: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .dot:not(.dot--idle) {
+    animation: dot-pulse 2.6s ease-in-out infinite;
+  }
+  @keyframes dot-pulse {
+    0%, 100% { box-shadow: 0 0 0 3px color-mix(in srgb, var(--signal) 20%, transparent); }
+    50% { box-shadow: 0 0 0 5px color-mix(in srgb, var(--signal) 8%, transparent); }
+  }
+}
+
+/* ---- Shared bits ------------------------------------------------------- */
+
+.empty {
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--r-2);
+  padding: 22px 20px;
+  text-align: center;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: var(--ink-2);
+  margin: 0;
+}
+
+.error-text {
+  color: var(--danger);
+  font-size: 0.875rem;
+  margin: 0 0 12px;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
 }

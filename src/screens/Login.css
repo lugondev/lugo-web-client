@@ -1,23 +1,50 @@
 .login {
   display: grid;
   place-items: center;
-  min-height: 100vh;
+  min-height: 100dvh;
   padding: 24px;
 }
 
 .login__form {
   display: grid;
-  gap: 12px;
-  width: min(320px, 100%);
+  gap: 14px;
+  width: min(340px, 100%);
+}
+
+.login__mark {
+  display: grid;
+  gap: 8px;
+  margin: 0 0 10px;
+}
+
+.login__lockup {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+/* The mark sizes itself for the Talk stage; here it is a lockup glyph. */
+.login__lockup .mark {
+  width: 32px;
+  height: 32px;
 }
 
 .login__title {
   margin: 0;
-  font-size: 1.75rem;
-  letter-spacing: 0.2em;
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: 0.34em;
+  line-height: 1;
+}
+
+.login__tag {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--ink-2);
 }
 
 .login__error {
-  color: var(--lugo-danger);
+  color: var(--danger);
+  font-size: 0.875rem;
   margin: 0;
 }

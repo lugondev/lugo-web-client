@@ -26,29 +26,34 @@ export function Usage({ onBack }: { onBack?: () => void }) {
   const totalCount = rows.reduce((s, r) => s + (r.count || 0), 0)
 
   return (
-    <main className="usage">
+    <main className="page">
       {/* Reached from Settings now, not the nav -- see Tools.tsx for the same note. */}
       {onBack && (
-        <div className="usage__bar">
+        <div className="page__back">
           <Button variant="ghost" size="sm" onClick={onBack}>
             ‹ Settings
           </Button>
         </div>
       )}
-      <div className="usage__head">
-        <h1 className="usage__h">My Usage</h1>
-        <label className="usage__period">
-          Month
-          <input
-            className="input"
-            value={period}
-            placeholder="YYYY-MM"
-            onChange={(e) => setPeriod(e.target.value)}
-            onBlur={() => void refresh()}
-          />
-        </label>
+      <div className="page__head">
+        {/* Same words as the Settings row that opens it. */}
+        <h1 className="page__title">My usage</h1>
       </div>
-      <p className="usage__sub">What you've used, by kind and model.</p>
+      <p className="page__sub">What you've used, by kind and model.</p>
+
+      <div className="usage__filter">
+        <label className="usage__period" htmlFor="usage-period">
+          Month
+        </label>
+        <input
+          id="usage-period"
+          className="input"
+          value={period}
+          placeholder="YYYY-MM"
+          onChange={(e) => setPeriod(e.target.value)}
+          onBlur={() => void refresh()}
+        />
+      </div>
 
       {error && (
         <p className="usage__err" role="alert">
@@ -57,15 +62,18 @@ export function Usage({ onBack }: { onBack?: () => void }) {
       )}
 
       {!error && rows.length === 0 ? (
-        <p className="usage__empty">No usage recorded yet.</p>
+        <p className="empty">No usage recorded yet.</p>
       ) : (
         !error && (
+          <div className="usage__scroll">
           <table className="usage__table">
+            {/* Kind and model share one column: five columns cannot fit a phone,
+                and the model id is the one value long enough to need its own
+                line anyway. */}
             <thead>
               <tr>
-                <th>Kind</th>
-                <th>Model</th>
-                <th>Cost (USD)</th>
+                <th>Source</th>
+                <th>Cost</th>
                 <th>Amount</th>
                 <th>Requests</th>
               </tr>
@@ -73,9 +81,9 @@ export function Usage({ onBack }: { onBack?: () => void }) {
             <tbody>
               {rows.map((r) => (
                 <tr key={`${r.kind}-${r.model_id}`}>
-                  <td>{r.kind}</td>
                   <td>
-                    <code>{r.model_id || '(none)'}</code>
+                    <span className="usage__kind">{r.kind}</span>
+                    <span className="usage__model">{r.model_id || '(none)'}</span>
                   </td>
                   <td>${(r.cost_usd || 0).toFixed(4)}</td>
                   <td>{(r.native_amount || 0).toLocaleString()}</td>
@@ -85,19 +93,14 @@ export function Usage({ onBack }: { onBack?: () => void }) {
             </tbody>
             <tfoot>
               <tr>
-                <td colSpan={2}>
-                  <strong>Total</strong>
-                </td>
-                <td>
-                  <strong>${totalCost.toFixed(4)}</strong>
-                </td>
+                <td>Total</td>
+                <td>${totalCost.toFixed(4)}</td>
                 <td></td>
-                <td>
-                  <strong>{totalCount.toLocaleString()}</strong>
-                </td>
+                <td>{totalCount.toLocaleString()}</td>
               </tr>
             </tfoot>
           </table>
+          </div>
         )
       )}
     </main>

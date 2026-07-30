@@ -1,74 +1,235 @@
-/* Shared button. Orange ONLY on the primary variant -- other variants are never orange
-   (Lugo brand discipline). */
+/* Shared controls. Tokens live in theme.css -- nothing here hardcodes a colour. */
+
+/* ---- Button ------------------------------------------------------------
+ * Small by default. The old button was 44px tall with 22px of side padding and a
+ * full pill radius, so a throwaway action like "History" carried as much visual
+ * weight as the assistant's own name, and "Add device" became a full-width
+ * orange bar. Height is the affordance here, not the emphasis: emphasis is the
+ * fill, and only one control per screen gets it. */
 .btn {
+  position: relative;
   font: inherit;
+  font-size: 0.875rem;
   font-weight: 500;
-  border-radius: 999px;
-  cursor: pointer;
+  letter-spacing: -0.006em;
+  line-height: 1;
+  height: 36px;
+  padding: 0 14px;
+  border-radius: var(--r-1);
   border: 1px solid transparent;
-  transition: opacity 160ms ease, background 160ms ease;
+  cursor: pointer;
+  white-space: nowrap;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  min-height: 44px;
-  padding: 12px 22px;
+  gap: 6px;
+  transition: background-color 140ms ease, border-color 140ms ease, color 140ms ease,
+    box-shadow 140ms ease;
 }
-.btn:focus-visible {
-  outline: 2px solid var(--lugo-accent-warm);
-  outline-offset: 3px;
-}
-.btn:disabled { cursor: default; opacity: 0.45; }
 
-.btn--sm { min-height: 40px; padding: 8px 16px; font-size: 0.875rem; }
+/* Keep the box small on screen but the target big under a thumb. Vertical only,
+   so buttons sitting side by side never steal each other's taps. */
+@media (pointer: coarse) {
+  .btn::after {
+    content: '';
+    position: absolute;
+    inset: -5px 0;
+  }
+}
+
+.btn:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 2px;
+}
+
+.btn--sm {
+  height: 30px;
+  padding: 0 10px;
+  font-size: 0.8125rem;
+}
+
+/* One per screen at most: the Talk control, the login submit. */
+.btn--lg {
+  height: 46px;
+  padding: 0 22px;
+  font-size: 0.9375rem;
+  border-radius: var(--r-2);
+}
+
 .btn--full { width: 100%; }
 
-.btn--primary { background: var(--lugo-accent-gradient); color: #111; }
-.btn--primary:disabled { background: none; border-color: currentColor; color: inherit; }
-
-.btn--secondary { background: none; border-color: currentColor; color: inherit; opacity: 0.8; }
-.btn--secondary:hover:not(:disabled) { opacity: 1; }
-
-.btn--danger { background: none; border-color: var(--lugo-danger); color: var(--lugo-danger); }
-.btn--danger:hover:not(:disabled) { background: color-mix(in srgb, var(--lugo-danger) 8%, transparent); }
-
-.btn--ghost { background: none; border-color: transparent; color: inherit; opacity: 0.6; }
-.btn--ghost:hover:not(:disabled) { opacity: 1; }
-
-/* Labeled input field. */
-.field { display: grid; gap: 6px; }
-.field__label { font-size: 0.8125rem; font-weight: 500; opacity: 0.7; }
-
-.input, .textarea {
-  font: inherit;
-  width: 100%;
-  padding: 12px 14px;
-  border-radius: 10px;
-  border: 1px solid var(--lugo-cream-deep);
-  background: transparent;
-  color: inherit;
+.btn--primary {
+  background: var(--signal);
+  color: var(--on-signal);
+  box-shadow: var(--sh-1);
 }
-.textarea { resize: vertical; min-height: 96px; }
-.input:focus-visible, .textarea:focus-visible {
-  outline: 2px solid var(--lugo-accent-warm);
-  outline-offset: 2px;
+.btn--primary:hover:not(:disabled) { background: var(--signal-press); }
+
+.btn--secondary {
+  background: var(--surface);
+  border-color: var(--line-strong);
+  color: var(--ink);
+  box-shadow: var(--sh-1);
+}
+.btn--secondary:hover:not(:disabled) { background: var(--surface-2); }
+
+.btn--ghost {
+  background: none;
+  color: var(--ink-2);
+}
+.btn--ghost:hover:not(:disabled) {
+  background: var(--surface-2);
+  color: var(--ink);
+}
+
+.btn--danger {
+  background: none;
+  border-color: color-mix(in srgb, var(--danger) 35%, transparent);
+  color: var(--danger);
+}
+.btn--danger:hover:not(:disabled) { background: var(--danger-tint); }
+
+/* In a modal the destructive button IS the primary action, so it fills. Nowhere
+   else -- a filled red button loose on a page is a dare. */
+.modal__actions .btn--danger {
+  background: var(--danger);
   border-color: transparent;
+  color: var(--on-danger);
 }
-.input[aria-invalid='true'], .textarea[aria-invalid='true'] {
-  border-color: var(--lugo-danger);
+.modal__actions .btn--danger:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--danger) 85%, #000);
 }
-.field__error { color: var(--lugo-danger); font-size: 0.875rem; margin: 0; }
+
+/* Disabled is a real colour pair, not 45% opacity: a translucent button picks up
+   whatever is behind it and stops being legible on the dark surface. */
+.btn:disabled {
+  cursor: default;
+  background: var(--surface-2);
+  border-color: var(--line);
+  color: var(--ink-3);
+  box-shadow: none;
+}
+
+/* ---- Field -------------------------------------------------------------- */
+
+.field {
+  display: grid;
+  gap: 6px;
+}
+
+.field__label {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--ink-2);
+}
+
+.input,
+.textarea,
+select.input {
+  font: inherit;
+  font-size: 0.9375rem;
+  width: 100%;
+  min-height: 38px;
+  padding: 8px 12px;
+  border-radius: var(--r-1);
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  color: var(--ink);
+  transition: border-color 140ms ease, box-shadow 140ms ease;
+}
+
+.input::placeholder,
+.textarea::placeholder { color: var(--ink-3); }
+
+.textarea {
+  resize: vertical;
+  min-height: 92px;
+  line-height: 1.55;
+}
+
+/* Our own caret instead of the OS double-arrow, so a select reads as the same
+   control as the input above it. The stroke is the one hardcoded colour in the
+   file -- a data URI cannot see currentColor -- and --ink-3 is legible on both
+   the light and the dark surface. */
+select.input {
+  appearance: none;
+  padding-right: 32px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6' fill='none' stroke='%236f7780' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M1 1l4 4 4-4'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 11px center;
+  cursor: pointer;
+}
+
+.input:focus-visible,
+.textarea:focus-visible,
+select.input:focus-visible {
+  border-color: var(--signal);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--signal) 20%, transparent);
+  /* Transparent rather than none: Windows high-contrast mode paints this back in,
+     where the box-shadow ring is dropped. */
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+}
+
+.input[aria-invalid='true'],
+.textarea[aria-invalid='true'] { border-color: var(--danger); }
+
+.field__error {
+  color: var(--danger);
+  font-size: 0.8125rem;
+  margin: 0;
+}
+
+/* ---- Card --------------------------------------------------------------- */
 
 .card {
-  border: 1px solid var(--lugo-cream-deep);
-  border-radius: 12px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-2);
   padding: 16px;
+  box-shadow: var(--sh-1);
 }
+
+/* ---- Grouped list -------------------------------------------------------
+ * One panel with hairline dividers, not N floating rounded boxes with gaps. A
+ * gapped stack of near-invisible outlines was most of why the light theme looked
+ * unresolved: eight borders, no edges, nothing to anchor the eye. */
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-2);
+  box-shadow: var(--sh-1);
+  overflow: hidden;
+}
+
+.list > li + li { border-top: 1px solid var(--line); }
+
+/* ---- Badge -------------------------------------------------------------- */
+
+.badge {
+  font-family: var(--mono);
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 3px 6px;
+  border-radius: 5px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  color: var(--ink-3);
+}
+
+/* ---- Modal -------------------------------------------------------------- */
 
 .modal__backdrop {
   position: fixed;
   inset: 0;
-  background: color-mix(in srgb, var(--lugo-ink) 55%, transparent);
+  background: rgba(11, 12, 14, 0.5);
+  backdrop-filter: blur(3px);
   display: grid;
   place-items: center;
   padding: 20px;
@@ -76,22 +237,37 @@
 }
 
 .modal {
-  /* The modal always uses the cream surface, even when opened from the dark Talk screen --
-     it's its own floating layer, not part of the background behind it. */
-  background: var(--lugo-cream);
-  color: var(--lugo-ink);
-  --lugo-danger: #c9372c;
-  border-radius: 16px;
-  padding: 22px;
-  width: min(380px, 100%);
+  background: var(--surface);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: var(--r-3);
+  padding: 20px;
+  width: min(400px, 100%);
   display: grid;
   gap: 14px;
-  box-shadow: 0 20px 60px -20px rgba(0, 0, 0, 0.5);
+  box-shadow: var(--sh-pop);
 }
 
-.modal__title { font-size: 1.125rem; font-weight: 600; margin: 0; }
-.modal__body { margin: 0; line-height: 1.55; opacity: 0.8; }
-.modal__actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 4px; }
+.modal__title {
+  font-size: 1.0625rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  margin: 0;
+}
+
+.modal__body {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: var(--ink-2);
+}
+
+.modal__actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 2px;
+}
 
 @media (prefers-reduced-motion: no-preference) {
   .modal { animation: modal-in 160ms ease; }
@@ -101,8 +277,10 @@
   }
 }
 
-/* Overflow menu. Destructive actions live in here rather than level with the
-   everyday buttons on a card -- see MenuButton.tsx. */
+/* ---- Overflow menu ------------------------------------------------------
+ * Destructive actions live in here rather than level with the everyday buttons
+ * on a card -- see MenuButton.tsx. */
+
 .menu { position: relative; display: inline-flex; }
 
 .menu__trigger {
@@ -110,44 +288,55 @@
   line-height: 1;
   background: none;
   border: none;
-  color: inherit;
-  opacity: 0.5;
+  color: var(--ink-3);
   cursor: pointer;
-  border-radius: 999px;
-  width: 32px;
-  height: 32px;
+  border-radius: var(--r-1);
+  width: 30px;
+  height: 30px;
   display: grid;
   place-items: center;
-  font-size: 1.25rem;
+  font-size: 1.125rem;
 }
-.menu__trigger:hover, .menu__trigger[aria-expanded='true'] { opacity: 1; }
-.menu__trigger:focus-visible { outline: 2px solid var(--lugo-accent-warm); outline-offset: 2px; }
+.menu__trigger:hover,
+.menu__trigger[aria-expanded='true'] {
+  background: var(--surface-2);
+  color: var(--ink);
+}
+.menu__trigger:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 2px;
+}
 
 .menu__list {
   position: absolute;
-  top: calc(100% + 4px);
+  top: calc(100% + 6px);
   right: 0;
   z-index: 20;
-  min-width: 160px;
+  min-width: 190px;
   display: grid;
-  padding: 6px;
-  border-radius: 12px;
-  background: var(--lugo-cream);
-  color: var(--lugo-ink);
-  border: 1px solid var(--lugo-cream-deep);
-  box-shadow: 0 16px 40px -16px rgba(0, 0, 0, 0.4);
+  padding: 5px;
+  border-radius: var(--r-2);
+  background: var(--surface);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  box-shadow: var(--sh-pop);
 }
 
 .menu__item {
   font: inherit;
+  font-size: 0.875rem;
   text-align: left;
   background: none;
   border: none;
   color: inherit;
-  padding: 10px 12px;
-  border-radius: 8px;
+  padding: 9px 10px;
+  border-radius: 7px;
   cursor: pointer;
 }
-.menu__item:hover { background: var(--lugo-cream-deep); }
-.menu__item:focus-visible { outline: 2px solid var(--lugo-accent-warm); outline-offset: -2px; }
-.menu__item--danger { color: #c9372c; }
+.menu__item:hover { background: var(--surface-2); }
+.menu__item:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: -2px;
+}
+.menu__item--danger { color: var(--danger); }
+.menu__item--danger:hover { background: var(--danger-tint); }

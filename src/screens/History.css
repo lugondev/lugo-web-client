@@ -1,52 +1,36 @@
-.his {
-  min-height: 100dvh;
-  padding: 20px 20px 88px;
-  max-width: 34rem;
-  margin: 0 auto;
-}
+/* ---- Conversation list -------------------------------------------------- */
 
-.his__h {
-  font-size: 1.5rem;
-  font-weight: 600;
-  margin: 8px 0 4px;
-}
+/* Panel and dividers come from .list (ui.css). */
 
-.his__sub {
-  margin: 0 0 24px;
-  opacity: 0.6;
-  font-size: 0.9375rem;
-  line-height: 1.5;
+.his__item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-right: 12px;
 }
-
-.his__list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: grid;
-  gap: 10px;
-}
+.his__item:hover { background: var(--surface-2); }
 
 .his__row {
-  width: 100%;
+  flex: 1;
+  min-width: 0;
   text-align: left;
   font: inherit;
   color: inherit;
-  border: 1px solid var(--lugo-cream-deep);
-  border-radius: 12px;
-  padding: 14px 16px;
+  border: 0;
   background: none;
+  padding: 13px 4px 13px 16px;
   cursor: pointer;
   display: grid;
-  gap: 4px;
+  gap: 3px;
 }
-.his__row:hover { border-color: color-mix(in srgb, currentColor 30%, transparent); }
 .his__row:focus-visible {
-  outline: 2px solid var(--lugo-accent-warm);
-  outline-offset: 2px;
+  outline: 2px solid var(--signal);
+  outline-offset: -2px;
 }
 
 .his__preview {
   font-weight: 500;
+  font-size: 0.9375rem;
   margin: 0;
   /* Clamp to one line: this is a list to scan, not to read. */
   overflow: hidden;
@@ -55,79 +39,52 @@
 }
 
 .his__meta {
-  font-size: 0.8125rem;
-  opacity: 0.55;
+  font-family: var(--mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.02em;
+  color: var(--ink-3);
   margin: 0;
 }
 
-.his__empty {
-  border: 1px dashed var(--lugo-cream-deep);
-  border-radius: 12px;
-  padding: 24px 20px;
-  text-align: center;
-  font-size: 0.9375rem;
-  line-height: 1.6;
-  opacity: 0.7;
-}
+.his__continue { flex: none; }
 
-.his__err {
-  color: var(--lugo-danger);
-  font-size: 0.9375rem;
-}
-
-/* --- detail --- */
+/* ---- Detail ------------------------------------------------------------- */
 
 .his__bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin-bottom: 16px;
+  margin: 0 0 22px;
 }
+
+.his__bar-right { display: flex; gap: 8px; }
 
 .his__turns {
   display: grid;
-  gap: 18px;
+  gap: 20px;
   margin: 0;
 }
 
 .his__turn { margin: 0; }
 
-/* Speaker label. No chat bubbles -- this is a transcript to read back,
-   not a live chat in progress. */
+/* Speaker label. No chat bubbles -- this is a transcript to read back, not a
+   live chat in progress. */
 .his__who {
-  font-size: 0.75rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  opacity: 0.45;
-  margin: 0 0 4px;
+  font-family: var(--mono);
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.13em;
+  color: var(--ink-3);
+  margin: 0 0 5px;
 }
 
 .his__said {
   margin: 0;
-  line-height: 1.6;
+  line-height: 1.65;
   white-space: pre-wrap;
 }
 
-.his__turn--user .his__said { opacity: 0.65; }
-
-.his__item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.his__item .his__row {
-  flex: 1;
-}
-
-.his__continue {
-  flex: none;
-}
-
-.his__bar-right {
-  display: flex;
-  gap: 8px;
-}
-
-.his__backbar { display: flex; align-items: center; margin: 0 0 4px -8px; }
+/* What the user said is context for what Lugo answered, so it steps back a level
+   with a real ink token rather than being dimmed by opacity. */
+.his__turn--user .his__said { color: var(--ink-2); }

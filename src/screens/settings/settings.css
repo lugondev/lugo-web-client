@@ -1,25 +1,8 @@
-.set {
-  min-height: 100dvh;
-  padding: 20px 20px 88px;
-  max-width: 34rem;
-  margin: 0 auto;
-}
+/* Settings: one panel of rows, plus the panels those rows open. The page frame
+   itself is .page in theme.css -- this file only owns what is specific here. */
 
-.set__bar { display: flex; align-items: center; margin: 0 0 4px -8px; }
-
-.set__h {
-  font-size: 1.5rem;
-  font-weight: 600;
-  margin: 8px 0 24px;
-}
-
-.set__list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: grid;
-  gap: 8px;
-}
+/* The panel and its dividers come from .list (ui.css); the rows are this
+   screen's own -- they carry a label plus a hint, which no other list does. */
 
 /* A settings row is a whole-width target, not a link buried in text: on a phone
    the entire row is the tap area. */
@@ -31,22 +14,43 @@
   justify-content: space-between;
   gap: 12px;
   text-align: left;
-  padding: 16px;
-  min-height: 64px;
-  border: 1px solid var(--lugo-cream-deep);
-  border-radius: 12px;
+  padding: 14px 16px;
+  min-height: 62px;
+  border: 0;
   background: none;
   color: inherit;
   cursor: pointer;
 }
-.set__row:hover { background: color-mix(in srgb, currentColor 4%, transparent); }
-.set__row:focus-visible { outline: 2px solid var(--lugo-accent-warm); outline-offset: 2px; }
+.set__row:hover { background: var(--surface-2); }
+.set__row:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: -2px;
+}
 
-.set__row-text { display: grid; gap: 2px; min-width: 0; }
-.set__row-label { font-weight: 500; }
-.set__row-hint { font-size: 0.8125rem; opacity: 0.55; }
+.set__row-text {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.set__row-label { font-weight: 500; font-size: 0.9375rem; }
+.set__row-hint { font-size: 0.8125rem; color: var(--ink-2); }
 
-.set__chev { opacity: 0.35; font-size: 1.25rem; line-height: 1; }
+.set__chev {
+  flex: none;
+  color: var(--ink-3);
+  font-size: 1.125rem;
+  line-height: 1;
+}
 
-.set__card { display: grid; gap: 16px; justify-items: start; }
-.set__note { margin: 0; font-size: 0.9375rem; line-height: 1.6; opacity: 0.75; }
+.set__card {
+  display: grid;
+  gap: 16px;
+  justify-items: start;
+}
+
+.set__note {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.65;
+  color: var(--ink-2);
+}

@@ -90,32 +90,34 @@ export function AllDevices({ onBack }: { onBack: () => void }) {
   }
 
   return (
-    <main className="dev">
-      <div className="dev__bar">
+    <main className="page">
+      <div className="page__back">
         <Button variant="ghost" size="sm" onClick={onBack}>
           ‹ Settings
         </Button>
       </div>
-      <h1 className="dev__h">All devices</h1>
-      <p className="dev__sub">Every device paired to your account, by assistant.</p>
+      <div className="page__head">
+        <h1 className="page__title">All devices</h1>
+      </div>
+      <p className="page__sub">Every device paired to your account, by assistant.</p>
 
       {error && (
-        <p className="field__error" role="alert">
+        <p className="error-text" role="alert">
           {error}
         </p>
       )}
 
       {active.length === 0 ? (
-        <p className="dev__empty">
+        <p className="empty">
           No devices yet. Open an assistant and add one there.
         </p>
       ) : (
         keys.map((key) => (
           <section key={key}>
-            <h2 className="dev__group">
+            <h2 className="eyebrow dev__group">
               {key === UNASSIGNED ? 'Unassigned' : titleOf(key)}
             </h2>
-            <ul className="dev__list">
+            <ul className="list dev__list">
               {(groups.get(key) ?? []).map((d) => (
                 <li key={d.id}>
                   <DeviceRow

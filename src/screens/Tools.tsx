@@ -47,9 +47,11 @@ function ToText() {
         </p>
       )}
       {text && <p className="tool__out">{text}</p>}
-      <Button variant="primary" onClick={run} disabled={!file || busy}>
-        {busy ? 'Listening…' : 'To text'}
-      </Button>
+      <div className="tool__actions">
+        <Button variant="primary" onClick={run} disabled={!file || busy}>
+          {busy ? 'Listening…' : 'To text'}
+        </Button>
+      </div>
     </Card>
   )
 }
@@ -113,28 +115,32 @@ function ToVoice() {
         // It lives only in this tab's memory and is revoked once replaced or on unmount.
         <audio className="tool__audio" controls src={url} autoPlay />
       )}
-      <Button variant="primary" onClick={run} disabled={!input.trim() || busy}>
-        {busy ? 'Reading…' : 'Read aloud'}
-      </Button>
+      <div className="tool__actions">
+        <Button variant="primary" onClick={run} disabled={!input.trim() || busy}>
+          {busy ? 'Reading…' : 'Read aloud'}
+        </Button>
+      </div>
     </Card>
   )
 }
 
 export function Tools({ onBack }: { onBack?: () => void }) {
   return (
-    <main className="tool">
+    <main className="page">
       {/* Tools is no longer a top-level nav destination -- it hangs off Settings,
           so it has to offer its own way back. Optional so the screen still
           renders standalone in tests. */}
       {onBack && (
-        <div className="tool__bar">
+        <div className="page__back">
           <Button variant="ghost" size="sm" onClick={onBack}>
             ‹ Settings
           </Button>
         </div>
       )}
-      <h1 className="tool__h">Tools</h1>
-      <p className="tool__sub">Two quick jobs, no need to open a conversation.</p>
+      <div className="page__head">
+        <h1 className="page__title">Tools</h1>
+      </div>
+      <p className="page__sub">Two quick jobs, no need to open a conversation.</p>
       <ToText />
       <ToVoice />
     </main>

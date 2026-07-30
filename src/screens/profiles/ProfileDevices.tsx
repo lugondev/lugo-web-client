@@ -81,27 +81,34 @@ export function ProfileDevices({
   }
 
   return (
-    <main className="dev">
-      <div className="dev__bar">
+    <main className="page">
+      <div className="page__back">
         <Button variant="ghost" size="sm" onClick={onBack}>
           ‹ Assistants
         </Button>
       </div>
-      <h1 className="dev__h">Devices</h1>
-      <p className="dev__sub">Hardware running {title}.</p>
+      <div className="page__head">
+        <h1 className="page__title">Devices</h1>
+        {/* Compact and in the header, not a full-width bar under the list: adding
+            a device happens once per device, the list is what you came for. */}
+        <Button variant="primary" size="sm" onClick={() => setPairing(true)}>
+          Add device
+        </Button>
+      </div>
+      <p className="page__sub">Hardware running {title}.</p>
 
       {error && (
-        <p className="field__error" role="alert">
+        <p className="error-text" role="alert">
           {error}
         </p>
       )}
 
       {mine.length === 0 ? (
-        <p className="dev__empty">
+        <p className="empty">
           No devices yet. Add one and it will answer as {title}.
         </p>
       ) : (
-        <ul className="dev__list">
+        <ul className="list dev__list">
           {mine.map((d) => (
             <li key={d.id}>
               <DeviceRow
@@ -116,10 +123,6 @@ export function ProfileDevices({
           ))}
         </ul>
       )}
-
-      <Button variant="primary" fullWidth onClick={() => setPairing(true)}>
-        + Add device
-      </Button>
 
       <PairWizard
         open={pairing}

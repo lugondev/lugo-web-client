@@ -11,13 +11,16 @@ import './settings.css'
  */
 export function Account({ onBack, onSignOut }: { onBack: () => void; onSignOut: () => void }) {
   return (
-    <main className="set">
-      <div className="set__bar">
+    <main className="page">
+      <div className="page__back">
         <Button variant="ghost" size="sm" onClick={onBack}>
           ‹ Settings
         </Button>
       </div>
-      <h1 className="set__h">Account</h1>
+      <div className="page__head">
+        <h1 className="page__title">Account</h1>
+      </div>
+      <p className="page__sub">This browser&apos;s access to Lugo.</p>
 
       <Card className="set__card">
         <p className="set__note">

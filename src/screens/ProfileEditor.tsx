@@ -78,7 +78,7 @@ export function ProfileEditor({
   return (
     <div className="pe">
       <div className="pe__bar">
-        <Button variant="secondary" size="sm" onClick={onCancel}>Back</Button>
+        <Button variant="ghost" size="sm" onClick={onCancel}>‹ Assistants</Button>
       </div>
 
       {error && <p className="pe__error" role="alert">{error}</p>}
