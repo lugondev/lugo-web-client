@@ -65,6 +65,9 @@
 .talk__controls {
   display: flex;
   gap: 12px;
+  /* Wraps so "New conversation" drops below the primary control at 320px
+     instead of squeezing both onto one cramped row. */
+  flex-wrap: wrap;
   justify-content: center;
   align-items: center;
 }

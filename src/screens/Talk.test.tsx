@@ -1,4 +1,4 @@
-import { render, screen, waitFor, fireEvent } from '@testing-library/react'
+import { act, render, screen, waitFor, fireEvent } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('../api/profiles', () => ({
@@ -79,6 +79,7 @@ describe('Talk session continuity', () => {
           connect: vi.fn().mockResolvedValue(undefined),
           disconnect: vi.fn(),
           abort: vi.fn(),
+          newConversation: vi.fn(),
           level: 0,
         } as unknown as Conversation
       },
@@ -120,5 +121,78 @@ describe('Talk session continuity', () => {
     expect(vi.mocked(Conversation).mock.calls[0][2]).toBe('s-picked')
     expect(listSessions).not.toHaveBeenCalled()
     await waitFor(() => expect(onResumed).toHaveBeenCalled())
+  })
+})
+
+describe('New conversation button', () => {
+  beforeEach(() => {
+    localStorage.clear()
+    // Conversation is a module-level mock, so its call log carries over from
+    // the describes above; without this, calls[0] is a component that has
+    // already unmounted and driving its callbacks updates nothing.
+    vi.clearAllMocks()
+    vi.mocked(listProfiles).mockResolvedValue([] as never)
+    vi.mocked(listSessions).mockResolvedValue([] as never)
+    vi.stubGlobal('AudioDecoder', class {})
+    vi.stubGlobal('AudioContext', class {})
+    vi.stubGlobal('navigator', { mediaDevices: { getUserMedia: () => {} } })
+    vi.mocked(Conversation).mockImplementation(
+      function () {
+        return {
+          connect: vi.fn().mockResolvedValue(undefined),
+          disconnect: vi.fn(),
+          abort: vi.fn(),
+          newConversation: vi.fn(),
+          level: 0,
+        } as unknown as Conversation
+      },
+    )
+  })
+
+  afterEach(() => vi.unstubAllGlobals())
+
+  /** Start a call and push the screen into a live state, as the real
+   * Conversation would via its onState callback. */
+  async function goLive() {
+    render(<Talk />)
+    fireEvent.click(await screen.findByText('Start talking'))
+    await waitFor(() => expect(Conversation).toHaveBeenCalled())
+    const instance = vi.mocked(Conversation).mock.results.at(-1)!.value as unknown as {
+      newConversation: ReturnType<typeof vi.fn>
+    }
+    const callbacks = vi.mocked(Conversation).mock.calls.at(-1)![0]!
+    act(() => callbacks.onState?.('listening'))
+    return instance
+  }
+
+  it('is hidden until a call is up', async () => {
+    render(<Talk />)
+    await screen.findByText('Start talking')
+    // With no connection there is no conversation to leave, and Start talking
+    // already begins one.
+    expect(screen.queryByText('New conversation')).toBeNull()
+  })
+
+  it('rotates the session instead of hanging up', async () => {
+    const instance = await goLive()
+    fireEvent.click(screen.getByText('New conversation'))
+    expect(instance.newConversation).toHaveBeenCalled()
+  })
+
+  it('clears the transcript so nothing implies Lugo still remembers it', async () => {
+    render(<Talk />)
+    fireEvent.click(await screen.findByText('Start talking'))
+    await waitFor(() => expect(Conversation).toHaveBeenCalled())
+    const callbacks = vi.mocked(Conversation).mock.calls.at(-1)![0]!
+    act(() => {
+      callbacks.onState?.('listening')
+      callbacks.onUserText?.('what did I just say')
+      callbacks.onReplyText?.('you said something')
+    })
+    expect(screen.getByText('what did I just say')).toBeTruthy()
+
+    fireEvent.click(screen.getByText('New conversation'))
+    expect(screen.queryByText('what did I just say')).toBeNull()
+    expect(screen.queryByText('you said something')).toBeNull()
   })
 })

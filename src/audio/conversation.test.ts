@@ -219,3 +219,35 @@ describe('abort()', () => {
     expect(sent).toContainEqual(JSON.stringify({ type: 'abort' }))
   })
 })
+
+describe('newConversation', () => {
+  function build() {
+    const sent: string[] = []
+    let playing = true
+    const conv = new Conversation({}) as unknown as {
+      player: { playing: boolean; stop: () => void }
+      ws: { readyState: number; send: (d: string) => void }
+      newConversation: () => void
+    }
+    conv.player = { get playing() { return playing }, stop: () => { playing = false } }
+    conv.ws = { readyState: 1 /* OPEN */, send: (d: string) => sent.push(d) }
+    return { conv, sent, stopped: () => !playing }
+  }
+
+  it('asks the server for a new session rather than reconnecting', () => {
+    const { conv, sent } = build()
+    conv.newConversation()
+    // Not `reset`: that only clears the server's in-memory context and keeps
+    // writing to the same stored session, so it would not produce a separate
+    // conversation. See docs/api.md.
+    expect(sent).toEqual([JSON.stringify({ type: 'new_session' })])
+  })
+
+  it('stops the reply still draining from the conversation being left', () => {
+    const { conv, stopped } = build()
+    conv.newConversation()
+    // Letting the old answer play on over "starting fresh" reads as Lugo
+    // ignoring the request.
+    expect(stopped()).toBe(true)
+  })
+})

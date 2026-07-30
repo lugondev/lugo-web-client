@@ -207,6 +207,19 @@ export class Conversation {
     this.setState('listening')
   }
 
+  /** End this conversation and start a fresh one, without dropping the socket.
+   *
+   * Stops playback first: the reply still draining belongs to the conversation
+   * being left behind, and letting it finish over the top of "starting fresh"
+   * reads as the assistant ignoring the request. The server answers
+   * `session_rotated`; nothing here needs the new id, since this client keeps no
+   * session state of its own between turns. */
+  newConversation(): void {
+    this.player.stop()
+    this.send({ type: 'new_session' })
+    this.setState('listening')
+  }
+
   disconnect(): void {
     this.closing = true
     this.mic.stop()

@@ -132,6 +132,21 @@ export function Talk({
     convRef.current?.abort()
   }
 
+  /** Start a fresh conversation without hanging up.
+   *
+   * Worth having here and not only on devices: Start talking resumes the most
+   * recent session (see latestSessionId above), so without this there is no way
+   * to deliberately leave a thread behind short of never coming back.
+   *
+   * Clears the transcript too -- leaving the last exchange on screen under a
+   * conversation that no longer knows about it is a lie about what Lugo
+   * remembers. */
+  function newConversation() {
+    convRef.current?.newConversation()
+    setYou('')
+    setReply('')
+  }
+
   const live = state !== 'idle' && state !== 'error'
   const control = controlFor(state)
 
@@ -198,6 +213,14 @@ export function Talk({
         ) : (
           <Button variant="secondary" onClick={control.kind === 'skip' ? skip : stop}>
             {control.label}
+          </Button>
+        )}
+        {/* Only while a call is up: with no connection there is no conversation
+            to leave, and Start talking already begins one. Ghost, so it never
+            competes with the primary control next to it. */}
+        {live && (
+          <Button variant="ghost" size="sm" onClick={newConversation}>
+            New conversation
           </Button>
         )}
       </div>
