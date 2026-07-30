@@ -9,6 +9,7 @@ vi.mock('../api/profiles', async (orig) => ({
   cloneProfile: vi.fn(),
   listLlmOptions: vi.fn(),
 }))
+vi.mock('../api/stt', () => ({ listSttModelOptions: vi.fn() }))
 vi.mock('../api/tts', () => ({ listTtsProfiles: vi.fn() }))
 vi.mock('../api/devices', () => ({ listDevices: vi.fn() }))
 vi.mock('../api/history', () => ({ listSessions: vi.fn() }))
@@ -18,6 +19,7 @@ vi.mock('./ProfileEditor', () => ({ ProfileEditor: () => <div>editor</div> }))
 import { listProfiles, deleteProfile, listLlmOptions } from '../api/profiles'
 import { listDevices } from '../api/devices'
 import { listSessions } from '../api/history'
+import { listSttModelOptions } from '../api/stt'
 import { listTtsProfiles } from '../api/tts'
 import { Profiles } from './Profiles'
 
@@ -44,6 +46,8 @@ beforeEach(() => {
   vi.mocked(listSessions).mockResolvedValue([] as never)
   vi.mocked(listLlmOptions).mockResolvedValue(
     [{ engine: 'openai', model_id: 'gpt-4o-mini', label: 'OpenAI · GPT-4o mini' }] as never)
+  vi.mocked(listSttModelOptions).mockResolvedValue(
+    [{ engine: 'openai_stt', model: 'Qwen/Qwen3-ASR-0.6B', label: 'Qwen3 ASR 0.6B' }] as never)
   vi.mocked(listTtsProfiles).mockResolvedValue(
     [{ name: 'vn-cf', nickname: 'VieNeu (Cloudflare)' }] as never)
 })
@@ -112,6 +116,7 @@ it('shows friendly registry labels only — never the raw engine or model id', a
     return el
   })
   expect(meta.textContent).toContain('VieNeu (Cloudflare)')
+  expect(meta.textContent).toContain('Qwen3 ASR 0.6B')
   // The raw engine names and model ids must not leak into the user-facing
   // summary -- only the labels the registry resolved them to.
   expect(meta.textContent).not.toContain('openai_stt')

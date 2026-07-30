@@ -4,17 +4,20 @@ import { Card } from '../../ui/Card'
 import { MenuButton, type MenuItem } from '../../ui/MenuButton'
 import type { Profile } from '../../api/profiles'
 
-/** What the meta strip shows. Three facts a non-engineer recognises.
+/** What the meta strip shows: the three parts of a turn, then when the last one
+ * was.
  *
  * Deliberately NOT the engine name or model id the profile actually stores --
  * "vieneu" and "qwen3-asr-flash" tell the person who set up a kitchen speaker
  * nothing. Those live one level down, in Configure.
  */
 export type ProfileMeta = {
-  /** TTS profile nickname, or a dash when the server default applies. */
-  voice: string
+  /** Model Registry label for the pinned STT model. */
+  hearing: string
   /** Model Registry label for the pinned LLM. */
   model: string
+  /** TTS profile nickname, or the server default. */
+  voice: string
   /** Human phrasing for the last conversation, e.g. "2 h ago". */
   lastUsed: string
 }
@@ -67,16 +70,25 @@ export function ProfileCard({
         <MenuButton label={`More actions for ${title}`} items={menu} />
       </div>
 
-      {/* title carries the untruncated value: a voice name can still outrun its
+      {/* In the order a turn actually happens -- hear, think, speak -- so the
+          three rows are a path rather than a list. "Hearing" and not "STT" or
+          "Listening": it is the mirror of Voice, and "listening" already names a
+          live state on Talk.
+
+          title carries the untruncated value: a voice name can still outrun its
           row on a narrow card, and hovering is cheaper than opening Configure. */}
       <dl className="pcard__meta">
         <div className="pcard__cell">
-          <dt>Voice</dt>
-          <dd title={meta.voice}>{meta.voice}</dd>
+          <dt>Hearing</dt>
+          <dd title={meta.hearing}>{meta.hearing}</dd>
         </div>
         <div className="pcard__cell">
           <dt>Model</dt>
           <dd title={meta.model}>{meta.model}</dd>
+        </div>
+        <div className="pcard__cell">
+          <dt>Voice</dt>
+          <dd title={meta.voice}>{meta.voice}</dd>
         </div>
         <div className="pcard__cell">
           <dt>Last used</dt>

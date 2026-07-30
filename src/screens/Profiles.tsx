@@ -5,6 +5,7 @@ import {
 } from '../api/profiles'
 import { listDevices, type Device } from '../api/devices'
 import { listSessions } from '../api/history'
+import { listSttModelOptions, type SttModelOption } from '../api/stt'
 import { listTtsProfiles, type TtsProfileSummary } from '../api/tts'
 import { relativeTime } from '../lib/time'
 import { emptyProfileInput, toEditableInput } from './profileForm'
@@ -22,7 +23,7 @@ type Editing = { mode: 'create' | 'edit'; initial: ProfileInput } | null
 // (engine, model); these lists turn that pair back into something a person
 // recognises. Empty engine = server default; a pair with no matching row =
 // unavailable (the model was removed from the registry).
-type Catalog = { llm: LlmOption[]; tts: TtsProfileSummary[] }
+type Catalog = { llm: LlmOption[]; stt: SttModelOption[]; tts: TtsProfileSummary[] }
 
 // How many recent sessions to scan for "last used". One request for the whole
 // grid instead of one per card. Assistants missing from this page are shown as
@@ -35,11 +36,16 @@ function metaFor(p: Profile, catalog: Catalog, lastUsedIso: string | null): Prof
     ? 'Server default'
     : catalog.llm.find((o) => o.engine === p.llm.engine && o.model_id === p.llm.model)?.label
       ?? 'Unavailable'
+  const hearing = !p.stt.engine
+    ? 'Server default'
+    : catalog.stt.find((o) => o.engine === p.stt.engine && o.model === p.stt.model)?.label
+      ?? 'Unavailable'
   const ttsProfile = catalog.tts.find((t) => t.name === p.tts.profile_name)
   const voice = !p.tts.profile_name
     ? 'Server default'
     : ttsProfile?.nickname || ttsProfile?.name || 'Unavailable'
   return {
+    hearing,
     voice,
     model,
     // Short enough to survive a third of a card: the longer wording ellipsised
@@ -61,7 +67,7 @@ export function Profiles({
   const [toDelete, setToDelete] = useState<string | null>(null)
   const [cloneOf, setCloneOf] = useState<string | null>(null)
   const [cloneName, setCloneName] = useState('')
-  const [catalog, setCatalog] = useState<Catalog>({ llm: [], tts: [] })
+  const [catalog, setCatalog] = useState<Catalog>({ llm: [], stt: [], tts: [] })
   const [devices, setDevices] = useState<Device[]>([])
   const [lastUsed, setLastUsed] = useState<Record<string, string>>({})
 
@@ -90,8 +96,9 @@ export function Profiles({
   useEffect(() => {
     Promise.all([
       listLlmOptions().catch(() => []),
+      listSttModelOptions().catch(() => []),
       listTtsProfiles().catch(() => []),
-    ]).then(([llm, tts]) => setCatalog({ llm, tts }))
+    ]).then(([llm, stt, tts]) => setCatalog({ llm, stt, tts }))
   }, [])
 
   async function openEdit(name: string): Promise<void> {
