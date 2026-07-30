@@ -89,7 +89,23 @@ function Detail({
   )
 }
 
-export function History({ onContinue }: { onContinue: (id: string) => void }) {
+/** Conversations, scoped to one assistant.
+ *
+ * There is no global history screen any more: history belongs to the assistant
+ * that produced it, so it is reached from that assistant's card. `profile` is
+ * optional only so the component still renders standalone in tests.
+ */
+export function History({
+  onContinue,
+  profile,
+  profileTitle,
+  onBack,
+}: {
+  onContinue: (id: string) => void
+  profile?: string
+  profileTitle?: string
+  onBack?: () => void
+}) {
   const [rows, setRows] = useState<SessionRow[]>([])
   const [open, setOpen] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -97,7 +113,7 @@ export function History({ onContinue }: { onContinue: (id: string) => void }) {
   async function refresh() {
     try {
       // The server already orders by created_at DESC -- don't re-sort on the client.
-      setRows(await listSessions(50))
+      setRows(await listSessions(50, 0, profile))
       setError(null)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Could not load history')
@@ -106,7 +122,8 @@ export function History({ onContinue }: { onContinue: (id: string) => void }) {
 
   useEffect(() => {
     void refresh()
-  }, [])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profile])
 
   if (open) {
     return (
@@ -124,8 +141,17 @@ export function History({ onContinue }: { onContinue: (id: string) => void }) {
 
   return (
     <main className="his">
+      {onBack && (
+        <div className="his__backbar">
+          <Button variant="ghost" size="sm" onClick={onBack}>
+            ‹ Assistants
+          </Button>
+        </div>
+      )}
       <h1 className="his__h">History</h1>
-      <p className="his__sub">Everything you and Lugo have said.</p>
+      <p className="his__sub">
+        {profileTitle ? `Conversations with ${profileTitle}.` : 'Everything you and Lugo have said.'}
+      </p>
 
       {error && (
         <p className="his__err" role="alert">

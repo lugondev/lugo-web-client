@@ -31,8 +31,19 @@ async function errorFrom(resp: Response): Promise<Error> {
   return new Error(`Server returned error ${resp.status}`)
 }
 
-export async function listSessions(limit = 20, offset = 0): Promise<SessionRow[]> {
-  const resp = await apiFetch(`/v1/sessions?limit=${limit}&offset=${offset}`)
+/** Recent sessions, newest first.
+ *
+ * `profile` filters server-side (`sessions.profile_id`) rather than in the
+ * browser: history is now read per assistant, and filtering a fixed page here
+ * would silently show fewer than `limit` rows -- or none at all for an assistant
+ * whose conversations fell off the page. */
+export async function listSessions(
+  limit = 20,
+  offset = 0,
+  profile?: string,
+): Promise<SessionRow[]> {
+  const scope = profile ? `&profile=${encodeURIComponent(profile)}` : ''
+  const resp = await apiFetch(`/v1/sessions?limit=${limit}&offset=${offset}${scope}`)
   if (!resp.ok) throw await errorFrom(resp)
   const body = await resp.json()
   return body.data as SessionRow[]

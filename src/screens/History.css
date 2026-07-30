@@ -129,3 +129,5 @@
   display: flex;
   gap: 8px;
 }
+
+.his__backbar { display: flex; align-items: center; margin: 0 0 4px -8px; }
