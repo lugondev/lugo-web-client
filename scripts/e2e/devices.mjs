@@ -2,8 +2,8 @@ import { chromium } from 'playwright'
 const b = await chromium.launch()
 const p = await b.newPage({ viewport: { width: 420, height: 860 }, deviceScaleFactor: 2 })
 await p.goto('http://localhost:5173/')
-await p.fill('input[placeholder="Username"]', 'e2e-user')
-await p.fill('input[placeholder="Password"]', 'pw12345678')
+await p.fill('#login-username', 'e2e-user')
+await p.fill('#login-password', 'pw12345678')
 await p.click('button[type="submit"]')
 await p.waitForTimeout(1500)
 // Pairing starts from an assistant now: Assistants -> a card's "Devices (n)"

@@ -4,11 +4,14 @@ const p = await b.newPage({ viewport: { width: 420, height: 860 }, deviceScaleFa
 const errors = []
 p.on('pageerror', e => errors.push(String(e)))
 await p.goto('http://localhost:5173/')
-await p.fill('input[placeholder="Username"]', 'e2e-user')
-await p.fill('input[placeholder="Password"]', 'pw12345678')
+await p.fill('#login-username', 'e2e-user')
+await p.fill('#login-password', 'pw12345678')
 await p.click('button[type="submit"]')
 await p.waitForTimeout(1500)
-await p.click('button:has-text("Tools")')
+// Tools hangs off Settings now, not the nav.
+await p.click('button:has-text("Settings")')
+await p.waitForTimeout(700)
+await p.click('.set__row:has-text("Tools & voices")')
 await p.waitForTimeout(800)
 const tabs = await p.locator('.nav__tabs button').allTextContents()
 console.log('nav:', JSON.stringify(tabs))
@@ -21,10 +24,12 @@ console.log('audio src:', src)
 console.log('points ONLY at the API?', String(src).startsWith('http://localhost:8000'))
 const dur = await p.locator('audio').evaluate(a => a.duration).catch(()=>null)
 console.log('duration (>0 = real audio):', dur)
-const orange = await p.evaluate(() => [...document.querySelectorAll('.tool *')].filter(e => {
-  const c = getComputedStyle(e); return /255,\s*138,\s*0/.test(c.backgroundImage + c.color)
+const orange = await p.evaluate(() => [...document.querySelectorAll('.page *')].filter(e => {
+  const c = getComputedStyle(e); return /238,\s*106,\s*17/.test(c.backgroundColor + c.backgroundImage + c.color)
 }).length)
-console.log('ORANGE elements (must be 2 main buttons):', orange)
+// The signal colour belongs to enabled primaries only. Here that is "Read aloud"
+// alone -- "To text" has no file chosen, so it is disabled and neutral.
+console.log('ORANGE elements (must be 1, Read aloud):', orange)
 await p.screenshot({ path: 'shots/tools-voice.png' })
 console.log('page errors:', errors.length ? errors : 'none')
 await b.close()
