@@ -1,34 +1,23 @@
+import type { Tab } from '../lib/route'
 import './Nav.css'
 
-export type Screen = 'talk' | 'history' | 'devices' | 'tools' | 'profiles' | 'usage'
-
-// Only list screens that ACTUALLY exist. A nav pointing to a missing screen lies
-// to the user. Ordered by decreasing frequency of use: Talk is the main thing,
-// History is what you check after talking, Profiles configures the assistant,
-// Devices configures hardware, Tools is the occasional odd job, Usage is the
-// least-visited (checked occasionally, not part of the core loop).
-const ITEMS: { id: Screen; label: string }[] = [
+// Three destinations, not six. The old nav listed every screen as a peer, so four
+// configuration screens sat level with the two the user actually lives in, and at
+// 320px seven controls fought for one row. Talk is the product; Assistants is
+// where everything about an assistant (its config, its history, its devices)
+// hangs off; Settings is the account-level rest.
+//
+// Sign out is deliberately NOT here any more -- it's a rare action, not a
+// destination, and it now lives in Settings > Account.
+const ITEMS: { id: Tab; label: string }[] = [
   { id: 'talk', label: 'Talk' },
-  { id: 'history', label: 'History' },
-  { id: 'profiles', label: 'Profiles' },
-  { id: 'devices', label: 'Devices' },
-  { id: 'tools', label: 'Tools' },
-  { id: 'usage', label: 'My Usage' },
+  { id: 'profiles', label: 'Assistants' },
+  { id: 'settings', label: 'Settings' },
 ]
 
-export function Nav({
-  current,
-  onGo,
-  onLogout,
-}: {
-  current: Screen
-  onGo: (s: Screen) => void
-  onLogout: () => void
-}) {
+export function Nav({ current, onGo }: { current: Tab; onGo: (t: Tab) => void }) {
   return (
     <nav className="nav" aria-label="Main navigation">
-      {/* Four real screens, level with each other -- grouped separately and centered in
-          the space left after making room for Sign out. */}
       <div className="nav__tabs">
         {ITEMS.map((it) => (
           <button
@@ -41,13 +30,6 @@ export function Nav({
           </button>
         ))}
       </div>
-      <span className="nav__divider" aria-hidden="true" />
-      {/* Sign out is an ACTION, not a screen -- deliberately NOT using nav__btn (no
-          aria-current, no pill/tab look) so it doesn't read as a peer of
-          Talk/History/Devices/Tools. */}
-      <button className="nav__logout" onClick={onLogout}>
-        Sign out
-      </button>
     </nav>
   )
 }

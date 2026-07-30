@@ -1,0 +1,52 @@
+.set {
+  min-height: 100dvh;
+  padding: 20px 20px 88px;
+  max-width: 34rem;
+  margin: 0 auto;
+}
+
+.set__bar { display: flex; align-items: center; margin: 0 0 4px -8px; }
+
+.set__h {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 8px 0 24px;
+}
+
+.set__list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 8px;
+}
+
+/* A settings row is a whole-width target, not a link buried in text: on a phone
+   the entire row is the tap area. */
+.set__row {
+  font: inherit;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  text-align: left;
+  padding: 16px;
+  min-height: 64px;
+  border: 1px solid var(--lugo-cream-deep);
+  border-radius: 12px;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+}
+.set__row:hover { background: color-mix(in srgb, currentColor 4%, transparent); }
+.set__row:focus-visible { outline: 2px solid var(--lugo-accent-warm); outline-offset: 2px; }
+
+.set__row-text { display: grid; gap: 2px; min-width: 0; }
+.set__row-label { font-weight: 500; }
+.set__row-hint { font-size: 0.8125rem; opacity: 0.55; }
+
+.set__chev { opacity: 0.35; font-size: 1.25rem; line-height: 1; }
+
+.set__card { display: grid; gap: 16px; justify-items: start; }
+.set__note { margin: 0; font-size: 0.9375rem; line-height: 1.6; opacity: 0.75; }

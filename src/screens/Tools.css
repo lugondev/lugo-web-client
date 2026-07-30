@@ -63,3 +63,5 @@
 }
 
 .tool__audio { width: 100%; }
+
+.tool__bar { display: flex; align-items: center; margin: 0 0 4px -8px; }

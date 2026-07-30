@@ -120,9 +120,19 @@ function ToVoice() {
   )
 }
 
-export function Tools() {
+export function Tools({ onBack }: { onBack?: () => void }) {
   return (
     <main className="tool">
+      {/* Tools is no longer a top-level nav destination -- it hangs off Settings,
+          so it has to offer its own way back. Optional so the screen still
+          renders standalone in tests. */}
+      {onBack && (
+        <div className="tool__bar">
+          <Button variant="ghost" size="sm" onClick={onBack}>
+            ‹ Settings
+          </Button>
+        </div>
+      )}
       <h1 className="tool__h">Tools</h1>
       <p className="tool__sub">Two quick jobs, no need to open a conversation.</p>
       <ToText />

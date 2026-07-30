@@ -100,3 +100,54 @@
     to { transform: none; opacity: 1; }
   }
 }
+
+/* Overflow menu. Destructive actions live in here rather than level with the
+   everyday buttons on a card -- see MenuButton.tsx. */
+.menu { position: relative; display: inline-flex; }
+
+.menu__trigger {
+  font: inherit;
+  line-height: 1;
+  background: none;
+  border: none;
+  color: inherit;
+  opacity: 0.5;
+  cursor: pointer;
+  border-radius: 999px;
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  font-size: 1.25rem;
+}
+.menu__trigger:hover, .menu__trigger[aria-expanded='true'] { opacity: 1; }
+.menu__trigger:focus-visible { outline: 2px solid var(--lugo-accent-warm); outline-offset: 2px; }
+
+.menu__list {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  z-index: 20;
+  min-width: 160px;
+  display: grid;
+  padding: 6px;
+  border-radius: 12px;
+  background: var(--lugo-cream);
+  color: var(--lugo-ink);
+  border: 1px solid var(--lugo-cream-deep);
+  box-shadow: 0 16px 40px -16px rgba(0, 0, 0, 0.4);
+}
+
+.menu__item {
+  font: inherit;
+  text-align: left;
+  background: none;
+  border: none;
+  color: inherit;
+  padding: 10px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.menu__item:hover { background: var(--lugo-cream-deep); }
+.menu__item:focus-visible { outline: 2px solid var(--lugo-accent-warm); outline-offset: -2px; }
+.menu__item--danger { color: #c9372c; }

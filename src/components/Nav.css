@@ -12,26 +12,25 @@
   border-top: 1px solid color-mix(in srgb, currentColor 12%, transparent);
 }
 
-/* Talk + Devices: take the space left after making room for Sign out, and center within
-   it -- so it still looks balanced, not shoved off to the left. */
+/* Three tabs, centred. Sign out no longer sits in this bar (it moved to
+   Settings > Account), so the row is free to be evenly spaced. */
 .nav__tabs {
   flex: 1;
   min-width: 0;
   display: flex;
   justify-content: center;
-  gap: 1px;
+  gap: 4px;
 }
 
-/* white-space: nowrap is NECESSARY but not sufficient -- on its own it would make the row
-   overflow sideways. Compensate with smaller padding/gap/font-size (see the rules below) so
-   all four labels still fit on one row at 320px without clipping or wrapping. */
+/* Roomier than the six-tab version it replaces: with three labels there is space
+   for a readable size and a real touch target at 320px. */
 .nav__btn {
   font: inherit;
-  font-size: 0.75rem;
+  font-size: 0.875rem;
   font-weight: 500;
   white-space: nowrap;
-  padding: 8px 7px;
-  min-height: 40px;
+  padding: 10px 20px;
+  min-height: 44px;
   border: 0;
   border-radius: 999px;
   background: none;
@@ -49,40 +48,6 @@
 }
 
 .nav__btn:focus-visible {
-  outline: 2px solid var(--lugo-accent-warm);
-  outline-offset: 2px;
-}
-
-/* Divider -- sets Sign out apart as a different KIND of control, not one more destination
-   in the tab row. */
-.nav__divider {
-  align-self: stretch;
-  width: 1px;
-  margin: 4px 1px;
-  background: color-mix(in srgb, currentColor 14%, transparent);
-}
-
-/* Sign out: smaller text, dimmer than nav__btn, no pill background, no tab-style hover --
-   so it does NOT read as a third peer alongside Talk/Devices. Still keeps a minimum ~40px
-   touch height and a clear focus-visible outline. Horizontal padding is tightened (instead
-   of font size) so it needn't be narrower than nav__btn. */
-.nav__logout {
-  font: inherit;
-  font-size: 0.6875rem;
-  font-weight: 400;
-  white-space: nowrap;
-  padding: 8px 6px;
-  min-height: 40px;
-  border: 0;
-  border-radius: 6px;
-  background: none;
-  color: inherit;
-  opacity: 0.4;
-  cursor: pointer;
-}
-.nav__logout:hover { opacity: 0.65; text-decoration: underline; }
-
-.nav__logout:focus-visible {
   outline: 2px solid var(--lugo-accent-warm);
   outline-offset: 2px;
 }

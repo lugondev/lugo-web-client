@@ -1,0 +1,82 @@
+/* Device screens: one assistant's devices, and the cross-cutting "All devices"
+   view under Settings. Both use .dev for the page frame and .drow for a device. */
+
+.dev {
+  min-height: 100dvh;
+  padding: 20px 20px 88px;
+  max-width: 34rem;
+  margin: 0 auto;
+}
+
+.dev__bar { display: flex; align-items: center; margin: 0 0 4px -8px; }
+
+.dev__h {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 8px 0 4px;
+}
+
+.dev__sub {
+  margin: 0 0 24px;
+  opacity: 0.6;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+}
+
+.dev__list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 20px;
+  display: grid;
+  gap: 10px;
+}
+
+/* Group heading in the all-devices view -- one per assistant, plus Unassigned. */
+.dev__group {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.45;
+  margin: 24px 0 10px;
+}
+.dev__group:first-of-type { margin-top: 8px; }
+
+.dev__empty {
+  border: 1px dashed var(--lugo-cream-deep);
+  border-radius: 12px;
+  padding: 24px 20px;
+  text-align: center;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  opacity: 0.7;
+  margin: 0 0 20px;
+}
+
+/* One device. */
+.drow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.drow__body { min-width: 0; }
+.drow__name { font-weight: 500; margin: 0 0 2px; }
+.drow__status { font-size: 0.8125rem; opacity: 0.55; margin: 0; }
+.drow__serial {
+  font-size: 0.75rem;
+  opacity: 0.4;
+  margin: 2px 0 0;
+  letter-spacing: 0.04em;
+}
+
+/* Pairing wizard (inside a modal). */
+.pair__form { display: grid; gap: 12px; }
+
+.pair__code {
+  font-size: 1.5rem;
+  letter-spacing: 0.3em;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}

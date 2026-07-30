@@ -1,29 +1,38 @@
-import { useEffect, useState, type ComponentType } from 'react'
+import { useEffect, useState } from 'react'
 import './theme.css'
 import { isAuthed, logout } from './api/auth'
 import { onAuthLost } from './api/client'
-import { Nav, type Screen } from './components/Nav'
-import { Devices } from './screens/Devices'
+import { Nav } from './components/Nav'
+import { tabOf, type Route, type Tab } from './lib/route'
 import { History } from './screens/History'
 import { Login } from './screens/Login'
 import { Profiles } from './screens/Profiles'
+import { ProfileDevices } from './screens/profiles/ProfileDevices'
+import { Account } from './screens/settings/Account'
+import { AllDevices } from './screens/settings/AllDevices'
+import { Settings, type SettingsPanel } from './screens/settings/Settings'
 import { Talk } from './screens/Talk'
 import { Tools } from './screens/Tools'
 import { Usage } from './screens/Usage'
 
-// Talk and History need props (session resume), so they're rendered
-// explicitly below rather than through the shared Screen -> component map
-// like the other three screens.
-const SCREENS: Record<Exclude<Screen, 'talk' | 'history'>, ComponentType> = {
-  profiles: Profiles,
-  devices: Devices,
-  tools: Tools,
-  usage: Usage,
+// Where each nav tab lands. Child routes (an assistant's devices, a settings
+// panel) are reached from inside their parent, never from the nav.
+const TAB_ROUTE: Record<Tab, Route> = {
+  talk: { screen: 'talk' },
+  profiles: { screen: 'profiles' },
+  settings: { screen: 'settings' },
+}
+
+const PANEL_ROUTE: Record<SettingsPanel, Route> = {
+  account: { screen: 'settings-account' },
+  devices: { screen: 'settings-devices' },
+  tools: { screen: 'settings-tools' },
+  usage: { screen: 'settings-usage' },
 }
 
 export default function App() {
   const [authed, setAuthed] = useState(isAuthed())
-  const [screen, setScreen] = useState<Screen>('talk')
+  const [route, setRoute] = useState<Route>({ screen: 'talk' })
   const [resumeSessionId, setResumeSessionId] = useState<string | null>(null)
 
   // A refresh failure on any request -> back to Login. This is why
@@ -38,29 +47,65 @@ export default function App() {
   function signOut() {
     logout()
     setAuthed(false)
-    setScreen('talk')
+    setRoute({ screen: 'talk' })
   }
 
-  // Continue from History -> go to Talk and auto-resume that exact session.
+  // Continue from a history entry -> go to Talk and auto-resume that session.
   function goToTalk(id: string) {
     setResumeSessionId(id)
-    setScreen('talk')
+    setRoute({ screen: 'talk' })
   }
 
+  const backToProfiles = () => setRoute({ screen: 'profiles' })
+  const backToSettings = () => setRoute({ screen: 'settings' })
+
   let active
-  if (screen === 'talk') {
-    active = <Talk resumeSessionId={resumeSessionId} onResumed={() => setResumeSessionId(null)} />
-  } else if (screen === 'history') {
-    active = <History onContinue={goToTalk} />
-  } else {
-    const Active = SCREENS[screen]
-    active = <Active />
+  switch (route.screen) {
+    case 'talk':
+      active = <Talk resumeSessionId={resumeSessionId} onResumed={() => setResumeSessionId(null)} />
+      break
+    case 'profiles':
+      active = (
+        <Profiles
+          onOpenDevices={(profile) => setRoute({ screen: 'profile-devices', profile })}
+          onOpenHistory={(profile, title) => setRoute({ screen: 'profile-history', profile, title })}
+        />
+      )
+      break
+    case 'profile-devices':
+      active = <ProfileDevices profileName={route.profile} onBack={backToProfiles} />
+      break
+    case 'profile-history':
+      active = (
+        <History
+          profile={route.profile}
+          profileTitle={route.title}
+          onBack={backToProfiles}
+          onContinue={goToTalk}
+        />
+      )
+      break
+    case 'settings':
+      active = <Settings onOpen={(panel) => setRoute(PANEL_ROUTE[panel])} />
+      break
+    case 'settings-account':
+      active = <Account onBack={backToSettings} onSignOut={signOut} />
+      break
+    case 'settings-devices':
+      active = <AllDevices onBack={backToSettings} />
+      break
+    case 'settings-tools':
+      active = <Tools onBack={backToSettings} />
+      break
+    case 'settings-usage':
+      active = <Usage onBack={backToSettings} />
+      break
   }
 
   return (
     <>
       {active}
-      <Nav current={screen} onGo={setScreen} onLogout={signOut} />
+      <Nav current={tabOf(route)} onGo={(tab) => setRoute(TAB_ROUTE[tab])} />
     </>
   )
 }

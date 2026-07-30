@@ -3,62 +3,93 @@ import {
   cloneProfile, deleteProfile, getProfile, listProfiles, listLlmOptions,
   type Profile, type ProfileInput, type LlmOption,
 } from '../api/profiles'
-import { listSttModelOptions, type SttModelOption } from '../api/stt'
+import { listDevices, type Device } from '../api/devices'
+import { listSessions } from '../api/history'
 import { listTtsProfiles, type TtsProfileSummary } from '../api/tts'
+import { relativeTime } from '../lib/time'
 import { emptyProfileInput, toEditableInput } from './profileForm'
+import { ProfileCard, type ProfileMeta } from './profiles/ProfileCard'
 import { ProfileEditor } from './ProfileEditor'
 import { Button } from '../ui/Button'
-import { Card } from '../ui/Card'
 import { ConfirmModal } from '../ui/ConfirmModal'
 import { Modal } from '../ui/Modal'
 import './Profiles.css'
 
 type Editing = { mode: 'create' | 'edit'; initial: ProfileInput } | null
 
-// The user-facing summary shows only the Model Registry label — never the raw
-// engine name or model id. A profile stores (engine, model), so we resolve each
-// pair back to its label via the same options lists the editor's dropdowns use.
-// Empty engine = server default; a pair with no matching registry row = unavailable.
-type Catalog = { llm: LlmOption[]; stt: SttModelOption[]; tts: TtsProfileSummary[] }
+// Labels shown on a card come from the Model Registry / TTS profile list, never
+// from the raw engine + model id the profile stores. A profile keeps
+// (engine, model); these lists turn that pair back into something a person
+// recognises. Empty engine = server default; a pair with no matching row =
+// unavailable (the model was removed from the registry).
+type Catalog = { llm: LlmOption[]; tts: TtsProfileSummary[] }
 
-function ProfileMeta({ p, catalog }: { p: Profile; catalog: Catalog }) {
-  const llmLabel = !p.llm.engine ? '—'
-    : catalog.llm.find((o) => o.engine === p.llm.engine && o.model_id === p.llm.model)?.label ?? 'Unavailable'
-  const sttLabel = !p.stt.engine ? '—'
-    : catalog.stt.find((o) => o.engine === p.stt.engine && o.model === p.stt.model)?.label ?? 'Unavailable'
+// How many recent sessions to scan for "last used". One request for the whole
+// grid instead of one per card. Assistants missing from this page are shown as
+// "Not used recently" -- deliberately NOT "never", which a truncated page cannot
+// establish.
+const RECENT_SESSION_SCAN = 100
+
+function metaFor(p: Profile, catalog: Catalog, lastUsedIso: string | null): ProfileMeta {
+  const model = !p.llm.engine
+    ? 'Server default'
+    : catalog.llm.find((o) => o.engine === p.llm.engine && o.model_id === p.llm.model)?.label
+      ?? 'Unavailable'
   const ttsProfile = catalog.tts.find((t) => t.name === p.tts.profile_name)
-  const ttsLabel = !p.tts.profile_name ? '—' : (ttsProfile?.nickname || ttsProfile?.name || 'Unavailable')
-  return (
-    <p className="profiles__meta">
-      <span>LLM {llmLabel}</span>
-      <span>STT {sttLabel}</span>
-      <span>TTS {ttsLabel}</span>
-    </p>
-  )
+  const voice = !p.tts.profile_name
+    ? 'Server default'
+    : ttsProfile?.nickname || ttsProfile?.name || 'Unavailable'
+  return {
+    voice,
+    model,
+    lastUsed: lastUsedIso ? relativeTime(lastUsedIso) : 'Not used recently',
+  }
 }
 
-export function Profiles() {
+export function Profiles({
+  onOpenDevices,
+  onOpenHistory,
+}: {
+  onOpenDevices: (profileName: string) => void
+  onOpenHistory: (profileName: string, title: string) => void
+}) {
   const [profiles, setProfiles] = useState<Profile[]>([])
   const [error, setError] = useState<string | null>(null)
   const [editing, setEditing] = useState<Editing>(null)
   const [toDelete, setToDelete] = useState<string | null>(null)
   const [cloneOf, setCloneOf] = useState<string | null>(null)
   const [cloneName, setCloneName] = useState('')
-  const [catalog, setCatalog] = useState<Catalog>({ llm: [], stt: [], tts: [] })
+  const [catalog, setCatalog] = useState<Catalog>({ llm: [], tts: [] })
+  const [devices, setDevices] = useState<Device[]>([])
+  const [lastUsed, setLastUsed] = useState<Record<string, string>>({})
 
   function refresh(): void {
     setError(null)
     listProfiles().then(setProfiles).catch((e) => setError((e as Error).message))
+    // Device counts and last-used are decoration on the cards: a failure there
+    // must not blank the list of assistants, so each falls back to "nothing
+    // known" rather than surfacing an error.
+    listDevices().then(setDevices).catch(() => setDevices([]))
+    listSessions(RECENT_SESSION_SCAN)
+      .then((rows) => {
+        const newest: Record<string, string> = {}
+        for (const row of rows) {
+          if (!row.profile_id || !row.created_at) continue
+          const seen = newest[row.profile_id]
+          if (!seen || row.created_at > seen) newest[row.profile_id] = row.created_at
+        }
+        setLastUsed(newest)
+      })
+      .catch(() => setLastUsed({}))
   }
   useEffect(refresh, [])
-  // Labels for the summary come from the registry; load once. A failed list just
-  // falls back to "Unavailable" for that column rather than blocking the page.
+  // Registry labels change rarely; load once. A failed list just falls back to
+  // "Unavailable" for that column rather than blocking the page.
   useEffect(() => {
     Promise.all([
       listLlmOptions().catch(() => []),
-      listSttModelOptions().catch(() => []),
       listTtsProfiles().catch(() => []),
-    ]).then(([llm, stt, tts]) => setCatalog({ llm, stt, tts }))
+    ]).then(([llm, tts]) => setCatalog({ llm, tts }))
   }, [])
 
   async function openEdit(name: string): Promise<void> {
@@ -86,44 +117,49 @@ export function Profiles() {
     )
   }
 
+  const countFor = (name: string) =>
+    devices.filter((d) => !d.revoked && d.profile_id === name).length
+
   const shared = profiles.filter((p) => p.owner_id === null)
   const mine = profiles.filter((p) => p.owner_id !== null)
+
+  function card(p: Profile, isShared: boolean) {
+    return (
+      <ProfileCard
+        key={p.name}
+        profile={p}
+        shared={isShared}
+        meta={metaFor(p, catalog, lastUsed[p.name] ?? null)}
+        deviceCount={countFor(p.name)}
+        onConfigure={() => openEdit(p.name)}
+        onHistory={() => onOpenHistory(p.name, p.nickname || p.name)}
+        onDevices={() => onOpenDevices(p.name)}
+        onDuplicate={() => { setCloneOf(p.name); setCloneName(`${p.name}-copy`) }}
+        onDelete={isShared ? undefined : () => setToDelete(p.name)}
+      />
+    )
+  }
 
   return (
     <main className="profiles">
       <div className="profiles__head">
-        <h1 className="profiles__h">Profiles</h1>
+        <h1 className="profiles__h">Assistants</h1>
         <Button variant="primary" size="sm"
           onClick={() => setEditing({ mode: 'create', initial: emptyProfileInput() })}>New</Button>
       </div>
-      <p className="profiles__sub">Assistant configurations you can switch between.</p>
+      <p className="profiles__sub">Each assistant has its own voice, model, history and devices.</p>
 
       {error && <p role="alert" className="pe__error">{error}</p>}
 
       <section className="profiles__section">
-        {/* "My profiles", not "Mine" -- a profile's nickname can legitimately
-            be "Mine" (see Profiles.test.tsx fixture), which would collide
-            with getByText queries against a bare "Mine" heading. */}
-        <h2 className="profiles__section-h">My profiles</h2>
+        {/* "My assistants", not "Mine" -- a nickname can legitimately be "Mine"
+            (see Profiles.test.tsx fixture), which would collide with getByText
+            queries against a bare "Mine" heading. */}
+        <h2 className="profiles__section-h">My assistants</h2>
         {mine.length === 0 ? (
-          <p className="profiles__empty">No profiles yet. Tap New to create one.</p>
+          <p className="profiles__empty">No assistants yet. Tap New to create one.</p>
         ) : (
-          <div className="profiles__list">
-            {mine.map((p) => (
-              <Card className="profiles__row" key={p.name}>
-                <div className="profiles__rowtop">
-                  <span className="profiles__name">{p.nickname || p.name}</span>
-                  <span className="profiles__actions">
-                    <Button data-act="edit" variant="secondary" size="sm" onClick={() => openEdit(p.name)}>Edit</Button>
-                    <Button data-act="clone" variant="secondary" size="sm"
-                      onClick={() => { setCloneOf(p.name); setCloneName(`${p.name}-copy`) }}>Clone</Button>
-                    <Button data-act="delete" variant="danger" size="sm" onClick={() => setToDelete(p.name)}>Delete</Button>
-                  </span>
-                </div>
-                <ProfileMeta p={p} catalog={catalog} />
-              </Card>
-            ))}
-          </div>
+          <div className="profiles__list">{mine.map((p) => card(p, false))}</div>
         )}
       </section>
 
@@ -132,39 +168,28 @@ export function Profiles() {
         {shared.length === 0 ? (
           <p className="profiles__empty">No shared templates.</p>
         ) : (
-          <div className="profiles__list">
-            {shared.map((p) => (
-              <Card className="profiles__row" key={p.name}>
-                <div className="profiles__rowtop">
-                  <span className="profiles__name">{p.nickname || p.name} <span className="profiles__badge">shared</span></span>
-                  <Button data-act="clone" variant="secondary" size="sm"
-                    onClick={() => { setCloneOf(p.name); setCloneName(`${p.name}-copy`) }}>Clone</Button>
-                </div>
-                <ProfileMeta p={p} catalog={catalog} />
-              </Card>
-            ))}
-          </div>
+          <div className="profiles__list">{shared.map((p) => card(p, true))}</div>
         )}
       </section>
 
       <ConfirmModal
         open={toDelete !== null}
         title={`Delete "${toDelete ?? ''}"?`}
-        message="This permanently removes the profile."
+        message="This permanently removes the assistant. Devices running it keep their pairing and become unassigned."
         confirmLabel="Yes, delete"
         destructive
         onConfirm={doDelete}
         onCancel={() => setToDelete(null)}
       />
 
-      <Modal open={cloneOf !== null} title={`Clone "${cloneOf ?? ''}"`} onClose={() => setCloneOf(null)}>
+      <Modal open={cloneOf !== null} title={`Duplicate "${cloneOf ?? ''}"`} onClose={() => setCloneOf(null)}>
         <label className="pe__field">New name
           <input className="input" aria-label="Clone new name" value={cloneName}
             onChange={(e) => setCloneName(e.target.value)} />
         </label>
         <div className="pe__actions">
           <Button variant="secondary" onClick={() => setCloneOf(null)}>Cancel</Button>
-          <Button variant="primary" onClick={doClone}>Clone</Button>
+          <Button variant="primary" onClick={doClone}>Duplicate</Button>
         </div>
       </Modal>
     </main>

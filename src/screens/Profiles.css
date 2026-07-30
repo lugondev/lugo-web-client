@@ -46,32 +46,86 @@
   margin: 0 0 10px;
 }
 
-.profiles__list { display: grid; gap: 10px; }
-.profiles__row { display: flex; flex-direction: column; gap: 8px; }
-.profiles__rowtop { display: flex; align-items: center; gap: 0.5rem; justify-content: space-between; }
-.profiles__name { font-weight: 500; }
-.profiles__actions { display: flex; gap: 0.5rem; }
-.profiles__badge { font-size: 0.7rem; opacity: 0.7; }
+.profiles__list { display: grid; gap: 12px; }
 
-.profiles__meta {
-  margin: 0;
+/* Assistant card. The grid is one column on a phone and two from ~40rem, so a
+   desktop user sees the whole set at a glance instead of a single long column. */
+@media (min-width: 40rem) {
+  .profiles__list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+.pcard { display: grid; gap: 14px; align-content: start; }
+
+.pcard__head { display: flex; align-items: center; gap: 12px; }
+
+/* Initial + gradient derived from the name (lib/avatar.ts): assistants have no
+   picture, and a wall of identical cards is unscannable. */
+.pcard__avatar {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  font-weight: 600;
+  font-size: 1.125rem;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+}
+
+.pcard__title {
+  flex: 1;
+  min-width: 0;
+  font-weight: 600;
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 4px 10px;
-  font-size: 0.8125rem;
-  opacity: 0.55;
+  gap: 8px;
+  overflow-wrap: anywhere;
 }
-.profiles__apikey {
-  opacity: 1;
+
+.pcard__badge {
   font-size: 0.6875rem;
-  font-weight: 600;
+  font-weight: 500;
   letter-spacing: 0.02em;
   padding: 2px 8px;
   border-radius: 999px;
-  color: var(--lugo-accent);
-  background: color-mix(in srgb, var(--lugo-accent) 14%, transparent);
+  background: color-mix(in srgb, currentColor 10%, transparent);
+  opacity: 0.7;
 }
+
+/* Three facts, equal width, hairline-separated -- reads as one strip rather than
+   three loose labels. */
+.pcard__meta {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  border: 1px solid var(--lugo-cream-deep);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.pcard__cell { padding: 10px 12px; min-width: 0; }
+.pcard__cell + .pcard__cell { border-left: 1px solid var(--lugo-cream-deep); }
+
+.pcard__cell dt {
+  font-size: 0.6875rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  opacity: 0.45;
+  margin: 0 0 3px;
+}
+
+/* One line, ellipsised: a long model label must not make one card taller than
+   its neighbour. The full value is a tap away in Configure. */
+.pcard__cell dd {
+  margin: 0;
+  font-size: 0.8125rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pcard__actions { display: flex; flex-wrap: wrap; gap: 8px; }
 
 .profiles__empty {
   border: 1px dashed var(--lugo-cream-deep);

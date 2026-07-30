@@ -23,23 +23,27 @@ await p.click('button:has-text("Sign in")'); await p.waitForTimeout(1500)
 // talk
 console.log('TALK vn:', await vnHits(p)); await p.screenshot({ path:'shots/ui-talk.png' })
 
-// history
-await p.click('button:has-text("History")'); await p.waitForTimeout(1200)
+// history (per assistant now -- reached from a card, not the nav)
+await p.click('button:has-text("Assistants")'); await p.waitForTimeout(1200)
+console.log('ASSISTANTS vn:', await vnHits(p)); await p.screenshot({ path:'shots/ui-profiles.png' })
+await p.locator('[data-act="history"]').first().click(); await p.waitForTimeout(1200)
 console.log('HISTORY vn:', await vnHits(p)); await p.screenshot({ path:'shots/ui-history.png' })
 if (await p.locator('.his__row').count()) { await p.locator('.his__row').first().click(); await p.waitForTimeout(1000); console.log('HIST DETAIL vn:', await vnHits(p)); await p.screenshot({ path:'shots/ui-history-detail.png' }); await p.click('button:has-text("Back")'); await p.waitForTimeout(500) }
 
-// devices + modal keyboard drive
-await p.click('button:has-text("Devices")'); await p.waitForTimeout(1200)
+// devices + modal keyboard drive (one assistant's devices)
+await p.click('button:has-text("‹ Assistants")'); await p.waitForTimeout(600)
+await p.locator('[data-act="devices"]').first().click(); await p.waitForTimeout(1200)
 console.log('DEVICES vn:', await vnHits(p)); await p.screenshot({ path:'shots/ui-devices.png' })
-const before = await p.locator('.dev__item').count()
+const before = await p.locator('.drow').count()
 if (before) {
-  await p.locator('button:has-text("Remove")').first().click(); await p.waitForTimeout(500)
+  await p.locator('.menu__trigger').first().click(); await p.waitForTimeout(200)
+  await p.locator('[role=menuitem]:has-text("Remove device")').first().click(); await p.waitForTimeout(500)
   const dlg = await p.locator('[role=dialog]').count()
   const focusIn = await p.evaluate(() => document.querySelector('[role=dialog]')?.contains(document.activeElement))
   await p.screenshot({ path:'shots/ui-modal.png' })
   await p.keyboard.press('Escape'); await p.waitForTimeout(400)
   const afterEsc = await p.locator('[role=dialog]').count()
-  const stillThere = await p.locator('.dev__item').count()
+  const stillThere = await p.locator('.drow').count()
   console.log('MODAL: dialog opened=', dlg, '| focus inside=', focusIn, '| Esc closed=', afterEsc===0, '| device NOT removed=', stillThere===before)
 }
 

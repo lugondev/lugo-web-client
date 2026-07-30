@@ -70,3 +70,5 @@
   color: var(--lugo-danger);
   font-size: 0.9375rem;
 }
+
+.usage__bar { display: flex; align-items: center; margin: 0 0 4px -8px; }

@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
 import { getMyUsage, type UsageRow } from '../api/usage'
+import { Button } from '../ui/Button'
 import './Usage.css'
 
-export function Usage() {
+export function Usage({ onBack }: { onBack?: () => void }) {
   const [rows, setRows] = useState<UsageRow[]>([])
   const [error, setError] = useState<string | null>(null)
   const [period, setPeriod] = useState('')
@@ -26,6 +27,14 @@ export function Usage() {
 
   return (
     <main className="usage">
+      {/* Reached from Settings now, not the nav -- see Tools.tsx for the same note. */}
+      {onBack && (
+        <div className="usage__bar">
+          <Button variant="ghost" size="sm" onClick={onBack}>
+            ‹ Settings
+          </Button>
+        </div>
+      )}
       <div className="usage__head">
         <h1 className="usage__h">My Usage</h1>
         <label className="usage__period">
