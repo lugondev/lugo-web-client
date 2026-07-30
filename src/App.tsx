@@ -1,9 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import './theme.css'
 import { isAuthed, logout } from './api/auth'
 import { onAuthLost } from './api/client'
 import { Nav } from './components/Nav'
-import { tabOf, type Route, type Tab } from './lib/route'
+import { pathOf, routeOf, tabOf, type Route, type Tab } from './lib/route'
 import { History } from './screens/History'
 import { Login } from './screens/Login'
 import { Profiles } from './screens/Profiles'
@@ -32,8 +32,35 @@ const PANEL_ROUTE: Record<SettingsPanel, Route> = {
 
 export default function App() {
   const [authed, setAuthed] = useState(isAuthed())
-  const [route, setRoute] = useState<Route>({ screen: 'talk' })
+  // The URL is the source of truth for where we are, so a reload, a bookmark or
+  // a shared link all land where they say they do.
+  const [route, setRoute] = useState<Route>(() => routeOf(window.location.pathname))
   const [resumeSessionId, setResumeSessionId] = useState<string | null>(null)
+
+  /** Navigate, and record it so Back returns here. */
+  const go = useCallback((next: Route) => {
+    setRoute(next)
+    const path = pathOf(next)
+    if (path !== window.location.pathname) window.history.pushState(null, '', path)
+  }, [])
+
+  // Back and Forward move through the app rather than out of it.
+  useEffect(() => {
+    const onPop = () => setRoute(routeOf(window.location.pathname))
+    window.addEventListener('popstate', onPop)
+    return () => window.removeEventListener('popstate', onPop)
+  }, [])
+
+  // An address that resolved to something else -- a typo, a stale link, a
+  // trailing slash -- is rewritten to the canonical path for what is actually on
+  // screen. Replace, not push: the URL that never rendered is not a place to go
+  // Back to.
+  useEffect(() => {
+    const path = pathOf(route)
+    if (path !== window.location.pathname) window.history.replaceState(null, '', path)
+    // Only on mount: afterwards `go` keeps the two in step.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   // A refresh failure on any request -> back to Login. This is why
   // client.ts has onAuthLost instead of navigating itself: the API layer
@@ -47,17 +74,19 @@ export default function App() {
   function signOut() {
     logout()
     setAuthed(false)
-    setRoute({ screen: 'talk' })
+    go({ screen: 'talk' })
   }
 
   // Continue from a history entry -> go to Talk and auto-resume that session.
+  // The session id stays out of the URL: it is a one-shot instruction Talk
+  // consumes, not a place, and a reload must not silently reopen it.
   function goToTalk(id: string) {
     setResumeSessionId(id)
-    setRoute({ screen: 'talk' })
+    go({ screen: 'talk' })
   }
 
-  const backToProfiles = () => setRoute({ screen: 'profiles' })
-  const backToSettings = () => setRoute({ screen: 'settings' })
+  const backToProfiles = () => go({ screen: 'profiles' })
+  const backToSettings = () => go({ screen: 'settings' })
 
   let active
   switch (route.screen) {
@@ -67,8 +96,8 @@ export default function App() {
     case 'profiles':
       active = (
         <Profiles
-          onOpenDevices={(profile) => setRoute({ screen: 'profile-devices', profile })}
-          onOpenHistory={(profile, title) => setRoute({ screen: 'profile-history', profile, title })}
+          onOpenDevices={(profile) => go({ screen: 'profile-devices', profile })}
+          onOpenHistory={(profile) => go({ screen: 'profile-history', profile })}
         />
       )
       break
@@ -77,16 +106,11 @@ export default function App() {
       break
     case 'profile-history':
       active = (
-        <History
-          profile={route.profile}
-          profileTitle={route.title}
-          onBack={backToProfiles}
-          onContinue={goToTalk}
-        />
+        <History profile={route.profile} onBack={backToProfiles} onContinue={goToTalk} />
       )
       break
     case 'settings':
-      active = <Settings onOpen={(panel) => setRoute(PANEL_ROUTE[panel])} />
+      active = <Settings onOpen={(panel) => go(PANEL_ROUTE[panel])} />
       break
     case 'settings-account':
       active = <Account onBack={backToSettings} onSignOut={signOut} />
@@ -105,7 +129,7 @@ export default function App() {
   return (
     <>
       {active}
-      <Nav current={tabOf(route)} onGo={(tab) => setRoute(TAB_ROUTE[tab])} />
+      <Nav current={tabOf(route)} onGo={(tab) => go(TAB_ROUTE[tab])} />
     </>
   )
 }

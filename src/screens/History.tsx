@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { deleteSession, getSession, listSessions, type SessionDetail, type SessionRow } from '../api/history'
+import { listProfiles } from '../api/profiles'
 import { relativeTime } from '../lib/time'
 import { Button } from '../ui/Button'
 import { ConfirmModal } from '../ui/ConfirmModal'
@@ -98,17 +99,21 @@ function Detail({
 export function History({
   onContinue,
   profile,
-  profileTitle,
   onBack,
 }: {
   onContinue: (id: string) => void
   profile?: string
-  profileTitle?: string
   onBack?: () => void
 }) {
   const [rows, setRows] = useState<SessionRow[]>([])
   const [open, setOpen] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  // Resolved here rather than handed over by the hub: this screen has its own
+  // URL, so it has to work when the hub was never rendered. Same pattern as
+  // ProfileDevices. Until it arrives the slug stands in -- it is the assistant's
+  // name often enough, and a heading that pops in beats one that pops from
+  // nothing.
+  const [title, setTitle] = useState<string | undefined>(profile)
 
   async function refresh() {
     try {
@@ -123,6 +128,22 @@ export function History({
   useEffect(() => {
     void refresh()
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profile])
+
+  useEffect(() => {
+    if (!profile) return
+    setTitle(profile)
+    // A failed lookup only costs the heading its nickname, so it must not
+    // surface an error over a list that loaded fine.
+    let alive = true
+    listProfiles()
+      .then((ps) => {
+        if (alive) setTitle(ps.find((p) => p.name === profile)?.nickname || profile)
+      })
+      .catch(() => {})
+    return () => {
+      alive = false
+    }
   }, [profile])
 
   if (open) {
@@ -152,7 +173,7 @@ export function History({
         <h1 className="page__title">History</h1>
       </div>
       <p className="page__sub">
-        {profileTitle ? `Conversations with ${profileTitle}.` : 'Everything you and Lugo have said.'}
+        {title ? `Conversations with ${title}.` : 'Everything you and Lugo have said.'}
       </p>
 
       {error && (
