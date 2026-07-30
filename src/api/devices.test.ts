@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { claimDevice, friendlyDeviceError, listDevices, revokeDevice } from './devices'
+import {
+  claimDevice, friendlyDeviceError, listDevices, revokeDevice, setDeviceProfile,
+} from './devices'
 import { saveTokens } from './tokens'
 
 function jsonResponse(body: unknown, status = 200): Response {
@@ -10,7 +12,7 @@ function jsonResponse(body: unknown, status = 200): Response {
 }
 
 const DEVICE = {
-  id: 'd1', user_id: 'u1', name: 'Kitchen speaker', serial: 'ABC123',
+  id: 'd1', user_id: 'u1', name: 'Kitchen speaker', serial: 'ABC123', profile_id: '',
   created_at: '2026-07-17T10:00:00Z', last_seen_at: null, revoked: false,
 }
 
@@ -43,13 +45,47 @@ describe('devices api', () => {
     expect(new Headers(f.mock.calls[0][1].headers).get('Authorization')).toBe('Bearer acc')
   })
 
-  it('claimDevice sends code and name', async () => {
+  it('claimDevice sends code and name, unassigned by default', async () => {
     const f = vi.fn().mockResolvedValue(jsonResponse({ success: true, data: DEVICE }))
     vi.stubGlobal('fetch', f)
     const d = await claimDevice('123456', 'Kitchen speaker')
     expect(f.mock.calls[0][0]).toContain('/v1/devices/pair/claim')
-    expect(JSON.parse(f.mock.calls[0][1].body)).toEqual({ code: '123456', name: 'Kitchen speaker' })
+    expect(JSON.parse(f.mock.calls[0][1].body)).toEqual({
+      code: '123456', name: 'Kitchen speaker', profile_id: '',
+    })
     expect(d.id).toBe('d1')
+  })
+
+  it('claimDevice binds the assistant in the same call', async () => {
+    // One request, not claim-then-assign: a failed second call would leave the
+    // device paired but answering to nothing.
+    const f = vi.fn().mockResolvedValue(jsonResponse({ success: true, data: DEVICE }))
+    vi.stubGlobal('fetch', f)
+    await claimDevice('123456', 'Kitchen speaker', 'kitchen')
+    expect(JSON.parse(f.mock.calls[0][1].body).profile_id).toBe('kitchen')
+  })
+
+  it('setDeviceProfile posts to the own-device subresource', async () => {
+    const f = vi.fn().mockResolvedValue(jsonResponse({ success: true }))
+    vi.stubGlobal('fetch', f)
+    await setDeviceProfile('d1', 'study')
+    expect(f.mock.calls[0][0]).toContain('/v1/devices/mine/d1/profile')
+    expect(f.mock.calls[0][1].method).toBe('POST')
+    expect(JSON.parse(f.mock.calls[0][1].body)).toEqual({ profile_id: 'study' })
+  })
+
+  it('setDeviceProfile sends an empty name to unassign', async () => {
+    const f = vi.fn().mockResolvedValue(jsonResponse({ success: true }))
+    vi.stubGlobal('fetch', f)
+    await setDeviceProfile('d1', '')
+    expect(JSON.parse(f.mock.calls[0][1].body)).toEqual({ profile_id: '' })
+  })
+
+  it('setDeviceProfile surfaces the server error', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(
+      jsonResponse({ success: false, detail: "profile 'gone' not found" }, 404),
+    ))
+    await expect(setDeviceProfile('d1', 'gone')).rejects.toThrow(/not found/)
   })
 
   it('claimDevice keeps the server error message verbatim', async () => {
