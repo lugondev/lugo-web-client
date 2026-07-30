@@ -240,7 +240,15 @@ describe('newConversation', () => {
     // Not `reset`: that only clears the server's in-memory context and keeps
     // writing to the same stored session, so it would not produce a separate
     // conversation. See docs/api.md.
-    expect(sent).toEqual([JSON.stringify({ type: 'new_session' })])
+    //
+    // `abort` first, because the gateway defers a rotation until the turn in
+    // flight finishes (that is what lets a device confirm a voice-driven "start
+    // over"). A button press is not a request to hear the rest of the old
+    // answer, so it cancels the turn instead of waiting for it.
+    expect(sent).toEqual([
+      JSON.stringify({ type: 'abort' }),
+      JSON.stringify({ type: 'new_session' }),
+    ])
   })
 
   it('stops the reply still draining from the conversation being left', () => {

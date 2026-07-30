@@ -211,11 +211,17 @@ export class Conversation {
    *
    * Stops playback first: the reply still draining belongs to the conversation
    * being left behind, and letting it finish over the top of "starting fresh"
-   * reads as the assistant ignoring the request. The server answers
-   * `session_rotated`; nothing here needs the new id, since this client keeps no
-   * session state of its own between turns. */
+   * reads as the assistant ignoring the request. `abort` before `new_session`
+   * for the same reason on the server side: the gateway lets a turn in flight
+   * FINISH before rotating (a device asks for a new session from mid-turn and
+   * has to be allowed to say so), which for a button press would mean the old
+   * answer still streaming in. Pressing the button means now.
+   *
+   * The server answers `session_rotated`; nothing here needs the new id, since
+   * this client keeps no session state of its own between turns. */
   newConversation(): void {
     this.player.stop()
+    this.send({ type: 'abort' })
     this.send({ type: 'new_session' })
     this.setState('listening')
   }
