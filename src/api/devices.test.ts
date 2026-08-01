@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import {
-  claimDevice, friendlyDeviceError, listDevices, revokeDevice, setDeviceProfile,
+  claimDevice, friendlyDeviceError, listDevices, renameDevice, revokeDevice, setDeviceProfile,
 } from './devices'
 import { saveTokens } from './tokens'
 
@@ -108,6 +108,36 @@ describe('devices api', () => {
   it('revokeDevice throws when the server rejects', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse({ detail: 'not found' }, 404)))
     await expect(revokeDevice('nope')).rejects.toThrow()
+  })
+
+  it('renameDevice posts the new name to MY device, url-encoding the id', async () => {
+    const f = vi.fn().mockResolvedValue(jsonResponse({ success: true, data: { id: 'a/b', name: 'Kitchen' } }))
+    vi.stubGlobal('fetch', f)
+
+    await renameDevice('a/b', 'Kitchen')
+
+    expect(f.mock.calls[0][0]).toContain('/v1/devices/mine/a%2Fb/name')
+    expect(f.mock.calls[0][1].method).toBe('POST')
+    expect(JSON.parse(f.mock.calls[0][1].body)).toEqual({ name: 'Kitchen' })
+  })
+
+  it('renameDevice surfaces the server message on failure', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse({ detail: "device 'x' not found" }, 404)))
+
+    await expect(renameDevice('x', 'Kitchen')).rejects.toThrow(/not found/)
+  })
+
+  it('claimDevice sends an empty name, letting the server name the device', async () => {
+    const f = vi.fn().mockResolvedValue(jsonResponse({ success: true, data: DEVICE }))
+    vi.stubGlobal('fetch', f)
+
+    await claimDevice('01234567')
+
+    expect(JSON.parse(f.mock.calls[0][1].body)).toEqual({
+      code: '01234567',
+      name: '',
+      profile_id: '',
+    })
   })
 })
 

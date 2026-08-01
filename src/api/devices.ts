@@ -74,7 +74,7 @@ export async function listDevices(): Promise<Device[]> {
  * would leave a device paired-but-unassigned whenever the second call failed. */
 export async function claimDevice(
   code: string,
-  name: string,
+  name = '',
   profileId = '',
 ): Promise<Device> {
   const resp = await apiFetch('/v1/devices/pair/claim', {
@@ -103,6 +103,20 @@ export async function setDeviceProfile(id: string, profileId: string): Promise<v
 export async function revokeDevice(id: string): Promise<void> {
   const resp = await apiFetch(`/v1/devices/mine/${encodeURIComponent(id)}/revoke`, {
     method: 'POST',
+  })
+  if (!resp.ok) throw await errorFrom(resp)
+}
+
+/** Rename a device. Never touches the pairing token or the assistant binding.
+ *
+ * A device arrives named after its own setup AP (Lugo-XXXX, chosen by the
+ * server from the pairing serial), so this is always an edit of something that
+ * already reads sensibly -- never the user's only chance to name it. */
+export async function renameDevice(id: string, name: string): Promise<void> {
+  const resp = await apiFetch(`/v1/devices/mine/${encodeURIComponent(id)}/name`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name }),
   })
   if (!resp.ok) throw await errorFrom(resp)
 }
