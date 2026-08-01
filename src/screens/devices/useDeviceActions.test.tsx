@@ -5,9 +5,10 @@ vi.mock('../../api/devices', async (orig) => ({
   ...(await orig<typeof import('../../api/devices')>()),
   setDeviceProfile: vi.fn(),
   revokeDevice: vi.fn(),
+  renameDevice: vi.fn(),
 }))
 
-import { revokeDevice, setDeviceProfile, type Device } from '../../api/devices'
+import { revokeDevice, renameDevice, setDeviceProfile, type Device } from '../../api/devices'
 import { useDeviceActions } from './useDeviceActions'
 
 const DEVICE = {
@@ -25,6 +26,7 @@ beforeEach(() => {
   vi.clearAllMocks()
   vi.mocked(setDeviceProfile).mockResolvedValue(undefined)
   vi.mocked(revokeDevice).mockResolvedValue(undefined)
+  vi.mocked(renameDevice).mockResolvedValue(undefined)
 })
 
 function setup() {
@@ -118,4 +120,47 @@ it('clears a stale removal error at the start of the next attempt, so a later su
   expect(onRemoveError.mock.calls).toEqual([[null], ['Removal failed'], [null]])
   expect(refresh).toHaveBeenCalled()
   await waitFor(() => expect(result.current.removing).toBeNull())
+})
+
+it('renames the open device and refreshes', async () => {
+  const { result, refresh } = setup()
+
+  act(() => result.current.openRename(DEVICE))
+  expect(result.current.renaming).toEqual(DEVICE)
+
+  await act(() => result.current.rename('Kitchen speaker'))
+
+  expect(renameDevice).toHaveBeenCalledWith('d1', 'Kitchen speaker')
+  expect(refresh).toHaveBeenCalled()
+  await waitFor(() => expect(result.current.renaming).toBeNull())
+})
+
+it('keeps the rename dialog open and shows the error when it fails', async () => {
+  vi.mocked(renameDevice).mockRejectedValue(new Error("device 'd1' not found"))
+  const { result, refresh } = setup()
+
+  act(() => result.current.openRename(DEVICE))
+  await act(() => result.current.rename('Kitchen speaker'))
+
+  expect(result.current.renameError).toBe("device 'd1' not found")
+  expect(result.current.renaming).toEqual(DEVICE)
+  expect(refresh).not.toHaveBeenCalled()
+})
+
+it('clears a stale rename error when the dialog is reopened', async () => {
+  vi.mocked(renameDevice).mockRejectedValue(new Error('nope'))
+  const { result } = setup()
+
+  act(() => result.current.openRename(DEVICE))
+  await act(() => result.current.rename('Kitchen'))
+  expect(result.current.renameError).toBe('nope')
+
+  act(() => result.current.openRename(DEVICE))
+  expect(result.current.renameError).toBeNull()
+})
+
+it('does nothing when rename is called with no device open', async () => {
+  const { result } = setup()
+  await act(() => result.current.rename('Kitchen'))
+  expect(renameDevice).not.toHaveBeenCalled()
 })

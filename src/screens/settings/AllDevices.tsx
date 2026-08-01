@@ -5,6 +5,7 @@ import { Button } from '../../ui/Button'
 import { ConfirmModal } from '../../ui/ConfirmModal'
 import { DeviceRow } from '../devices/DeviceRow'
 import { MoveDeviceModal } from '../devices/MoveDeviceModal'
+import { RenameDeviceModal } from '../devices/RenameDeviceModal'
 import { useDeviceActions } from '../devices/useDeviceActions'
 import '../devices/devices.css'
 
@@ -91,6 +92,7 @@ export function AllDevices({ onBack }: { onBack: () => void }) {
                     device={d}
                     onMove={() => actions.openMove(d)}
                     onRemove={() => actions.openRemove(d)}
+                    onRename={() => actions.openRename(d)}
                   />
                 </li>
               ))}
@@ -106,6 +108,14 @@ export function AllDevices({ onBack }: { onBack: () => void }) {
         error={actions.moveError}
         onCancel={actions.closeMove}
         onConfirm={actions.move}
+      />
+
+      <RenameDeviceModal
+        device={actions.renaming}
+        busy={actions.renameBusy}
+        error={actions.renameError}
+        onCancel={actions.closeRename}
+        onConfirm={actions.rename}
       />
 
       <ConfirmModal

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { revokeDevice, setDeviceProfile, type Device } from '../../api/devices'
+import { renameDevice, revokeDevice, setDeviceProfile, type Device } from '../../api/devices'
 
 /** Move and remove, for the two screens that list devices.
  *
@@ -25,6 +25,9 @@ export function useDeviceActions(
   const [moveError, setMoveError] = useState<string | null>(null)
   const [removing, setRemoving] = useState<Device | null>(null)
   const [removeBusy, setRemoveBusy] = useState(false)
+  const [renaming, setRenaming] = useState<Device | null>(null)
+  const [renameBusy, setRenameBusy] = useState(false)
+  const [renameError, setRenameError] = useState<string | null>(null)
 
   async function move(targetProfileId: string) {
     if (!moving) return
@@ -56,6 +59,21 @@ export function useDeviceActions(
     }
   }
 
+  async function rename(name: string) {
+    if (!renaming) return
+    setRenameBusy(true)
+    setRenameError(null)
+    try {
+      await renameDevice(renaming.id, name)
+      setRenaming(null)
+      await refresh()
+    } catch (e) {
+      setRenameError(e instanceof Error ? e.message : 'Could not rename the device')
+    } finally {
+      setRenameBusy(false)
+    }
+  }
+
   return {
     moving,
     moveBusy,
@@ -73,5 +91,14 @@ export function useDeviceActions(
     openRemove: (device: Device) => setRemoving(device),
     closeRemove: () => setRemoving(null),
     remove,
+    renaming,
+    renameBusy,
+    renameError,
+    openRename: (device: Device) => {
+      setRenameError(null)
+      setRenaming(device)
+    },
+    closeRename: () => setRenaming(null),
+    rename,
   }
 }

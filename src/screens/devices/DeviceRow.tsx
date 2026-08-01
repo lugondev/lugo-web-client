@@ -12,10 +12,12 @@ export function DeviceRow({
   device,
   onMove,
   onRemove,
+  onRename,
 }: {
   device: Device
   onMove: () => void
   onRemove: () => void
+  onRename: () => void
 }) {
   const live = isRecentlyActive(device.last_seen_at)
 
@@ -32,6 +34,7 @@ export function DeviceRow({
       <MenuButton
         label={`More actions for ${device.name}`}
         items={[
+          { label: 'Rename device', onSelect: onRename },
           { label: 'Move to another assistant', onSelect: onMove },
           // "Remove" and not "Unpair": this revokes the token, so the device has
           // to be paired again from its own screen. Unassigning (a soft change)
