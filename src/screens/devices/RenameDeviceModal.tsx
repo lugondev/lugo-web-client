@@ -33,7 +33,16 @@ export function RenameDeviceModal({
   }, [device])
 
   return (
-    <Modal open={device !== null} onClose={onCancel} title={`Rename "${device?.name ?? ''}"`}>
+    // Escape and the backdrop click go through this same onClose; make dismissal
+    // a no-op while the rename request is in flight, otherwise the dialog can
+    // unmount mid-request and the later setRenameError(...) lands on nothing --
+    // the rename fails and the user is never told. PairWizard closes the same
+    // hole on its own onClose.
+    <Modal
+      open={device !== null}
+      onClose={busy ? () => {} : onCancel}
+      title={`Rename "${device?.name ?? ''}"`}
+    >
       <TextInput
         id="rename-device"
         label="Device name"

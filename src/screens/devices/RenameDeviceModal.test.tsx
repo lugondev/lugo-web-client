@@ -54,6 +54,16 @@ it('renders nothing when no device is selected', () => {
   expect(screen.queryByLabelText('Device name')).toBeNull()
 })
 
+it('ignores dismissal while busy -- no closing mid-request', () => {
+  const onCancel = vi.fn()
+  render(<RenameDeviceModal device={DEVICE} busy onCancel={onCancel} onConfirm={() => {}} />)
+
+  fireEvent.click(screen.getByTestId('modal-backdrop'))
+  fireEvent.keyDown(document, { key: 'Escape' })
+
+  expect(onCancel).not.toHaveBeenCalled()
+})
+
 it('shows the new name when reopened on a different device', () => {
   const other = { ...DEVICE, id: 'd2', name: 'Lugo-9A1B' }
   const { rerender } = render(

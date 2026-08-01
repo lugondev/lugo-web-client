@@ -170,8 +170,8 @@ export function PairWizard({
       {step === 'done' && (
         <>
           <p className="modal__body">
-            It now runs {profileTitle}. Change that any time from this assistant&apos;s device
-            list — no re-pairing needed.
+            The device now runs {profileTitle}. Change that any time from this assistant&apos;s
+            device list — no re-pairing needed.
           </p>
           <TextInput
             id="pair-name"
