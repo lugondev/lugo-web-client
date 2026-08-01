@@ -53,3 +53,16 @@ it('renders nothing when no device is selected', () => {
   render(<RenameDeviceModal device={null} onCancel={() => {}} onConfirm={() => {}} />)
   expect(screen.queryByLabelText('Device name')).toBeNull()
 })
+
+it('shows the new name when reopened on a different device', () => {
+  const other = { ...DEVICE, id: 'd2', name: 'Lugo-9A1B' }
+  const { rerender } = render(
+    <RenameDeviceModal device={DEVICE} onCancel={() => {}} onConfirm={() => {}} />,
+  )
+  expect((screen.getByLabelText('Device name') as HTMLInputElement).value).toBe('Lugo-48D0')
+
+  rerender(<RenameDeviceModal device={other} onCancel={() => {}} onConfirm={() => {}} />)
+
+  // Reused across rows in a list: the previous device's name must not survive.
+  expect((screen.getByLabelText('Device name') as HTMLInputElement).value).toBe('Lugo-9A1B')
+})
