@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useState } from 'react'
-import { listDevices, revokeDevice, setDeviceProfile, type Device } from '../../api/devices'
+import { listDevices, type Device } from '../../api/devices'
 import { listProfiles, type Profile } from '../../api/profiles'
 import { Button } from '../../ui/Button'
 import { ConfirmModal } from '../../ui/ConfirmModal'
 import { DeviceRow } from '../devices/DeviceRow'
 import { MoveDeviceModal } from '../devices/MoveDeviceModal'
 import { PairWizard } from '../devices/PairWizard'
+import { useDeviceActions } from '../devices/useDeviceActions'
 import '../devices/devices.css'
 
 /** The devices belonging to one assistant.
@@ -25,11 +26,6 @@ export function ProfileDevices({
   const [profiles, setProfiles] = useState<Profile[]>([])
   const [error, setError] = useState<string | null>(null)
   const [pairing, setPairing] = useState(false)
-  const [moving, setMoving] = useState<Device | null>(null)
-  const [moveError, setMoveError] = useState<string | null>(null)
-  const [moveBusy, setMoveBusy] = useState(false)
-  const [removing, setRemoving] = useState<Device | null>(null)
-  const [removeBusy, setRemoveBusy] = useState(false)
 
   const refresh = useCallback(async () => {
     try {
@@ -38,6 +34,7 @@ export function ProfileDevices({
       setError(e instanceof Error ? e.message : 'Could not load devices')
     }
   }, [])
+  const actions = useDeviceActions(refresh, setError)
 
   useEffect(() => {
     void refresh()
@@ -49,36 +46,6 @@ export function ProfileDevices({
   const profile = profiles.find((p) => p.name === profileName)
   const title = profile?.nickname || profileName
   const mine = devices.filter((d) => !d.revoked && d.profile_id === profileName)
-
-  async function move(target: string) {
-    if (!moving) return
-    setMoveBusy(true)
-    setMoveError(null)
-    try {
-      await setDeviceProfile(moving.id, target)
-      setMoving(null)
-      await refresh()
-    } catch (e) {
-      setMoveError(e instanceof Error ? e.message : 'Could not move the device')
-    } finally {
-      setMoveBusy(false)
-    }
-  }
-
-  async function remove() {
-    if (!removing) return
-    setRemoveBusy(true)
-    setError(null)
-    try {
-      await revokeDevice(removing.id)
-      setRemoving(null)
-      await refresh()
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Removal failed')
-    } finally {
-      setRemoveBusy(false)
-    }
-  }
 
   return (
     <main className="page">
@@ -113,11 +80,8 @@ export function ProfileDevices({
             <li key={d.id}>
               <DeviceRow
                 device={d}
-                onMove={() => {
-                  setMoveError(null)
-                  setMoving(d)
-                }}
-                onRemove={() => setRemoving(d)}
+                onMove={() => actions.openMove(d)}
+                onRemove={() => actions.openRemove(d)}
               />
             </li>
           ))}
@@ -136,23 +100,23 @@ export function ProfileDevices({
       />
 
       <MoveDeviceModal
-        device={moving}
+        device={actions.moving}
         profiles={profiles}
-        busy={moveBusy}
-        error={moveError}
-        onCancel={() => setMoving(null)}
-        onConfirm={move}
+        busy={actions.moveBusy}
+        error={actions.moveError}
+        onCancel={actions.closeMove}
+        onConfirm={actions.move}
       />
 
       <ConfirmModal
-        open={removing !== null}
+        open={actions.removing !== null}
         title="Remove device?"
-        message={`${removing?.name ?? 'This device'} will lose access and have to be paired again.`}
+        message={`${actions.removing?.name ?? 'This device'} will lose access and have to be paired again.`}
         confirmLabel="Remove"
         destructive
-        busy={removeBusy}
-        onConfirm={remove}
-        onCancel={() => setRemoving(null)}
+        busy={actions.removeBusy}
+        onConfirm={actions.remove}
+        onCancel={actions.closeRemove}
       />
     </main>
   )
