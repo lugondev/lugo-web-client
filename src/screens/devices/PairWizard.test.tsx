@@ -107,6 +107,19 @@ it('does not call rename when the name was left alone', async () => {
   expect(renameDevice).not.toHaveBeenCalled()
 })
 
+it('does not call rename via Save when the name field was never edited', async () => {
+  // Done never calls renameDevice at all, so it can't tell us whether the
+  // guard inside save() itself is doing anything. Save is the button that
+  // actually has to skip the request for an untouched field.
+  const submit = await renderAndFill(CODE)
+  fireEvent.click(submit)
+  await screen.findByRole('heading', { name: 'Device added' })
+
+  fireEvent.click(screen.getByRole('button', { name: 'Save' }))
+
+  await waitFor(() => expect(renameDevice).not.toHaveBeenCalled())
+})
+
 it('keeps the device when the rename fails -- pairing already succeeded', async () => {
   vi.mocked(renameDevice).mockRejectedValue(new Error("device 'd1' not found"))
   const submit = await renderAndFill(CODE)
@@ -135,4 +148,44 @@ it('tells the user to remove the old pairing when the hardware is already paired
   const submit = await renderAndFill(CODE)
   fireEvent.click(submit)
   expect(await screen.findByText(/already paired to an account/i)).toBeTruthy()
+})
+
+it('ignores dismissal while a claim is in flight -- no closing mid-request', async () => {
+  // Cancel/Done are disabled while busy, but Escape and the backdrop click go
+  // through the same onClose regardless of `busy`. Drive the same path they
+  // use: the Modal's own keydown listener on `document`. If dismissal is not
+  // blocked, close() fires here -- resetting state and calling onCancel --
+  // while the claim promise is still pending.
+  let resolveClaim!: (device: typeof PAIRED) => void
+  vi.mocked(claimDevice).mockReturnValue(
+    new Promise((resolve) => {
+      resolveClaim = resolve
+    }) as never,
+  )
+  const onCancel = vi.fn()
+  const onPaired = vi.fn()
+  render(
+    <PairWizard
+      open
+      profileId="kitchen"
+      profileTitle="Kitchen assistant"
+      onCancel={onCancel}
+      onPaired={onPaired}
+    />,
+  )
+  fireEvent.click(await screen.findByRole('button', { name: 'I see a code' }))
+  fireEvent.change(screen.getByLabelText(/digit code/i), { target: { value: CODE } })
+  fireEvent.click(screen.getByRole('button', { name: 'Pair device' }))
+
+  // The claim is in flight (busy) -- Escape must be a no-op here, not an early
+  // close that fires onCancel while the request is still running.
+  fireEvent.keyDown(document, { key: 'Escape' })
+  expect(onCancel).not.toHaveBeenCalled()
+
+  resolveClaim(PAIRED)
+  // The dismissal was blocked rather than silently discarding the in-flight
+  // claim, so pairing still lands normally once it resolves -- state was
+  // never corrupted by a close() that ran mid-request.
+  await screen.findByRole('heading', { name: 'Device added' })
+  expect(onPaired).not.toHaveBeenCalled()
 })

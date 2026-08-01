@@ -54,6 +54,9 @@ export function PairWizard({
     setPaired(null)
     setName('')
     setError(null)
+    // A wizard reopened after a mid-request dismissal must never come up with
+    // its buttons stuck disabled.
+    setBusy(false)
   }
 
   function close() {
@@ -107,7 +110,13 @@ export function PairWizard({
   }
 
   return (
-    <Modal open={open} onClose={close} title={titles[step]}>
+    // Cancel/Done are already disabled while busy; Escape and the backdrop
+    // click go through this same onClose, so make dismissal a no-op while a
+    // claim or rename is in flight -- otherwise that request's `.then` can
+    // still run setPaired/setStep('done')/finish() against a wizard the user
+    // just closed and reset, firing onPaired after onCancel already fired and
+    // leaving a stale "Device added" screen the next time it opens.
+    <Modal open={open} onClose={busy ? () => {} : close} title={titles[step]}>
       {step === 'intro' && (
         <>
           <p className="modal__body">
