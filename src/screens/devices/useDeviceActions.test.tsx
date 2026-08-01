@@ -98,3 +98,24 @@ it('reports removal failures to the page banner, not the dialog', async () => {
 
   expect(onRemoveError).toHaveBeenCalledWith('Removal failed')
 })
+
+it('clears a stale removal error at the start of the next attempt, so a later success does not leave it on screen', async () => {
+  vi.mocked(revokeDevice)
+    .mockRejectedValueOnce(new Error('Removal failed'))
+    .mockResolvedValueOnce(undefined)
+  const { result, onRemoveError, refresh } = setup()
+
+  act(() => result.current.openRemove(DEVICE))
+  await act(() => result.current.remove())
+  expect(onRemoveError).toHaveBeenCalledWith('Removal failed')
+
+  // Retry: still the same device (a failed removal leaves the dialog/target open).
+  await act(() => result.current.remove())
+
+  // Order proves the banner is cleared up front on *every* attempt, not just
+  // reported on failure -- otherwise a stale message from the first try would
+  // still be showing after the second try succeeds.
+  expect(onRemoveError.mock.calls).toEqual([[null], ['Removal failed'], [null]])
+  expect(refresh).toHaveBeenCalled()
+  await waitFor(() => expect(result.current.removing).toBeNull())
+})
