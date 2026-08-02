@@ -98,11 +98,19 @@ export function Talk({
     setReply('')
     setYou('')
     // An explicit id (from History/Continue) -> use it directly, no lookup.
-    // Otherwise take the most recent session; a lookup failure must not block Start talking.
+    // Otherwise take the most recent session OF THIS ASSISTANT; a lookup failure
+    // must not block Start talking.
+    //
+    // The profile filter is not a nicety: without it the lookup returns whatever
+    // session is newest across every assistant and device on the account, so
+    // pressing Start under one assistant would resume, say, the ESP32 speaker's
+    // last conversation. The server then filed the turns under THAT session's
+    // profile (a session keeps the profile it was created with), and History --
+    // which reads per assistant -- showed an empty list for the one on screen.
     let sessionId = explicitSessionId
     if (!sessionId) {
       try {
-        sessionId = latestSessionId(await listSessions(1))
+        sessionId = latestSessionId(await listSessions(1, 0, profile || undefined))
       } catch {
         // ignore -- just start a new session like before this feature existed
       }

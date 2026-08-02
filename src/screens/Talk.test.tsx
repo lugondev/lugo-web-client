@@ -98,6 +98,26 @@ describe('Talk session continuity', () => {
     expect(vi.mocked(Conversation).mock.calls[0][2]).toBe('s-latest')
   })
 
+  it('looks up the latest session of the SELECTED assistant, not the latest overall', async () => {
+    // Regression (2026-08-02): the lookup passed no profile, so a browser
+    // talking as one assistant resumed whatever session was globally newest --
+    // in practice an ESP32 conversation under a different profile. The server
+    // appended the turns there (same user, ownership check passed) and History,
+    // which reads per assistant, showed nothing under the one selected here.
+    // This block's default is an empty assistant list (no picker at all); the
+    // bug needs one selected, so give it the same list the picker tests use.
+    vi.mocked(listProfiles).mockResolvedValue(LIST as never)
+    vi.mocked(listSessions).mockResolvedValue([] as never)
+    render(<Talk />)
+    // Wait for the picker to settle first: the list loads async, and clicking
+    // before it does asks with no profile at all (a different case).
+    const select = (await screen.findByLabelText('Assistant')) as HTMLSelectElement
+    await waitFor(() => expect(select.value).toBe('esp32'))
+    fireEvent.click(await screen.findByText('Start talking'))
+    await waitFor(() => expect(listSessions).toHaveBeenCalled())
+    expect(vi.mocked(listSessions).mock.calls[0]).toEqual([1, 0, 'esp32'])
+  })
+
   it('starts a fresh session when there is no session history', async () => {
     vi.mocked(listSessions).mockResolvedValue([] as never)
     render(<Talk />)
